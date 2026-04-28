@@ -59,7 +59,7 @@ class InfoPage:
 
         event = st.dataframe(
             rows,
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             on_select="rerun",
             selection_mode="single-row",
@@ -80,7 +80,7 @@ class InfoPage:
                 "Delete row",
                 key=f"del_{table}",
                 type="primary",
-                use_container_width=True,
+                width="stretch",
             ):
                 self._delete(table, pk_col, pk_value)
 

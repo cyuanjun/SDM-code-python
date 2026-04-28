@@ -14,7 +14,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 python -m persistence.db          # creates app.db with empty tables
-python -m data.seed               # populates ~100 records per table
+python -m data.seed               # populates ~10 records per table (bump RECORD_COUNT to 100 in data/seed.py for the marking demo)
 
 streamlit run app.py              # launches the UI on http://localhost:8501
 ```
@@ -25,7 +25,7 @@ streamlit run app.py              # launches the UI on http://localhost:8501
 pytest
 ```
 
-17 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+43 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -41,14 +41,13 @@ pytest
 | `docs/` | — | implementation reference + todo list |
 | `.github/workflows/ci.yml` | — | CI: runs pytest on push/PR |
 
-## Sprint 1 coverage (current)
+## Coverage so far
 
-- US-1 Create user profile
-- US-6 Create user account (profile chosen via dropdown)
-- US-11/18/26/39 Login (User Admin / Fundraiser / Donee / Platform Manager)
-- US-12/19/27/40 Logout
-- US-13 Create fundraising activity
-- US-21 View fundraising activity details (clickable list → details view)
+**Sprint 1** (12 stories): create profile/account, login/logout for all four actors, create fundraising activity, view fundraising activity (donee).
+
+**Sprint 2** (9 stories): admin view/update profile (US-2/3) and account (US-7/8); fundraiser view/update their own FSAs (US-14/15); donee search FSAs (US-20), save to favourites (US-22), view favourites (US-24).
+
+Total: **21 of 43 user stories** implemented across 16 Streamlit pages and 43 passing tests.
 
 ## Debug utilities
 

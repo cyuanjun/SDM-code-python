@@ -46,7 +46,12 @@ If a Boundary page legitimately needs to display a list of records (e.g. a profi
 - An entry is added to the **"Diagram updates needed before final marking"** section of [docs/todo.md](docs/todo.md), naming the new method and the future user story it will fit under.
 - The class diagram is updated to reflect the new method **before** final submission.
 
-Existing examples: `UserProfile.view_all_profiles()` (powers the profile dropdown on `CreateAccountPage`) and `FundraisingActivity.view_all_fundraising_activities()` (powers the clickable table on `ViewFundraisingActivityPage`).
+Existing examples (all logged in [docs/todo.md](docs/todo.md) for diagram catchup):
+- `UserProfile.view_all_profiles()` — profile dropdown on `CreateAccountPage`
+- `FundraisingActivity.view_all_fundraising_activities()` — clickable table on `ViewFundraisingActivityPage`
+- `UserAccount.view_all_user_accounts()` — admin's account list on `ViewUserAccountPage`
+- `FundraisingActivity.view_activities_by_owner()` — fundraiser's scoped list on `ViewFundraiserActivityPage` / `UpdateFundraiserActivityPage`
+- `FavouriteList.remove_favourite()` — helper anticipating US-23
 
 ### Exception B — Debug-only utilities
 
@@ -67,7 +72,7 @@ SDM-code/
 ├── controller/            # <<Controller>> classes — one file per use case
 ├── entity/                # <<Entity>> classes — own their persistence
 ├── persistence/           # db.py + schema.sql
-├── data/seed.py           # Faker-based test data generator (100+/table)
+├── data/seed.py           # Faker-based test data generator (RECORD_COUNT, default 10; bump to 100 for the marking demo)
 ├── tests/                 # pytest tests
 └── .github/workflows/     # CI
 ```

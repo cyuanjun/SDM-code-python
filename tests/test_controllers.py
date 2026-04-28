@@ -55,7 +55,7 @@ def test_create_and_view_fundraising_activity_controllers():
         category="community",
         start_date=date(2026, 5, 1),
         end_date=date(2026, 6, 1),
-        owner_email=None,
+        owner_account_id=None,
     )
     assert success is True
 

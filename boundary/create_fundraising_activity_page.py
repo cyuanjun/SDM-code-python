@@ -33,8 +33,8 @@ class CreateFundraisingActivityPage:
             self.display_fundraising_activity_validation_error()
             return
 
-        owner_email = (
-            st.session_state["user"].email if "user" in st.session_state else None
+        owner_account_id = (
+            st.session_state["user"].account_id if "user" in st.session_state else None
         )
         success = CreateFundraisingActivityController().create_fundraising_activity(
             title=title,
@@ -43,7 +43,7 @@ class CreateFundraisingActivityPage:
             category=category,
             start_date=start_date,
             end_date=end_date,
-            owner_email=owner_email,
+            owner_account_id=owner_account_id,
         )
         if success:
             self.display_fundraising_activity_confirmation()

@@ -1,41 +1,47 @@
-"""ViewFundraisingActivityPage <<Boundary>> — Sprint 1 diagram US-21.
+"""ViewFundraiserActivityPage <<Boundary>> — Sprint 2 diagram US-14.
 
-Donee browses a list of fundraising activities and clicks one to view details.
-Clicking maps to the diagram's selectFundraisingActivity(activityID) message.
+Fundraiser views *their own* fundraising activities. The list is scoped to
+activities owned by the logged-in fundraiser. Click maps to the diagram's
+clickFundraisingActivity() message.
 """
 from __future__ import annotations
 
 import streamlit as st
 
-from controller.view_fundraising_activity_controller import (
-    ViewFundraisingActivityController,
+from controller.view_fundraiser_activity_controller import (
+    ViewFundraiserActivityController,
 )
 
-SELECTED_KEY = "selected_activity_id"
+SELECTED_KEY = "selected_fundraiser_activity_id"
 
 
-class ViewFundraisingActivityPage:
+class ViewFundraiserActivityPage:
     def render(self) -> None:
-        st.header("View fundraising activity")
-        controller = ViewFundraisingActivityController()
+        st.header("View my fundraising activity")
+
+        if "user" not in st.session_state:
+            st.warning("Log in as a fundraiser first.")
+            return
+        owner_account_id = st.session_state["user"].account_id
+        controller = ViewFundraiserActivityController()
 
         if SELECTED_KEY in st.session_state:
-            activity = controller.view_fundraising_activity_details(
+            activity = controller.view_fundraiser_activity(
                 st.session_state[SELECTED_KEY]
             )
-            if activity is None:
-                st.error("Selected activity no longer exists.")
+            if activity is None or activity.owner_account_id != owner_account_id:
+                st.error("Activity not found or not owned by you.")
                 st.session_state.pop(SELECTED_KEY, None)
             else:
-                self.display_fundraising_activity_details(activity)
+                self.display_fundraising_activity(activity)
             if st.button("← Back to list"):
                 st.session_state.pop(SELECTED_KEY, None)
                 st.rerun()
             return
 
-        activities = controller.view_all_fundraising_activities()
+        activities = controller.view_activities_by_owner(owner_account_id)
         if not activities:
-            st.info("No fundraising activities yet.")
+            st.info("You haven't created any fundraising activities yet.")
             return
 
         st.caption(f"{len(activities)} activities — click a row to view details")
@@ -57,18 +63,19 @@ class ViewFundraisingActivityPage:
             hide_index=True,
             on_select="rerun",
             selection_mode="single-row",
+            key="df_view_fundraiser_activities",
         )
         selected = event.selection.rows
         if selected:
-            self.select_fundraising_activity(str(activities[selected[0]].activity_id))
+            self.click_fundraising_activity(str(activities[selected[0]].activity_id))
             st.rerun()
 
     @staticmethod
-    def select_fundraising_activity(activity_id: str) -> None:
+    def click_fundraising_activity(activity_id: str) -> None:
         st.session_state[SELECTED_KEY] = activity_id
 
     @staticmethod
-    def display_fundraising_activity_details(activity) -> None:
+    def display_fundraising_activity(activity) -> None:
         st.subheader(activity.title)
         st.write(f"**Category:** {activity.category}")
         st.write(f"**Status:** {activity.status}")

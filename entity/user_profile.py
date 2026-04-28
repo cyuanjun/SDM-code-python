@@ -1,4 +1,4 @@
-"""UserProfile <<Entity>> — see Sprint 1 class diagram (US-1)."""
+"""UserProfile <<Entity>> — Sprint 1 (US-1) + Sprint 2 (US-2 view, US-3 update)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,12 +31,42 @@ class UserProfile:
                 "SELECT profile_id, role, description, suspended "
                 "FROM user_profile WHERE suspended = 0 ORDER BY profile_id"
             ).fetchall()
-        return [
-            cls(
-                role=row["role"],
-                description=row["description"],
-                profile_id=row["profile_id"],
-                suspended=bool(row["suspended"]),
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def view_user_profile(cls, profile_id: str) -> Optional["UserProfile"]:
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT profile_id, role, description, suspended "
+                "FROM user_profile WHERE profile_id = ?",
+                (profile_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return cls._from_row(row)
+
+    @classmethod
+    def update_user_profile(
+        cls, profile_id: str, updated_profile: "UserProfile"
+    ) -> bool:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_profile SET role = ?, description = ?, suspended = ? "
+                "WHERE profile_id = ?",
+                (
+                    updated_profile.role,
+                    updated_profile.description,
+                    int(updated_profile.suspended),
+                    profile_id,
+                ),
             )
-            for row in rows
-        ]
+        return cursor.rowcount > 0
+
+    @classmethod
+    def _from_row(cls, row) -> "UserProfile":
+        return cls(
+            role=row["role"],
+            description=row["description"],
+            profile_id=row["profile_id"],
+            suspended=bool(row["suspended"]),
+        )

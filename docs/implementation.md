@@ -1,6 +1,6 @@
-# Implementation Reference — Sprint 1
+# Implementation Reference — Sprint 1 + Sprint 2
 
-A complete index of what is implemented in the codebase as of Sprint 1. Cross-references every file, class, method, and the user story it serves. For deferred work and known shortcuts, see [todo.md](todo.md). For architecture rules, see [../CLAUDE.md](../CLAUDE.md).
+A complete index of what is implemented in the codebase as of Sprint 2. Cross-references every file, class, method, and the user story it serves. For deferred work and known shortcuts, see [todo.md](todo.md). For architecture rules, see [../CLAUDE.md](../CLAUDE.md).
 
 ---
 
@@ -9,39 +9,41 @@ A complete index of what is implemented in the codebase as of Sprint 1. Cross-re
 | Concern | Choice |
 |---|---|
 | Language | Python 3 |
-| UI | Streamlit |
+| UI | Streamlit (`layout="wide"`) |
 | Persistence | SQLite via stdlib `sqlite3` (single file `app.db`) |
-| Tests | pytest |
-| Seed data | Faker |
+| Tests | pytest (43 tests as of Sprint 2) |
+| Seed data | Faker — `RECORD_COUNT` rows per table (default 10 for fast dev; bump to 100 for the marking demo) |
 | CI | GitHub Actions |
 
 ## 2. Directory layout
 
 ```
 SDM-code/
-├── app.py                     # Streamlit entry + sidebar router (wide layout)
-├── boundary/                  # 7 Boundary classes (incl. InfoPage debug utility)
-├── controller/                # 6 Controller classes
-├── entity/                    # 3 Entity classes
+├── app.py                     # Streamlit entry + sidebar router (16 pages)
+├── boundary/                  # 16 Boundary classes (incl. InfoPage debug utility)
+├── controller/                # 14 Controller classes
+├── entity/                    # 4 Entity classes
 ├── persistence/               # db.py + schema.sql
-├── data/seed.py               # 100/100/100 record generator
-├── tests/                     # 17 pytest tests
+├── data/seed.py               # record generator (RECORD_COUNT, default 10)
+├── tests/                     # 43 pytest tests
 ├── docs/                      # implementation.md + todo.md
 ├── .github/workflows/ci.yml   # pytest on push/PR
 ├── requirements.txt
 ├── README.md
-├── CLAUDE.md                  # durable conventions for Claude/team
+├── CLAUDE.md
 └── .gitignore
 ```
 
-## 3. Sprint 1 coverage — 12 user stories
+## 3. User-story coverage
+
+### Sprint 1 — 12 stories
 
 | US | Story | Boundary | Controller | Entity method |
 |---|---|---|---|---|
 | US-1  | Admin: create user profile | `CreateProfilePage` | `CreateProfileController` | `UserProfile.create_profile` |
 | US-6  | Admin: create user account | `CreateAccountPage` | `CreateAccountController` + `ViewProfilesController` | `UserAccount.create_account`, `UserProfile.view_all_profiles` |
 | US-11 | Admin: log in | `LoginPage` | `LoginController` | `UserAccount.login` |
-| US-12 | Admin: log out | `LogoutPage` | — (self-clear in Boundary per diagram) | — |
+| US-12 | Admin: log out | `LogoutPage` | — | — |
 | US-13 | Fundraiser: create fundraising activity | `CreateFundraisingActivityPage` | `CreateFundraisingActivityController` | `FundraisingActivity.save_fundraising_activity` |
 | US-18 | Fundraiser: log in | `LoginPage` (shared) | `LoginController` | `UserAccount.login` |
 | US-19 | Fundraiser: log out | `LogoutPage` (shared) | — | — |
@@ -51,155 +53,182 @@ SDM-code/
 | US-39 | Platform Manager: log in | `LoginPage` (shared) | `LoginController` | `UserAccount.login` |
 | US-40 | Platform Manager: log out | `LogoutPage` (shared) | — | — |
 
-12 stories, 6 unique flows, because the 4 login stories share one diagram and the 4 logout stories share one diagram.
+### Sprint 2 — 9 stories
+
+| US | Story | Boundary | Controller | Entity method |
+|---|---|---|---|---|
+| US-2  | Admin: view user profile | `ViewUserProfilePage` | `ViewUserProfileController` | `UserProfile.view_user_profile` |
+| US-3  | Admin: update user profile | `UpdateUserProfilePage` | `UpdateUserProfileController` | `UserProfile.update_user_profile` |
+| US-7  | Admin: view user account | `ViewUserAccountPage` | `ViewUserAccountController` | `UserAccount.view_user_account` |
+| US-8  | Admin: update user account | `UpdateUserAccountPage` | `UpdateUserAccountController` | `UserAccount.update_user_account` |
+| US-14 | Fundraiser: view their FSA | `ViewFundraiserActivityPage` | `ViewFundraiserActivityController` | `FundraisingActivity.view_fundraiser_activity` |
+| US-15 | Fundraiser: update their FSA | `UpdateFundraiserActivityPage` | `UpdateFundraiserActivityController` | `FundraisingActivity.update_fundraiser_activity` |
+| US-20 | Donee: search FSAs | `SearchFundraiserActivityPage` | `SearchFundraiserActivityController` | `FundraisingActivity.submit_search_criteria` |
+| US-22 | Donee: save FSA to favourites | `SaveFundraiserActivityPage` | `SaveFundraiserActivityController` | `FavouriteList.save_fundraising_activity` |
+| US-24 | Donee: view favourites list | `ViewFavouriteListPage` | `ViewFavouriteListController` | `FavouriteList.view_favourite_list` |
 
 ---
 
-## 4. Boundary layer ([boundary/](../boundary/))
+## 4. Entity layer ([entity/](../entity/))
 
-All input/format validation lives here. None of these classes import from `entity/` directly — they go through Controllers.
+Four entities. Each owns its SQL via `persistence.db.get_connection()`.
 
-### `LoginPage` — [boundary/login_page.py](../boundary/login_page.py)
-Covers US-11, US-18, US-26, US-39. Streamlit form with email + password. Validates non-empty + `@` in email. Calls `LoginController().login(...)`. Stores returned `UserAccount` in `st.session_state["user"]` on success.
-- `render() -> None`
-- `display_success() -> None`
-- `display_error() -> None`
+### `UserProfile` — [entity/user_profile.py](../entity/user_profile.py)
+Fields: `role: str`, `description: str`, `profile_id: int | None`, `suspended: bool`.
+- `create_profile(role, description) -> UserProfile | None` (classmethod) — US-1
+- `view_all_profiles() -> list[UserProfile]` (classmethod, **not yet in class diagram**)
+- `view_user_profile(profile_id) -> UserProfile | None` (classmethod) — US-2
+- `update_user_profile(profile_id, updated_profile) -> bool` (classmethod) — US-3
 
-### `LogoutPage` — [boundary/logout_page.py](../boundary/logout_page.py)
-Covers US-12, US-19, US-27, US-40. Self-contained per diagram: clears session state and reruns. No Controller/Entity.
-- `render() -> None`
-- `logout() -> None`
+### `UserAccount` — [entity/user_account.py](../entity/user_account.py)
+Fields: `email, password, name, dob, phone_num, profile_id, account_id, suspended`.
+- `login(email, password) -> UserAccount | None` (classmethod) — US-11/18/26/39
+- `create_account(email, password, name, dob, phone_num, profile_id) -> UserAccount | None` (classmethod) — US-6. Returns None on duplicate email
+- `view_user_account(account_id) -> UserAccount | None` (classmethod) — US-7
+- `view_all_user_accounts() -> list[UserAccount]` (classmethod, **not yet in class diagram**)
+- `update_user_account(account_id, updated_account) -> bool` (classmethod) — US-8
 
-### `CreateProfilePage` — [boundary/create_profile_page.py](../boundary/create_profile_page.py)
-Covers US-1. Free-text inputs for `role` (`String` per diagram) and `description`. Validates non-empty.
-- `render() -> None`
-- `display_success() / display_error() -> None`
+### `FundraisingActivity` — [entity/fundraising_activity.py](../entity/fundraising_activity.py)
+Fields: `title, description, target_amount, category, start_date, end_date, status, activity_id, owner_account_id`.
+- `save_fundraising_activity() -> bool` (instance method) — US-13
+- `view_fundraising_activity_details(activity_id) -> FundraisingActivity | None` (classmethod) — US-21
+- `view_all_fundraising_activities() -> list[FundraisingActivity]` (classmethod, **not yet in class diagram**)
+- `view_fundraiser_activity(activity_id) -> FundraisingActivity | None` (classmethod) — US-14
+- `view_activities_by_owner(owner_account_id) -> list[FundraisingActivity]` (classmethod, **not yet in class diagram**)
+- `update_fundraiser_activity(activity_id, updated_fundraiser) -> bool` (classmethod) — US-15
+- `submit_search_criteria(search_criteria) -> list[FundraisingActivity]` (classmethod, LIKE on title/description/category) — US-20
 
-### `CreateAccountPage` — [boundary/create_account_page.py](../boundary/create_account_page.py)
-Covers US-6. Inputs: email, password, name, dob, phone, profile (dropdown sourced from `ViewProfilesController().view_all_profiles()`). Validates email format, password length ≥ 6, phone digits-only. Refuses to render if no profiles exist yet.
-- `render() -> None`
-- `display_success() / display_error() -> None`
-
-### `CreateFundraisingActivityPage` — [boundary/create_fundraising_activity_page.py](../boundary/create_fundraising_activity_page.py)
-Covers US-13. Inputs: title, description, target amount, category (temporary hardcoded list — see [todo.md](todo.md)), start/end date. Boundary owns validation per diagram.
-- `render() -> None`
-- `validate_fundraising_activity(...) -> bool`
-- `display_fundraising_activity_confirmation() -> None`
-- `display_fundraising_activity_validation_error() -> None`
-
-### `ViewFundraisingActivityPage` — [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py)
-Covers US-21. Two-step flow: (1) shows a sortable table of all activities (sourced from `ViewFundraisingActivityController().view_all_fundraising_activities()`) with click-to-select; (2) on row click, calls `select_fundraising_activity(activity_id)` (mirroring the diagram's `selectFundraisingActivity` message) and displays full details with a back button.
-- `render() -> None`
-- `select_fundraising_activity(activity_id: str) -> None`
-- `display_fundraising_activity_details(activity) -> None`
-
-### `InfoPage` — [boundary/info_page.py](../boundary/info_page.py)
-**Debug utility, not in any diagram.** Reads and writes SQLite directly. Shows row counts, tabbed dataframes per table, and the live schema. Each table tab supports row-click → "Delete row" (with friendly FK-violation handling). Hide before final demo.
+### `FavouriteList` — [entity/favourite_list.py](../entity/favourite_list.py) (NEW Sprint 2)
+Fields: `account_id: int`, `activity_id: int`. Composite PK (account_id, activity_id) with ON DELETE CASCADE.
+- `save_fundraising_activity(account_id, activity_id) -> bool` (classmethod) — US-22. Returns False on duplicate or FK violation
+- `view_favourite_list(account_id) -> list[FavouriteList]` (classmethod) — US-24
+- `remove_favourite(account_id, activity_id) -> bool` (classmethod, **not yet in class diagram** — foreshadows US-23)
 
 ---
 
 ## 5. Controller layer ([controller/](../controller/))
 
-Pure delegators. Every method is a one-liner that calls one Entity method.
+All controllers are pure delegators: each method is a one-liner that calls one Entity method.
 
 | Controller | Method | Delegates to |
 |---|---|---|
 | `LoginController` | `login(email, password)` | `UserAccount.login` |
 | `CreateProfileController` | `create_profile(role, description)` | `UserProfile.create_profile` |
-| `CreateAccountController` | `create_account(email, password, name, dob, phone_num, profile_id)` | `UserAccount.create_account` |
-| `CreateFundraisingActivityController` | `create_fundraising_activity(title, description, target_amount, category, start_date, end_date, owner_email)` | `FundraisingActivity.save_fundraising_activity` (after constructing the entity) |
+| `CreateAccountController` | `create_account(...)` | `UserAccount.create_account` |
+| `CreateFundraisingActivityController` | `create_fundraising_activity(...)` | `FundraisingActivity.save_fundraising_activity` |
 | `ViewFundraisingActivityController` | `view_fundraising_activity_details(activity_id)` | `FundraisingActivity.view_fundraising_activity_details` |
 | `ViewFundraisingActivityController` | `view_all_fundraising_activities()` | `FundraisingActivity.view_all_fundraising_activities` |
 | `ViewProfilesController` | `view_all_profiles()` | `UserProfile.view_all_profiles` |
+| `ViewUserProfileController` | `view_user_profile(profile_id)` | `UserProfile.view_user_profile` |
+| `UpdateUserProfileController` | `update_user_profile(profile_id, updated_profile)` | `UserProfile.update_user_profile` |
+| `ViewUserAccountController` | `view_user_account(account_id)` | `UserAccount.view_user_account` |
+| `ViewUserAccountController` | `view_all_user_accounts()` | `UserAccount.view_all_user_accounts` |
+| `UpdateUserAccountController` | `update_user_account(account_id, updated_account)` | `UserAccount.update_user_account` |
+| `ViewFundraiserActivityController` | `view_fundraiser_activity(activity_id)` | `FundraisingActivity.view_fundraiser_activity` |
+| `ViewFundraiserActivityController` | `view_activities_by_owner(owner_account_id)` | `FundraisingActivity.view_activities_by_owner` |
+| `UpdateFundraiserActivityController` | `update_fundraiser_activity(activity_id, updated)` | `FundraisingActivity.update_fundraiser_activity` |
+| `SearchFundraiserActivityController` | `submit_search_criteria(search_criteria)` | `FundraisingActivity.submit_search_criteria` |
+| `SaveFundraiserActivityController` | `save_fundraising_activity(account_id, activity_id)` | `FavouriteList.save_fundraising_activity` |
+| `ViewFavouriteListController` | `view_favourite_list(account_id)` | `FavouriteList.view_favourite_list` |
 
-Two of these are **pragmatic additions not on any Sprint 1 class diagram** and need to land on the diagram before final marking (logged in [todo.md](todo.md)):
-- `ViewProfilesController.view_all_profiles()` powers the profile dropdown on `CreateAccountPage`. Will fit alongside US-2 / US-5 in Sprint 2.
-- `ViewFundraisingActivityController.view_all_fundraising_activities()` powers the clickable table on `ViewFundraisingActivityPage`. Will fit alongside US-20 in Sprint 3.
+Pragmatic methods not yet on any class diagram (logged in [todo.md](todo.md) for diagram catchup):
+- `view_all_profiles`, `view_all_fundraising_activities`, `view_all_user_accounts`, `view_activities_by_owner`, `remove_favourite`
 
 ---
 
-## 6. Entity layer ([entity/](../entity/))
+## 6. Boundary layer ([boundary/](../boundary/))
 
-Each Entity owns its own SQL via `persistence.db.get_connection()`. All data access is through the Entity's public methods.
+All input/format validation lives here. None of these classes import from `entity/` directly — they go through Controllers.
 
-### `UserProfile` — [entity/user_profile.py](../entity/user_profile.py)
-Fields: `role: str`, `description: str`, `profile_id: int | None`, `suspended: bool`.
-- `create_profile(role, description) -> UserProfile | None`  (classmethod)
-- `view_all_profiles() -> list[UserProfile]` (classmethod, **not yet in class diagram**)
+### Sprint 1 (unchanged behaviour, new account_id wiring)
 
-### `UserAccount` — [entity/user_account.py](../entity/user_account.py)
-Fields: `email, password, name, dob, phone_num, profile_id, suspended`.
-- `login(email, password) -> UserAccount | None`  (classmethod, returns None on bad creds OR if account is suspended)
-- `create_account(email, password, name, dob, phone_num, profile_id) -> UserAccount | None`  (classmethod, returns None if email already exists — this is the business-rule validation that bubbles up to the Boundary's `display_error()`)
+- `LoginPage` — US-11/18/26/39
+- `LogoutPage` — US-12/19/27/40 (self-contained, no Controller per diagram)
+- `CreateProfilePage` — US-1
+- `CreateAccountPage` — US-6 (profile picked via dropdown sourced from `ViewProfilesController`)
+- `CreateFundraisingActivityPage` — US-13 (now stamps `owner_account_id` from `st.session_state["user"].account_id`)
+- `ViewFundraisingActivityPage` — US-21 (clickable table → details + back)
+- `InfoPage` — debug utility (row-click delete with FK error handling); hide before final demo
 
-### `FundraisingActivity` — [entity/fundraising_activity.py](../entity/fundraising_activity.py)
-Fields: `title, description, target_amount, category, start_date, end_date, status, activity_id, owner_email`.
-- `save_fundraising_activity() -> bool`  (instance method; sets `self.activity_id` on success)
-- `view_fundraising_activity_details(activity_id) -> FundraisingActivity | None`  (classmethod)
-- `view_all_fundraising_activities() -> list[FundraisingActivity]` (classmethod, **not yet in class diagram**)
+### Sprint 2 (new)
+
+- `ViewUserProfilePage` — US-2. Click-to-select table of profiles → details panel
+- `UpdateUserProfilePage` — US-3. Select profile → pre-filled form → save / cancel
+- `ViewUserAccountPage` — US-7. Click-to-select table of accounts → details panel
+- `UpdateUserAccountPage` — US-8. Select account → pre-filled form (profile dropdown reused, dob converted to `date.fromisoformat`)
+- `ViewFundraiserActivityPage` — US-14. Scoped to `st.session_state["user"].account_id`. Ownership check on detail view
+- `UpdateFundraiserActivityPage` — US-15. Same ownership scoping. Reuses `DEFAULT_CATEGORIES` from `CreateFundraisingActivityPage`
+- `SearchFundraiserActivityPage` — US-20. Free-text search → results table
+- `SaveFundraiserActivityPage` — US-22. Donee picks an FSA from the public list → favourite saved (idempotent: duplicates display "already in your favourites")
+- `ViewFavouriteListPage` — US-24. Joins favourites with FSA details into a single table
+
+### Method names that mirror the diagrams' message arrows
+- `LoginPage.display_success / display_error`
+- `CreateProfilePage.display_success / display_error`
+- `CreateAccountPage.display_success / display_error`
+- `CreateFundraisingActivityPage.validate_fundraising_activity / display_fundraising_activity_confirmation / display_fundraising_activity_validation_error`
+- `ViewFundraisingActivityPage.select_fundraising_activity / display_fundraising_activity_details`
+- `ViewUserProfilePage.click_user_profile / display_user_profile`
+- `UpdateUserProfilePage.click_edit_option / display_update_page / display_success / display_error`
+- `ViewUserAccountPage.click_user_account / display_user_account`
+- `UpdateUserAccountPage.click_edit_option / display_update_page / display_success / display_error`
+- `ViewFundraiserActivityPage.click_fundraising_activity / display_fundraising_activity`
+- `UpdateFundraiserActivityPage.click_edit_option / display_update_page / display_success / display_error`
+- `SearchFundraiserActivityPage.display_search_page / display_matching_fundraising_activities`
+- `SaveFundraiserActivityPage.click_save_option / display_success`
+- `ViewFavouriteListPage.display_favourite_list`
 
 ---
 
 ## 7. Persistence ([persistence/](../persistence/))
 
 ### [persistence/schema.sql](../persistence/schema.sql)
-Three tables, one per Entity. Field names mirror the UML attribute lists in snake_case.
 
-| Table | Notable columns |
-|---|---|
-| `user_profile` | `profile_id` (PK, AUTOINCREMENT), `role`, `description`, `suspended` |
-| `user_account` | `email` (PK), `password`, `name`, `dob`, `phone_num`, `profile_id` (FK → user_profile), `suspended` |
-| `fundraising_activity` | `activity_id` (PK, AUTOINCREMENT), `title`, `description`, `target_amount`, `category`, `start_date`, `end_date`, `status`, `owner_email` (FK → user_account) |
+| Table | Columns | Notes |
+|---|---|---|
+| `user_profile` | `profile_id` (PK, AUTOINC), `role`, `description`, `suspended` | |
+| `user_account` | `account_id` (PK, AUTOINC), `email` (UNIQUE NOT NULL), `password`, `name`, `dob`, `phone_num`, `profile_id` (FK), `suspended` | **Sprint 2 migration:** `account_id` added; `email` demoted from PK to UNIQUE |
+| `fundraising_activity` | `activity_id` (PK, AUTOINC), `title`, `description`, `target_amount`, `category`, `start_date`, `end_date`, `status`, `owner_account_id` (FK) | **Sprint 2 migration:** `owner_email` → `owner_account_id` |
+| `favourite_list` | `account_id` (FK), `activity_id` (FK), composite PK | **NEW Sprint 2.** `ON DELETE CASCADE` on both FKs |
 
 ### [persistence/db.py](../persistence/db.py)
-- `get_connection() -> sqlite3.Connection` — row factory set to `Row`, foreign keys ON
+- `get_connection() -> sqlite3.Connection` — row factory `Row`, foreign keys ON
 - `init_db() -> None` — runs `schema.sql`
-- Run as `python -m persistence.db` to initialise an empty DB at `app.db`
 
 ---
 
 ## 8. Application entry ([app.py](../app.py))
 
-Streamlit entry. Uses `layout="wide"` so tables and the debug inspector can use full window width. On startup calls `init_db()`. Sidebar shows sign-in status and a radio for the 7 pages. Pages registered:
-
-```python
-PAGES = {
-    "Log in":                       LoginPage,
-    "Log out":                      LogoutPage,
-    "Create user profile":          CreateProfilePage,
-    "Create user account":          CreateAccountPage,
-    "Create fundraising activity":  CreateFundraisingActivityPage,
-    "View fundraising activity":    ViewFundraisingActivityPage,
-    ".info (debug)":                InfoPage,
-}
-```
-
-No role-based menu gating yet — see [todo.md](todo.md) "Open design questions".
+Streamlit entry. `layout="wide"`. Sidebar shows sign-in status and a radio for the 16 pages, prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`, plus `.info (debug)`). No role-based gating yet — see [todo.md](todo.md).
 
 ---
 
 ## 9. Tests ([tests/](../tests/))
 
-17 tests, all green.
+43 tests, all green.
 
 | File | What it covers |
 |---|---|
-| [tests/conftest.py](../tests/conftest.py) | `fresh_db` autouse fixture: monkeypatches `DB_PATH` to a tmp file and re-initialises schema before every test |
-| [tests/test_user_profile.py](../tests/test_user_profile.py) | `create_profile` persistence; `view_all_profiles` returns all profiles + empty list when no records |
-| [tests/test_user_account.py](../tests/test_user_account.py) | `create_account` happy path; duplicate-email rejection; `login` correct/incorrect creds |
-| [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) | `save_fundraising_activity` persists + sets ID; `view_fundraising_activity_details` round-trip + missing-ID returns None; `view_all_fundraising_activities` returns every record + empty list when none |
-| [tests/test_controllers.py](../tests/test_controllers.py) | Each Controller's delegation contract; pins controllers as pure delegators (incl. `view_all_profiles` and `view_all_fundraising_activities`) |
+| [tests/conftest.py](../tests/conftest.py) | `fresh_db` autouse fixture — fresh schema before every test |
+| [tests/test_user_profile.py](../tests/test_user_profile.py) | create / view / view-all / update / update-missing-id |
+| [tests/test_user_account.py](../tests/test_user_account.py) | create / duplicate / login / view / view-all / update / update-missing-id |
+| [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) | save / view-details / view-all / view-fundraiser-activity / view-by-owner / update / search |
+| [tests/test_favourite_list.py](../tests/test_favourite_list.py) | save / duplicate / view-empty / remove |
+| [tests/test_controllers.py](../tests/test_controllers.py) | Sprint 1 controller delegation contracts |
+| [tests/test_sprint2_controllers.py](../tests/test_sprint2_controllers.py) | All 9 Sprint 2 controllers — pure-delegation pin |
 
-Run with `pytest` (or `.venv/bin/pytest`).
+Run with `pytest`.
 
 ---
 
 ## 10. Seed data ([data/seed.py](../data/seed.py))
 
-Idempotent (drops & recreates `app.db`). Populates:
-- 100 user profiles (random role + Faker sentence description)
-- 100 user accounts (Faker name/email/dob/phone, password `password123`, random profile assignment)
-- 100 fundraising activities (Faker text, random category/status/dates/amounts)
+Idempotent (drops & recreates `app.db`). Row counts are governed by `RECORD_COUNT` at the top of the file (default **10**, intended to be bumped to **100** before the marking demo per the project spec). Populates:
+
+- `RECORD_COUNT` user profiles (random role + Faker sentence)
+- `RECORD_COUNT` user accounts (Faker name/email/dob/phone, password `password123`, random profile FK)
+- `RECORD_COUNT` fundraising activities (random category/status/dates/amount, random `owner_account_id` FK)
+- `RECORD_COUNT * 2` favourite-list save attempts (deduped by composite PK)
 
 Run with `python -m data.seed`.
 
@@ -207,36 +236,25 @@ Run with `python -m data.seed`.
 
 ## 11. CI ([.github/workflows/ci.yml](../.github/workflows/ci.yml))
 
-Triggers: push or PR to `main` / `master`. Steps: checkout → setup Python 3.11 with pip cache → `pip install -r requirements.txt` → `pytest -v`.
-
-This satisfies the project's CI/CD evidence requirement once the repo is pushed to GitHub.
+Triggers: push or PR to `main` / `master`. Steps: checkout → Python 3.11 → install deps → `pytest -v`. Satisfies the project's CI/CD evidence requirement once the repo is pushed.
 
 ---
 
 ## 12. Conventions enforced
 
-See [../CLAUDE.md](../CLAUDE.md) for the full list. Quick recap:
-
-1. All input/format validation in Boundary
-2. Business-rule validation (uniqueness, existence) bubbles up from Entity → displayed by Boundary
-3. No `get_*` / `retrieve_*` method names; entity public methods named after user actions
-4. Controllers are pure delegators
-5. Class suffixes: `Page`, `Controller`, none for Entities
-6. Method signatures match diagrams character-for-character
-7. Boundary never imports from `entity/` directly
+See [../CLAUDE.md](../CLAUDE.md) for the full list including the two documented exceptions (pragmatic Entity extensions for UX, and debug-only utilities).
 
 ---
 
 ## 13. What is **not** implemented (intentional)
 
-See [todo.md](todo.md) for the full list. Highlights:
+See [todo.md](todo.md) for the full list. Highlights still deferred after Sprint 2:
 
-- Password hashing — Sprint 2
-- Role-based menu / route guards — Sprint 2
-- US-2..US-5 (admin view/update/suspend/search profile)
-- US-7..US-10 (admin view/update/suspend/search account)
-- US-14..US-17 (fundraiser FSA management)
-- US-22..US-25 (donee favourites)
-- US-28..US-33 (analytics/history)
-- US-34..US-38 (platform manager category management) — categories currently hardcoded as a temporary placeholder
+- Password hashing (any sprint, hardening)
+- Role-based menu / route guards
+- US-4 / US-5, US-9 / US-10 (admin suspend & search)
+- US-16 / US-17 (fundraiser suspend & search FSA)
+- US-23 / US-25 (donee delete-favourite & search-favourites — `remove_favourite` already coded as helper)
+- US-28..US-33 (analytics / history)
+- US-34..US-38 (platform manager category management) — categories still hardcoded
 - US-41..US-43 (reports)

@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS user_profile (
 );
 
 CREATE TABLE IF NOT EXISTS user_account (
-    email      TEXT PRIMARY KEY,
+    account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email      TEXT NOT NULL UNIQUE,
     password   TEXT NOT NULL,
     name       TEXT NOT NULL,
     dob        TEXT,
@@ -27,5 +28,11 @@ CREATE TABLE IF NOT EXISTS fundraising_activity (
     start_date    TEXT NOT NULL,
     end_date      TEXT NOT NULL,
     status        TEXT NOT NULL,
-    owner_email   TEXT REFERENCES user_account(email)
+    owner_account_id INTEGER REFERENCES user_account(account_id)
+);
+
+CREATE TABLE IF NOT EXISTS favourite_list (
+    account_id  INTEGER NOT NULL REFERENCES user_account(account_id) ON DELETE CASCADE,
+    activity_id INTEGER NOT NULL REFERENCES fundraising_activity(activity_id) ON DELETE CASCADE,
+    PRIMARY KEY (account_id, activity_id)
 );

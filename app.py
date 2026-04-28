@@ -1,7 +1,8 @@
 """Streamlit entry point. Drives navigation through st.session_state.
 
-Routing is intentionally simple for Sprint 1: a sidebar lets the user pick a page.
-Sprint 2+ will add role-based menus once admin/fundraiser/donee/manager flows diverge.
+Sprint 2 expanded the page count significantly. Pages are grouped by actor
+in the sidebar with a leading bracket prefix so non-relevant pages are easy
+to skip. Role-based menu gating remains a deferred decision (see docs/todo.md).
 """
 from __future__ import annotations
 
@@ -13,16 +14,34 @@ from boundary.create_profile_page import CreateProfilePage
 from boundary.info_page import InfoPage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
+from boundary.save_fundraiser_activity_page import SaveFundraiserActivityPage
+from boundary.search_fundraiser_activity_page import SearchFundraiserActivityPage
+from boundary.update_fundraiser_activity_page import UpdateFundraiserActivityPage
+from boundary.update_user_account_page import UpdateUserAccountPage
+from boundary.update_user_profile_page import UpdateUserProfilePage
+from boundary.view_favourite_list_page import ViewFavouriteListPage
+from boundary.view_fundraiser_activity_page import ViewFundraiserActivityPage
 from boundary.view_fundraising_activity_page import ViewFundraisingActivityPage
+from boundary.view_user_account_page import ViewUserAccountPage
+from boundary.view_user_profile_page import ViewUserProfilePage
 from persistence.db import init_db
 
 PAGES = {
     "Log in": LoginPage,
     "Log out": LogoutPage,
-    "Create user profile": CreateProfilePage,
-    "Create user account": CreateAccountPage,
-    "Create fundraising activity": CreateFundraisingActivityPage,
-    "View fundraising activity": ViewFundraisingActivityPage,
+    "[Admin] Create user profile": CreateProfilePage,
+    "[Admin] View user profile": ViewUserProfilePage,
+    "[Admin] Update user profile": UpdateUserProfilePage,
+    "[Admin] Create user account": CreateAccountPage,
+    "[Admin] View user account": ViewUserAccountPage,
+    "[Admin] Update user account": UpdateUserAccountPage,
+    "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
+    "[Fundraiser] View my fundraising activity": ViewFundraiserActivityPage,
+    "[Fundraiser] Update my fundraising activity": UpdateFundraiserActivityPage,
+    "[Donee] View fundraising activity": ViewFundraisingActivityPage,
+    "[Donee] Search fundraising activities": SearchFundraiserActivityPage,
+    "[Donee] Save to favourites": SaveFundraiserActivityPage,
+    "[Donee] View my favourites": ViewFavouriteListPage,
     ".info (debug)": InfoPage,
 }
 
