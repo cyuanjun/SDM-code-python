@@ -21,7 +21,7 @@ A complete index of what is implemented in the codebase as of Sprint 2. Cross-re
 SDM-code/
 ├── app.py                     # Streamlit entry + sidebar router (16 pages)
 ├── boundary/                  # 16 Boundary classes (incl. InfoPage debug utility)
-├── controller/                # 14 Controller classes
+├── controller/                # 15 Controller classes
 ├── entity/                    # 4 Entity classes
 ├── persistence/               # db.py + schema.sql
 ├── data/seed.py               # record generator (RECORD_COUNT, default 10)
