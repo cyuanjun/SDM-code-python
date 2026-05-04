@@ -1,4 +1,5 @@
-"""UserAccount <<Entity>> — Sprint 1 (US-6, login) + Sprint 2 (US-7 view, US-8 update)."""
+"""UserAccount <<Entity>> — Sprint 1 (US-6, login) + Sprint 2 (US-7 view, US-8 update)
++ Sprint 3 (US-9 suspend, US-10 search)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -103,6 +104,30 @@ class UserAccount:
                 ),
             )
         return cursor.rowcount > 0
+
+    @classmethod
+    def suspend_user_account(cls, account_id: str) -> bool:
+        """US-9. Marks the account suspended; login() rejects suspended rows."""
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_account SET suspended = 1 WHERE account_id = ?",
+                (account_id,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def submit_search_criteria(cls, search_criteria: str) -> list["UserAccount"]:
+        """US-10. Case-insensitive substring match on email or name."""
+        like = f"%{search_criteria}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account "
+                "WHERE email LIKE ? OR name LIKE ? "
+                "ORDER BY account_id",
+                (like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
 
     @classmethod
     def _from_row(cls, row) -> "UserAccount":

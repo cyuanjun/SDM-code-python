@@ -109,3 +109,40 @@ def test_update_user_account_returns_false_for_missing_id():
         phone_num="1", profile_id=profile_id, account_id=99999,
     )
     assert UserAccount.update_user_account("99999", dummy) is False
+
+
+# ---- Sprint 3 ----
+
+def test_suspend_user_account_marks_suspended_and_blocks_login():
+    profile_id = _make_profile()
+    account = UserAccount.create_account(
+        "sus@x.com", "pw", "S", "1990-01-01", "1", profile_id
+    )
+    assert UserAccount.suspend_user_account(str(account.account_id)) is True
+    assert UserAccount.login("sus@x.com", "pw") is None
+
+
+def test_suspend_user_account_returns_false_for_missing_id():
+    assert UserAccount.suspend_user_account("99999") is False
+
+
+def test_submit_search_criteria_user_account_matches_email_or_name():
+    profile_id = _make_profile()
+    UserAccount.create_account(
+        "alice@x.com", "pw", "Alice Doe", "1990-01-01", "1", profile_id
+    )
+    UserAccount.create_account(
+        "bob@y.com", "pw", "Bob Roe", "1990-01-01", "2", profile_id
+    )
+    UserAccount.create_account(
+        "carol@x.com", "pw", "Carol", "1990-01-01", "3", profile_id
+    )
+
+    assert {a.email for a in UserAccount.submit_search_criteria("alice")} == {
+        "alice@x.com"
+    }
+    assert {a.email for a in UserAccount.submit_search_criteria("@x.com")} == {
+        "alice@x.com",
+        "carol@x.com",
+    }
+    assert UserAccount.submit_search_criteria("zzzzz") == []

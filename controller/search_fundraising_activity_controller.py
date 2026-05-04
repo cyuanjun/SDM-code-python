@@ -1,8 +1,7 @@
-"""SearchFundraiserActivityController <<Controller>> — pure delegator, US-20.
+"""SearchFundraisingActivityController <<Controller>> — pure delegator, US-17.
 
-Sprint 3: signature widened to match the Sprint-3 entity update (US-17/US-30
-share this method). The donee boundary still passes a single argument; the
-extra optional parameters are forwarded with defaults.
+Distinct from SearchFundraiserActivityController (donee, US-20) — same entity
+method, different actor scope. Boundary supplies owner_account_id from session.
 """
 from __future__ import annotations
 
@@ -11,7 +10,7 @@ from typing import Optional
 from entity.fundraising_activity import FundraisingActivity
 
 
-class SearchFundraiserActivityController:
+class SearchFundraisingActivityController:
     def submit_search_criteria(
         self,
         search_criteria: str,

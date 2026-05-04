@@ -1,8 +1,14 @@
-"""FundraisingActivity <<Entity>> — Sprint 1 (US-13, US-21) + Sprint 2 (US-14, US-15, US-20).
+"""FundraisingActivity <<Entity>> — Sprint 1 (US-13, US-21) + Sprint 2 (US-14, US-15, US-20)
++ Sprint 3 (US-16 suspend, US-17 fundraiser search, US-30 search completed, US-31 view completed).
 
 Note on owner field: Sprint 2 migrated owner_email -> owner_account_id to track
 account_id as the primary key. Sprint 1 callers passing owner_email should
 update to owner_account_id.
+
+Sprint 3 update: submit_search_criteria gained owner_account_id and status
+filter parameters to disambiguate the four use cases (US-17, US-20, US-30,
+deferred US-32) sharing the diagram method name. Diagrams to be updated
+before final marking — see docs/todo.md.
 """
 from __future__ import annotations
 
@@ -119,21 +125,62 @@ class FundraisingActivity:
 
     @classmethod
     def submit_search_criteria(
-        cls, search_criteria: str
+        cls,
+        search_criteria: str,
+        owner_account_id: Optional[int] = None,
+        status: Optional[str] = None,
     ) -> list["FundraisingActivity"]:
-        """US-20 — donee searches activities. Matches title, description, or
-        category (case-insensitive substring)."""
+        """Shared search for US-17, US-20, US-30. Matches title, description,
+        or category (case-insensitive substring). Optional filters narrow to
+        a specific owner (US-17, US-30) and/or a specific status (US-30).
+        """
         like = f"%{search_criteria}%"
+        sql = (
+            "SELECT activity_id, title, description, target_amount, category, "
+            "start_date, end_date, status, owner_account_id "
+            "FROM fundraising_activity "
+            "WHERE (title LIKE ? OR description LIKE ? OR category LIKE ?)"
+        )
+        params: list = [like, like, like]
+        if owner_account_id is not None:
+            sql += " AND owner_account_id = ?"
+            params.append(owner_account_id)
+        if status is not None:
+            sql += " AND status = ?"
+            params.append(status)
+        sql += " ORDER BY activity_id"
         with get_connection() as conn:
-            rows = conn.execute(
+            rows = conn.execute(sql, params).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def suspend_fundraising_activity(cls, activity_id: str) -> bool:
+        """US-16 — fundraiser suspends donations on their activity."""
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity SET status = 'suspended' "
+                "WHERE activity_id = ?",
+                (activity_id,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def view_completed_activity(
+        cls, activity_id: str
+    ) -> Optional["FundraisingActivity"]:
+        """US-31 — fundraiser views one of their completed activities. Returns
+        None when the row is missing or its status is not 'completed'."""
+        with get_connection() as conn:
+            row = conn.execute(
                 "SELECT activity_id, title, description, target_amount, category, "
                 "start_date, end_date, status, owner_account_id "
                 "FROM fundraising_activity "
-                "WHERE title LIKE ? OR description LIKE ? OR category LIKE ? "
-                "ORDER BY activity_id",
-                (like, like, like),
-            ).fetchall()
-        return [cls._from_row(row) for row in rows]
+                "WHERE activity_id = ? AND status = 'completed'",
+                (activity_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return cls._from_row(row)
 
     @classmethod
     def _from_row(cls, row) -> "FundraisingActivity":
