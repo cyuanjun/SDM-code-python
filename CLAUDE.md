@@ -1,6 +1,32 @@
-# CLAUDE.md — SDM Project Conventions
+# CLAUDE.md
 
-This file is the durable contract between the team and Claude Code for the CSIT314 SDM group project. Read it first every session.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+This is the durable contract between the team and Claude Code for the CSIT314 SDM group project. Read it first every session.
+
+## Common commands
+
+```bash
+# First-time setup
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Database
+python -m persistence.db          # create/refresh app.db with empty tables (idempotent)
+python -m data.seed               # drops app.db, re-inits, seeds RECORD_COUNT rows per table
+
+# Run the app
+streamlit run app.py              # serves on http://localhost:8501
+
+# Tests
+pytest                            # full suite
+pytest -v                         # verbose (matches CI)
+pytest tests/test_user_account.py                          # single file
+pytest tests/test_user_account.py::test_login_succeeds     # single test
+pytest -k favourite               # by name substring
+```
+
+There is no linter or formatter configured — do not introduce one without asking.
 
 ## Project context
 
@@ -76,6 +102,16 @@ SDM-code/
 ├── tests/                 # pytest tests
 └── .github/workflows/     # CI
 ```
+
+## Key implementation patterns
+
+These are the non-obvious wiring choices a future session would otherwise have to reverse-engineer:
+
+- **Routing.** `app.py` holds a single `PAGES` dict mapping a sidebar label to a Boundary class. `main()` calls `page_cls().render()` on the selection — every Boundary class must expose a no-arg `render(self)` method. Sidebar labels are prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`) so role-gating can be deferred.
+- **Session.** Cross-page state (the logged-in user) lives in `st.session_state["user"]` as a `UserAccount` instance. Login writes it; logout clears it; pages read it directly.
+- **DB access.** `persistence/db.py` exposes `get_connection()` (returns a `sqlite3.Connection` with `row_factory = sqlite3.Row` and `PRAGMA foreign_keys = ON`) and `init_db()` (executes `schema.sql`). Entities open their own connections per operation — there is no ORM and no shared session.
+- **Test isolation.** [tests/conftest.py](tests/conftest.py) defines an `autouse` fixture that monkey-patches `persistence.db.DB_PATH` to a `tmp_path` file and re-initialises the schema before every test. Never write tests that assume `app.db`; just call entity methods and the fixture handles the rest.
+- **Seed data.** `data/seed.py` is destructive — it deletes `app.db` then re-seeds. `RECORD_COUNT` defaults to 10; bump to 100 only for the marking demo.
 
 ## TDD expectations
 

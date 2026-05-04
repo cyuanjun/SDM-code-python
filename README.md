@@ -5,6 +5,9 @@ CSIT314 group project — an online fundraising system matching fundraisers with
 - [CLAUDE.md](CLAUDE.md) — architecture conventions and the diagram-as-contract rule
 - [docs/implementation.md](docs/implementation.md) — full reference of every file, class, and method
 - [docs/todo.md](docs/todo.md) — temporary placeholders, deferred work, and diagram updates owed before final marking
+- [docs/issues.md](docs/issues.md) — active design gaps and known security/scope items (RBAC, ownership-check, donation tracking)
+- [docs/differences.md](docs/differences.md) — per-user-story catalogue of every divergence between the BCE/sequence diagrams and the code
+- [diagrams/](diagrams/) — source-of-truth UML class and sequence diagrams, organised by sprint
 
 ## Quickstart
 
@@ -25,7 +28,7 @@ streamlit run app.py              # launches the UI on http://localhost:8501
 pytest
 ```
 
-43 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+68 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -38,7 +41,8 @@ pytest
 | `persistence/` | — | SQLite connection helper + schema |
 | `data/seed.py` | — | Test data generator (Faker) |
 | `tests/` | — | pytest tests (TDD) |
-| `docs/` | — | implementation reference + todo list |
+| `docs/` | — | implementation reference, todo list, active issues, diagram-vs-code differences |
+| `diagrams/` | — | source UML diagrams (class + sequence), organised by sprint |
 | `.github/workflows/ci.yml` | — | CI: runs pytest on push/PR |
 
 ## Coverage so far
@@ -47,7 +51,9 @@ pytest
 
 **Sprint 2** (9 stories): admin view/update profile (US-2/3) and account (US-7/8); fundraiser view/update their own FSAs (US-14/15); donee search FSAs (US-20), save to favourites (US-22), view favourites (US-24).
 
-Total: **21 of 43 user stories** implemented across 16 Streamlit pages and 43 passing tests.
+**Sprint 3** (10 stories): admin delete/search profile (US-4/5) and suspend/search account (US-9/10); fundraiser suspend/search own FSAs (US-16/17), search/view their completed FSAs (US-30/31); donee delete favourite (US-23) and search favourites (US-25). US-32 / US-33 (donee donation history) deferred to Sprint 4 — see [docs/issues.md](docs/issues.md).
+
+Total: **31 of 43 user stories** implemented across 26 Streamlit pages and 68 passing tests.
 
 ## Debug utilities
 
