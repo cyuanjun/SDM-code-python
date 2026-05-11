@@ -1,6 +1,6 @@
-# Implementation Reference — Sprint 1 + Sprint 2 + Sprint 3
+# Implementation Reference — Sprint 1 + Sprint 2 + Sprint 3 + Sprint 4
 
-A complete index of what is implemented in the codebase as of Sprint 3. Cross-references every file, class, method, and the user story it serves. For deferred work and known shortcuts, see [todo.md](todo.md). For active design gaps, see [issues.md](issues.md). For architecture rules, see [../CLAUDE.md](../CLAUDE.md).
+A complete index of what is implemented in the codebase as of Sprint 4. Cross-references every file, class, method, and the user story it serves. For deferred work and known shortcuts, see [todo.md](todo.md). For active design gaps, see [issues.md](issues.md). For architecture rules, see [../CLAUDE.md](../CLAUDE.md).
 
 ---
 
@@ -11,7 +11,7 @@ A complete index of what is implemented in the codebase as of Sprint 3. Cross-re
 | Language | Python 3 |
 | UI | Streamlit (`layout="wide"`) |
 | Persistence | SQLite via stdlib `sqlite3` (single file `app.db`) |
-| Tests | pytest (68 tests as of Sprint 3) |
+| Tests | pytest (110 tests as of Sprint 4) |
 | Seed data | Faker — `RECORD_COUNT` rows per table (default 10 for fast dev; bump to 100 for the marking demo) |
 | CI | GitHub Actions |
 
@@ -19,13 +19,13 @@ A complete index of what is implemented in the codebase as of Sprint 3. Cross-re
 
 ```
 SDM-code/
-├── app.py                     # Streamlit entry + sidebar router (26 pages)
-├── boundary/                  # 26 Boundary classes (incl. InfoPage debug utility)
-├── controller/                # 25 Controller classes
-├── entity/                    # 4 Entity classes
-├── persistence/               # db.py + schema.sql (unchanged in Sprint 3)
+├── app.py                     # Streamlit entry + sidebar router (34 pages)
+├── boundary/                  # 34 Boundary classes (incl. InfoPage debug utility)
+├── controller/                # 33 Controller classes
+├── entity/                    # 7 Entity classes
+├── persistence/               # db.py + schema.sql (Sprint 4 adds 2 tables + 2 cols)
 ├── data/seed.py               # record generator (RECORD_COUNT, default 10)
-├── tests/                     # 68 pytest tests
+├── tests/                     # 110 pytest tests
 ├── docs/                      # implementation.md + todo.md + issues.md + differences.md
 ├── diagrams/                  # source UML class + sequence diagrams (per sprint)
 ├── .github/workflows/ci.yml   # pytest on push/PR
@@ -85,11 +85,28 @@ SDM-code/
 
 US-32 and US-33 (donee donation history) were planned for Sprint 3 but deferred to Sprint 4 — donations are not yet modelled. See [issues.md](issues.md).
 
+### Sprint 4 — 10 stories
+
+| US | Story | Boundary | Controller | Entity method |
+|---|---|---|---|---|
+| US-28 | Fundraiser: view FRA view count | `ViewFundraisingActivityPage` (owner-only section) | `ViewFundraisingActivityViewCountController` | `FundraisingActivity.view_fundraising_activity_view_count` |
+| US-29 | Fundraiser: view FRA save count | `ViewFundraisingActivityPage` (owner-only section) | `ViewFundraisingActivitySaveCountController` | `FundraisingActivity.view_fundraising_activity_save_count` |
+| US-34 | PM: create FRA category | `CreateFundraisingActivityCategoryPage` | `CreateFundraisingActivityCategoryController` | `FundraisingActivityCategory.create_category` |
+| US-35 | PM: view FRA category | `ViewFundraisingActivityCategoryPage` | `ViewFundraisingActivityCategoryController` | `FundraisingActivityCategory.view_fundraising_activity_category` |
+| US-36 | PM: update FRA category | `UpdateFundraisingActivityCategoryPage` | `UpdateFundraisingActivityCategoryController` | `FundraisingActivityCategory.update_fundraising_activity_category` |
+| US-37 | PM: search FRA categories | `SearchFundraisingActivityCategoryPage` | `SearchFundraisingActivityCategoryController` | `FundraisingActivityCategory.submit_search_criteria` |
+| US-38 | PM: suspend FRA category | `SuspendFundraisingActivityCategoryPage` | `SuspendFundraisingActivityCategoryController` | `FundraisingActivityCategory.suspend_fundraising_activity_category` |
+| US-41 | PM: generate daily report | `GenerateDailyReportPage` | `GenerateDailyReportController` | `Report.generate_daily_report` |
+| US-42 | PM: generate weekly report | `GenerateWeeklyReportPage` | `GenerateWeeklyReportController` | `Report.generate_weekly_report` |
+| US-43 | PM: generate monthly report | `GenerateMonthlyReportPage` | `GenerateMonthlyReportController` | `Report.generate_monthly_report` |
+
+US-32 / US-33 (donee donation history) remain deferred — still blocked on the missing donate use case and `Donation` entity. US-39 / US-40 not in the supplied Sprint 4 diagrams. See [issues.md](issues.md) and [todo.md](todo.md).
+
 ---
 
 ## 4. Entity layer ([entity/](../entity/))
 
-Four entities. Each owns its SQL via `persistence.db.get_connection()`.
+Seven entities. Each owns its SQL via `persistence.db.get_connection()`.
 
 ### `UserProfile` — [entity/user_profile.py](../entity/user_profile.py)
 Fields: `role: str`, `description: str`, `profile_id: int | None`, `suspended: bool`.
@@ -111,7 +128,7 @@ Fields: `email, password, name, dob, phone_num, profile_id, account_id, suspende
 - `submit_search_criteria(search_criteria) -> list[UserAccount]` (classmethod) — US-10. LIKE on email/name
 
 ### `FundraisingActivity` — [entity/fundraising_activity.py](../entity/fundraising_activity.py)
-Fields: `title, description, target_amount, category, start_date, end_date, status, activity_id, owner_account_id`.
+Fields: `title, description, target_amount, category, start_date, end_date, status, activity_id, owner_account_id, view_count, save_count`. **Sprint 4 added `view_count` and `save_count` (defaulted to 0).**
 - `save_fundraising_activity() -> bool` (instance method) — US-13
 - `view_fundraising_activity_details(activity_id) -> FundraisingActivity | None` (classmethod) — US-21
 - `view_all_fundraising_activities() -> list[FundraisingActivity]` (classmethod, **not yet in class diagram**)
@@ -121,13 +138,41 @@ Fields: `title, description, target_amount, category, start_date, end_date, stat
 - `submit_search_criteria(search_criteria, owner_account_id=None, status=None) -> list[FundraisingActivity]` (classmethod, LIKE on title/description/category, optional filters) — US-17/US-20/US-30. **Sprint 3 widened the diagram signature; see todo.md.**
 - `suspend_fundraising_activity(activity_id) -> bool` (classmethod) — US-16. Sets `status='suspended'`
 - `view_completed_activity(activity_id) -> FundraisingActivity | None` (classmethod) — US-31. Returns None unless `status='completed'`
+- `view_fundraising_activity_view_count(activity_id) -> int` (classmethod) — US-28
+- `view_fundraising_activity_save_count(activity_id) -> int` (classmethod) — US-29
+- `increment_view_count(activity_id) -> bool` (classmethod, **not yet in class diagram** — Sprint 4 wiring; bumped by the donee's selectFundraisingActivity click)
+- `increment_save_count(activity_id, delta) -> bool` (classmethod, **not yet in class diagram** — Sprint 4 wiring; floors at 0; called on favourite save / delete)
 
 ### `FavouriteList` — [entity/favourite_list.py](../entity/favourite_list.py) (NEW Sprint 2, extended Sprint 3)
 Fields: `account_id: int`, `activity_id: int`. Composite PK (account_id, activity_id) with ON DELETE CASCADE.
-- `save_fundraising_activity(account_id, activity_id) -> bool` (classmethod) — US-22. Returns False on duplicate or FK violation
+- `save_fundraising_activity(account_id, activity_id) -> bool` (classmethod) — US-22. Returns False on duplicate or FK violation. **Sprint 4: also bumps `FundraisingActivity.save_count` on success.**
 - `view_favourite_list(account_id) -> list[FavouriteList]` (classmethod) — US-24
-- `delete_favourite(activity_id, account_id) -> bool` (classmethod) — US-23. Note diagram-matching param order `(activityId, accountId)`. Replaces the Sprint 2 `remove_favourite` placeholder
+- `delete_favourite(activity_id, account_id) -> bool` (classmethod) — US-23. Note diagram-matching param order `(activityId, accountId)`. Replaces the Sprint 2 `remove_favourite` placeholder. **Sprint 4: also decrements `FundraisingActivity.save_count` on success.**
 - `submit_search_criteria(search_criteria, account_id=None) -> list[FavouriteList]` (classmethod) — US-25. JOINs onto fundraising_activity for the LIKE; `account_id` scopes to one donee (Sprint 3 added the param; see todo.md)
+
+### `FundraisingActivityCategory` — [entity/fundraising_activity_category.py](../entity/fundraising_activity_category.py) (NEW Sprint 4)
+Fields: `category_id, category_name (UNIQUE), description, status` (`active` by default; flips to `suspended` via US-38).
+- `create_category(category_name, description) -> bool` (classmethod) — US-34. Returns False on uniqueness conflict
+- `view_fundraising_activity_category(category_id) -> FundraisingActivityCategory | None` (classmethod) — US-35
+- `view_all_categories() -> list[FundraisingActivityCategory]` (classmethod, **not yet in class diagram** — replaces the hardcoded DEFAULT_CATEGORIES tuple in `CreateFundraisingActivityPage`)
+- `update_fundraising_activity_category(category_id, updated_category) -> bool` (classmethod) — US-36
+- `submit_search_criteria(search_criteria) -> list[FundraisingActivityCategory]` (classmethod) — US-37
+- `suspend_fundraising_activity_category(category_id) -> bool` (classmethod) — US-38
+
+### `PlatformManager` — [entity/platform_manager.py](../entity/platform_manager.py) (NEW Sprint 4)
+Fields: `platform_manager_id, username (UNIQUE), password, email (UNIQUE), name`.
+Minimal scaffold: the diagrams introduce the Platform Manager actor for Sprint 4 but supply no login story. The table exists to satisfy `Report.platformManagerId`; PM pages are accessible like other admin pages (RBAC deferred — see [issues.md](issues.md)).
+- `create_platform_manager(username, password, email, name) -> PlatformManager | None` (classmethod). None on uniqueness conflict
+- `view_all_platform_managers() -> list[PlatformManager]` (classmethod). Used by `Report` to source `platformManagerId`
+
+### `Report` — [entity/report.py](../entity/report.py) (NEW Sprint 4)
+Generated on the fly — no `report` table; `report_id` defaults to 0 and `generated_at` is set at call time. Open question logged in [issues.md](issues.md).
+Fields: `report_id, report_type, start_date, end_date, generated_at, platform_manager_id, total_donation_amount, total_donation_count, total_activity_count, total_fundraiser_count, total_donee_count`.
+- `generate_daily_report(start_date, end_date) -> Report` (classmethod) — US-41
+- `generate_weekly_report(start_date, end_date) -> Report` (classmethod) — US-42
+- `generate_monthly_report(start_date, end_date) -> Report` (classmethod) — US-43
+
+Scoping: activities counted by `start_date BETWEEN ? AND ?`; fundraiser / donee counts are platform-wide totals (no `created_at` on `user_account`). Donation totals are always 0 — see [issues.md](issues.md) "Donation tracking missing".
 
 ---
 
@@ -165,10 +210,24 @@ All controllers are pure delegators: each method is a one-liner that calls one E
 | `SearchFavouriteController` | `submit_search_criteria(search_criteria, account_id=None)` | `FavouriteList.submit_search_criteria` |
 | `SearchCompletedActivityController` | `submit_search_criteria(search_criteria, owner_account_id=None, status=None)` | `FundraisingActivity.submit_search_criteria` |
 | `ViewCompletedActivityController` | `view_completed_activity(activity_id)` | `FundraisingActivity.view_completed_activity` |
+| `ViewFundraisingActivityViewCountController` | `view_fundraising_activity_view_count(activity_id)` | `FundraisingActivity.view_fundraising_activity_view_count` |
+| `ViewFundraisingActivitySaveCountController` | `view_fundraising_activity_save_count(activity_id)` | `FundraisingActivity.view_fundraising_activity_save_count` |
+| `CreateFundraisingActivityCategoryController` | `create_category(category_name, description)` | `FundraisingActivityCategory.create_category` |
+| `ViewFundraisingActivityCategoryController` | `view_fundraising_activity_category(category_id)` | `FundraisingActivityCategory.view_fundraising_activity_category` |
+| `ViewFundraisingActivityCategoryController` | `view_all_categories()` | `FundraisingActivityCategory.view_all_categories` |
+| `UpdateFundraisingActivityCategoryController` | `update_fundraising_activity_category(category_id, updated)` | `FundraisingActivityCategory.update_fundraising_activity_category` |
+| `SearchFundraisingActivityCategoryController` | `submit_search_criteria(search_criteria)` | `FundraisingActivityCategory.submit_search_criteria` |
+| `SuspendFundraisingActivityCategoryController` | `suspend_fundraising_activity_category(category_id)` | `FundraisingActivityCategory.suspend_fundraising_activity_category` |
+| `GenerateDailyReportController` | `generate_daily_report(start_date, end_date)` | `Report.generate_daily_report` |
+| `GenerateWeeklyReportController` | `generate_weekly_report(start_date, end_date)` | `Report.generate_weekly_report` |
+| `GenerateMonthlyReportController` | `generate_monthly_report(start_date, end_date)` | `Report.generate_monthly_report` |
 
 Pragmatic methods not yet on any class diagram (logged in [todo.md](todo.md) for diagram catchup):
 - `view_all_profiles`, `view_all_fundraising_activities`, `view_all_user_accounts`, `view_activities_by_owner`
+- `view_all_categories` (Sprint 4 — replaces hardcoded DEFAULT_CATEGORIES)
+- `FundraisingActivity.increment_view_count`, `increment_save_count` (Sprint 4 — counter wiring not specified in the diagrams)
 - Sprint 3 signature additions on `submit_search_criteria` (FundraisingActivity gains `owner_account_id`/`status`; FavouriteList gains `account_id`)
+- Sprint 4 naming deviations: `view_fundraising_activity_category` / `update_fundraising_activity_category` / `suspend_fundraising_activity_category` instead of the diagrams' `FRACategory` shorthand
 
 ---
 
@@ -211,6 +270,18 @@ All input/format validation lives here. None of these classes import from `entit
 - `SearchCompletedActivityPage` — US-30. Owner-scoped + `status="completed"` → results table
 - `ViewCompletedActivityPage` — US-31. Lists fundraiser's completed activities → click row for details. Detail view also enforces ownership
 
+### Sprint 4 (new)
+
+- `ViewFundraisingActivityPage` extended for US-28 / US-29. When the logged-in user is the activity's `owner_account_id`, the details panel adds two metric tiles (view count, save count). The donee's `selectFundraisingActivity` click also bumps `FundraisingActivity.view_count`.
+- `CreateFundraisingActivityCategoryPage` — US-34. Name + description form → unique-name failure reports "name may already exist"
+- `ViewFundraisingActivityCategoryPage` — US-35. Category dropdown → details panel (name, status, description)
+- `UpdateFundraisingActivityCategoryPage` — US-36. Select category → pre-filled form → save / cancel
+- `SearchFundraisingActivityCategoryPage` — US-37. Free-text search on name/description → results table
+- `SuspendFundraisingActivityCategoryPage` — US-38. Active-category dropdown → detail preview → suspend button
+- `GenerateDailyReportPage` — US-41. Single-date input (start=end) → click → metric tiles + a caption noting donation totals are 0
+- `GenerateWeeklyReportPage` — US-42. Start/end date inputs (default last 7 days) with sanity check → click → metric tiles
+- `GenerateMonthlyReportPage` — US-43. Year + month inputs → click → metric tiles spanning the calendar month
+
 ### Method names that mirror the diagrams' message arrows
 - `LoginPage.display_success / display_error`
 - `CreateProfilePage.display_success / display_error`
@@ -247,8 +318,10 @@ All input/format validation lives here. None of these classes import from `entit
 |---|---|---|
 | `user_profile` | `profile_id` (PK, AUTOINC), `role`, `description`, `suspended` | |
 | `user_account` | `account_id` (PK, AUTOINC), `email` (UNIQUE NOT NULL), `password`, `name`, `dob`, `phone_num`, `profile_id` (FK), `suspended` | **Sprint 2 migration:** `account_id` added; `email` demoted from PK to UNIQUE |
-| `fundraising_activity` | `activity_id` (PK, AUTOINC), `title`, `description`, `target_amount`, `category`, `start_date`, `end_date`, `status`, `owner_account_id` (FK) | **Sprint 2 migration:** `owner_email` → `owner_account_id` |
+| `fundraising_activity` | `activity_id` (PK, AUTOINC), `title`, `description`, `target_amount`, `category`, `start_date`, `end_date`, `status`, `owner_account_id` (FK), `view_count`, `save_count` | **Sprint 2 migration:** `owner_email` → `owner_account_id`. **Sprint 4:** `view_count` and `save_count` (NOT NULL DEFAULT 0) |
 | `favourite_list` | `account_id` (FK), `activity_id` (FK), composite PK | **NEW Sprint 2.** `ON DELETE CASCADE` on both FKs |
+| `fundraising_activity_category` | `category_id` (PK, AUTOINC), `category_name` (UNIQUE), `description`, `status` | **NEW Sprint 4.** Status flips to `suspended` via US-38 |
+| `platform_manager` | `platform_manager_id` (PK, AUTOINC), `username` (UNIQUE), `password`, `email` (UNIQUE), `name` | **NEW Sprint 4.** No login flow yet; reports source `platformManagerId` from the first row |
 
 Sprint 3 added no new tables or columns — `status` and `suspended` were already present.
 
@@ -260,24 +333,28 @@ Sprint 3 added no new tables or columns — `status` and `suspended` were alread
 
 ## 8. Application entry ([app.py](../app.py))
 
-Streamlit entry. `layout="wide"`. Sidebar shows sign-in status and a radio for the 26 pages, prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`, plus `.info (debug)`). No role-based gating yet — see [issues.md](issues.md) ("Admin pages have no authentication / RBAC gate").
+Streamlit entry. `layout="wide"`. Sidebar shows sign-in status and a radio for the 34 pages, prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`, `[PM]`, plus `.info (debug)`). No role-based gating yet — see [issues.md](issues.md) ("Admin pages have no authentication / RBAC gate"). PM pages are not gated either (consistent stance — see "Platform Manager actor has no login flow" in [issues.md](issues.md)).
 
 ---
 
 ## 9. Tests ([tests/](../tests/))
 
-68 tests, all green.
+110 tests, all green.
 
 | File | What it covers |
 |---|---|
 | [tests/conftest.py](../tests/conftest.py) | `fresh_db` autouse fixture — fresh schema before every test |
 | [tests/test_user_profile.py](../tests/test_user_profile.py) | create / view / view-all / update / update-missing-id; **Sprint 3:** delete / delete-with-FK / search |
 | [tests/test_user_account.py](../tests/test_user_account.py) | create / duplicate / login / view / view-all / update / update-missing-id; **Sprint 3:** suspend / suspend-blocks-login / search |
-| [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) | save / view-details / view-all / view-fundraiser-activity / view-by-owner / update / search; **Sprint 3:** suspend / view-completed / search-by-owner / search-by-status / search-by-owner-and-status |
+| [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) | save / view-details / view-all / view-fundraiser-activity / view-by-owner / update / search; **Sprint 3:** suspend / view-completed / search-by-owner / search-by-status / search-by-owner-and-status; **Sprint 4:** view/save count getters / increment / decrement / floor-at-zero / favourite-counter sync |
 | [tests/test_favourite_list.py](../tests/test_favourite_list.py) | save / duplicate / view-empty; **Sprint 3:** delete-favourite / delete-no-match / search-by-text-and-account |
+| [tests/test_fundraising_activity_category.py](../tests/test_fundraising_activity_category.py) | **Sprint 4:** create / duplicate / view / view-all / update / search / suspend (US-34..38) |
+| [tests/test_platform_manager.py](../tests/test_platform_manager.py) | **Sprint 4:** create / duplicate-username / duplicate-email / view-all |
+| [tests/test_report.py](../tests/test_report.py) | **Sprint 4:** daily/weekly/monthly report-type / activity window filter / fundraiser+donee counts / zero-donation totals / platform-manager-id fallback |
 | [tests/test_controllers.py](../tests/test_controllers.py) | Sprint 1 controller delegation contracts |
 | [tests/test_sprint2_controllers.py](../tests/test_sprint2_controllers.py) | All 9 Sprint 2 controllers — pure-delegation pin |
 | [tests/test_sprint3_controllers.py](../tests/test_sprint3_controllers.py) | All 10 Sprint 3 controllers — pure-delegation pin |
+| [tests/test_sprint4_controllers.py](../tests/test_sprint4_controllers.py) | All 10 Sprint 4 controllers — pure-delegation pin |
 
 Run with `pytest`.
 
@@ -290,7 +367,9 @@ Idempotent (drops & recreates `app.db`). Row counts are governed by `RECORD_COUN
 - `RECORD_COUNT` user profiles (random role + Faker sentence)
 - `RECORD_COUNT` user accounts (Faker name/email/dob/phone, password `password123`, random profile FK)
 - `RECORD_COUNT` fundraising activities (random category/status/dates/amount, random `owner_account_id` FK)
-- `RECORD_COUNT * 2` favourite-list save attempts (deduped by composite PK)
+- `RECORD_COUNT * 2` favourite-list save attempts (deduped by composite PK; also bumps each parent activity's `save_count`)
+- 5 fundraising activity categories (medical, education, disaster_relief, community, other)
+- `RECORD_COUNT // 2` platform managers (Faker username/email/name, password `password123`)
 
 Run with `python -m data.seed`.
 
@@ -310,12 +389,12 @@ See [../CLAUDE.md](../CLAUDE.md) for the full list including the two documented 
 
 ## 13. What is **not** implemented (intentional)
 
-See [todo.md](todo.md) for the full list and [issues.md](issues.md) for active design gaps. Highlights still deferred after Sprint 3:
+See [todo.md](todo.md) for the full list and [issues.md](issues.md) for active design gaps. Highlights still deferred after Sprint 4:
 
 - Password hashing (any sprint, hardening)
-- Role-based menu / route guards — admin pages currently reachable by anonymous visitors. Tracked as **High** in [issues.md](issues.md)
+- Role-based menu / route guards — admin and PM pages currently reachable by anonymous visitors. Tracked as **High** in [issues.md](issues.md)
 - Entity-layer ownership check on `update_fundraiser_activity` and `suspend_fundraising_activity` — boundary filters today, no defense-in-depth. Tracked as **Medium** in [issues.md](issues.md)
-- US-28 / US-29 (FSA view & favourite counts) — Sprint 4
-- US-32 / US-33 (donee donation-history search & view) — blocked on a `donation` entity + table; deferred to Sprint 4 alongside the donate flow ([issues.md](issues.md))
-- US-34..US-38 (platform manager category management) — categories still hardcoded
-- US-41..US-43 (reports)
+- US-32 / US-33 (donee donation-history search & view) — still blocked on a `donation` entity + table and a donate use case. Knock-on effect: Sprint 4 reports show zero donation totals.
+- US-39 / US-40 — no diagrams supplied with the Sprint 4 batch.
+- Platform Manager login flow — `platform_manager` table exists but no login page yet; PM pages accessible like other admin pages.
+- Report persistence — currently on-the-fly only; team to decide whether each generation writes a `report` row for audit (open question in [issues.md](issues.md)).

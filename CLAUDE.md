@@ -39,13 +39,15 @@ CSIT314 (Software Development Methodologies) group project, UOW SIM S2 2026. Bui
 - **SQLite** via stdlib `sqlite3` for persistence — single `app.db` file
 - **pytest** for tests
 - **Faker** for seed data
-- **GitHub Actions** for CI
+- **GitHub Actions** for CI ([.github/workflows/ci.yml](.github/workflows/ci.yml) pins Python 3.11 — keep `requirements.txt` compatible)
 
 Do not propose Django/Flask/FastAPI/Node/SQLAlchemy/etc. unless the user explicitly reopens the stack discussion.
 
 ## Diagram-as-contract rule
 
 When the user shares Sprint N sequence/class diagrams, **treat the class names, method names, parameter lists, and return types as binding**. Implement them character-for-character (modulo Python `snake_case`). Do not rename, merge, split, or "clean up" diagram methods without explicit approval. If a diagram conflicts with this file, ask the user which to update.
+
+The source-of-truth diagrams live under [diagrams/](diagrams/), organised by sprint (`sprint-1_diagrams/`, `sprint-2_diagrams/`, `sprint-3_diagrams/`). Every divergence between a diagram and the code is catalogued per-user-story in [docs/differences.md](docs/differences.md); known typos in the source diagrams (where the code follows the corrected version) are listed in [docs/todo.md](docs/todo.md). Read those before assuming a method name or signature is wrong in the code — it may just be tracking a known diagram fix.
 
 ## Architecture conventions
 
@@ -77,7 +79,6 @@ Existing examples (all logged in [docs/todo.md](docs/todo.md) for diagram catchu
 - `FundraisingActivity.view_all_fundraising_activities()` — clickable table on `ViewFundraisingActivityPage`
 - `UserAccount.view_all_user_accounts()` — admin's account list on `ViewUserAccountPage`
 - `FundraisingActivity.view_activities_by_owner()` — fundraiser's scoped list on `ViewFundraiserActivityPage` / `UpdateFundraiserActivityPage`
-- `FavouriteList.remove_favourite()` — helper anticipating US-23
 
 ### Exception B — Debug-only utilities
 
@@ -96,11 +97,13 @@ SDM-code/
 ├── app.py                 # Streamlit entry; routes via st.session_state
 ├── boundary/              # <<Boundary>> classes — one file per page
 ├── controller/            # <<Controller>> classes — one file per use case
-├── entity/                # <<Entity>> classes — own their persistence
+├── entity/                # <<Entity>> classes — own their persistence (UserAccount, UserProfile, FundraisingActivity, FavouriteList)
 ├── persistence/           # db.py + schema.sql
 ├── data/seed.py           # Faker-based test data generator (RECORD_COUNT, default 10; bump to 100 for the marking demo)
 ├── tests/                 # pytest tests
-└── .github/workflows/     # CI
+├── docs/                  # implementation.md (file/class reference), todo.md, issues.md, differences.md
+├── diagrams/              # source-of-truth UML diagrams (sprint-1/2/3)
+└── .github/workflows/     # CI (Python 3.11)
 ```
 
 ## Key implementation patterns
@@ -143,9 +146,15 @@ When handed new sprint diagrams:
 - Renaming a diagram method to fit Pythonic taste
 - Adding password hashing, RBAC, or other features not in the active sprint's diagrams
 
-## Out-of-scope features (deferred, intentionally)
+## Coverage and what's deferred
 
-- Password hashing — add in Sprint 2 hardening
-- Full role-based access control — single-role check in `app.py` is enough for now
-- Suspend/update/search admin flows (US-2..US-5, US-7..US-10) — Sprint 2
-- FSA management, favourites, history, reports (US-14..US-43) — Sprints 3/4
+Sprints 1–4 are implemented (41 of 43 user stories, 34 Streamlit pages). See `## Coverage so far` in [README.md](README.md) for the per-sprint breakdown and [docs/todo.md](docs/todo.md) for the live deferred-work list.
+
+Active design gaps and known shortcuts that have NOT been addressed yet:
+
+- **Plain-text passwords** in [entity/user_account.py](entity/user_account.py) and [entity/platform_manager.py](entity/platform_manager.py) — hashing scheduled for a hardening sprint.
+- **No RBAC / no menu gating in `app.py`** — every sidebar page is reachable by anyone, even unauthenticated. Pages are prefixed `[Admin]` / `[Fundraiser]` / `[Donee]` / `[PM]` for legibility only. See the "High" entry in [docs/issues.md](docs/issues.md).
+- **Ownership not enforced** at the entity layer for `update_fundraiser_activity` (US-15) and `suspend_fundraising_activity` (US-16). "Medium" entry in [docs/issues.md](docs/issues.md).
+- **Platform Manager has no login flow** — the `platform_manager` table exists and is seeded but `app.py` doesn't sign PMs in. Reports source `platformManagerId` from the first seeded row.
+- **Reports run with zero donations** — the `Report` entity exposes donation totals but no `donation` table or "donate" use case exists yet; US-32 / US-33 remain deferred. See [docs/issues.md](docs/issues.md).
+- **US-39 / US-40** — no diagrams supplied; status unknown.

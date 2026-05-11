@@ -14,6 +14,8 @@ The Sprint 3 diagrams for US-32/US-33 assume donation data exists but no Sprint 
 
 **Decision (2026-05-05).** Defer US-32 and US-33 to Sprint 4 alongside the actual donate flow. Sprint 3 ships the remaining 10 stories (US-4, US-5, US-9, US-10, US-16, US-17, US-23, US-25, US-30, US-31).
 
+**Update (2026-05-11).** Sprint 4 diagrams arrived without a "donate" user story and without US-32 / US-33 diagrams. Both stories stay deferred. **Knock-on impact on Sprint 4 reports (US-41–43):** the `Report` entity exposes `totalDonationAmount` and `totalDonationCount`, but with no donation data those columns will always read `0` / `0.00`. The reports still generate the activity/fundraiser/donee count fields correctly. Surface this clearly in the Generate-Report boundary pages so markers understand the limitation, and revisit once a donate use case is added.
+
 **What unblocks them.**
 - A `Donation` entity + table (likely fields: `donation_id`, `account_id`, `activity_id`, `amount`, `donated_at`).
 - A "donate" user story (or a documented Sprint 4 story) that produces donation rows.
@@ -66,3 +68,24 @@ The entity should refuse cross-tenant writes, not trust the caller.
 - Update controllers and boundaries to forward `st.session_state["user"].account_id`.
 - Add tests asserting cross-tenant suspend/update returns `False` and leaves the row unchanged.
 - Diagram impact: US-15 and US-16 class + sequence diagrams gain `ownerAccountId: String` on the entity, controller, and message arrows. Log under [todo.md](todo.md) "Diagram updates needed before final marking".
+
+## Reports are generated on the fly with no `report` table (open question)
+
+**Problem.** Sprint 4 US-41 / US-42 / US-43 introduce a `Report` entity with `reportId: Integer` and `generatedAt: Date` fields, which imply persistence. The Sprint 4 sequence diagrams only show generate-and-display — no save step. There is no story for "view past reports" either.
+
+**Decision (2026-05-11).** Generate on the fly for now. Reports are returned from the entity as in-memory objects, never persisted; `reportId` defaults to `0` and `generatedAt` is set to `datetime.now()` at generation time.
+
+**What unblocks deciding.** Confirm with the team whether:
+
+- (a) Reports should never be persisted (current behaviour is correct, just remove `reportId` from the diagram).
+- (b) Each generation should write a row to a new `report` table for audit (adds a story, makes `reportId` meaningful, and probably wants a "view past reports" use case).
+
+Either way, the existing US-41–43 diagrams will need a small update.
+
+## Platform Manager actor has no login flow (Sprint 4 scoping decision)
+
+**Problem.** Sprint 4 introduces the Platform Manager actor for category management and reports, but no login/authentication story was supplied for the role.
+
+**Decision (2026-05-11).** Mirror the existing RBAC stance for Admin/Fundraiser/Donee: a `platform_manager` table exists and is seeded, but PM pages do not gate on login. The `Report.platformManagerId` field is populated from the first seeded PM row (see [docs/todo.md](todo.md) "Temporary placeholders"). When the project finally addresses RBAC in a hardening sprint, PM gets the same gate as Admin.
+
+**What unblocks it.** The same fix as the existing RBAC item above — gate the sidebar by role and read the session user's role to populate `Report.platformManagerId` for real.
