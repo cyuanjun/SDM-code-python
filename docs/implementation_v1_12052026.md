@@ -82,10 +82,8 @@ Fundraiser metrics, platform-manager category management, platform-manager repor
 |---|---|---|---|
 | US-32 | Donee: search donation history | **Deferred** | Blocked on a missing donate use case + `Donation` entity. The Sprint 3 and Sprint 4 diagram drops both omitted a "donate" story, so there is no way to produce donation rows. Logged in [issues.md](issues.md). |
 | US-33 | Donee: view donation history | **Deferred** | Same blocker as US-32. |
-| US-39 | Platform Manager: log in | **Diagram-only / unverified** | A Sprint 1 diagram exists, but no Sprint 4 diagram introduces a separate PM login. The current implementation re-uses the shared `LoginPage` for everyone, which technically satisfies US-39 as drawn (Sprint 1) but does not gate by role. See §2.3. |
-| US-40 | Platform Manager: log out | **Diagram-only / unverified** | Same as US-39. |
 
-US-32 / US-33 are the only two stories with no implementation at all. The two PM-login stories are arguably "done by reuse" but were never re-drawn for Sprint 4.
+**US-32 / US-33 are the only two un-implemented stories.** US-39 / US-40 (PM login / logout) are implemented via the shared `LoginPage` and `LogoutPage` — identical status to US-11 / US-18 / US-26 for the other three roles, and listed under §1 "Sprint 1 — 12 stories". Sprint 4 introduced the separate `platform_manager` table without re-drawing the PM login flow; that *architectural* gap is tracked as the "Platform Manager has no dedicated login flow" item in §2.2 below, not as a missing user story.
 
 ### 2.2 Active design gaps (have implementations, but with known shortcuts)
 
