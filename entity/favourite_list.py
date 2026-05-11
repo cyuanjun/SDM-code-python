@@ -36,6 +36,10 @@ class FavouriteList:
         except sqlite3.IntegrityError:
             # already favourited or FK violation — idempotent failure
             return False
+        # Sprint 4 US-29: track save count on the parent activity.
+        from entity.fundraising_activity import FundraisingActivity
+
+        FundraisingActivity.increment_save_count(activity_id, +1)
         return True
 
     @classmethod
@@ -59,7 +63,13 @@ class FavouriteList:
                 "DELETE FROM favourite_list WHERE activity_id = ? AND account_id = ?",
                 (activity_id, account_id),
             )
-        return cursor.rowcount > 0
+        removed = cursor.rowcount > 0
+        if removed:
+            # Sprint 4 US-29: keep save_count in sync.
+            from entity.fundraising_activity import FundraisingActivity
+
+            FundraisingActivity.increment_save_count(activity_id, -1)
+        return removed
 
     @classmethod
     def submit_search_criteria(

@@ -181,3 +181,90 @@ def test_submit_search_criteria_filters_by_owner_and_status():
         "", owner_account_id=me.account_id, status="completed"
     )
     assert {a.title for a in mine_done} == {"My done"}
+
+
+# ---- Sprint 4 ----
+
+def test_new_activity_starts_with_zero_view_and_save_counts():
+    activity = _make_activity()
+    activity.save_fundraising_activity()
+    assert FundraisingActivity.view_fundraising_activity_view_count(
+        activity.activity_id
+    ) == 0
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 0
+
+
+def test_view_counts_return_zero_for_missing_id():
+    assert FundraisingActivity.view_fundraising_activity_view_count(99999) == 0
+    assert FundraisingActivity.view_fundraising_activity_save_count(99999) == 0
+
+
+def test_increment_view_count_bumps_by_one():
+    activity = _make_activity()
+    activity.save_fundraising_activity()
+    assert FundraisingActivity.increment_view_count(activity.activity_id) is True
+    assert FundraisingActivity.increment_view_count(activity.activity_id) is True
+    assert FundraisingActivity.view_fundraising_activity_view_count(
+        activity.activity_id
+    ) == 2
+
+
+def test_increment_view_count_returns_false_for_missing_id():
+    assert FundraisingActivity.increment_view_count(99999) is False
+
+
+def test_increment_save_count_supports_positive_and_negative_delta():
+    activity = _make_activity()
+    activity.save_fundraising_activity()
+    FundraisingActivity.increment_save_count(activity.activity_id, +3)
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 3
+    FundraisingActivity.increment_save_count(activity.activity_id, -2)
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 1
+
+
+def test_increment_save_count_floors_at_zero():
+    activity = _make_activity()
+    activity.save_fundraising_activity()
+    FundraisingActivity.increment_save_count(activity.activity_id, -5)
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 0
+
+
+def test_favourite_save_and_delete_keep_save_count_in_sync():
+    from entity.favourite_list import FavouriteList
+    from entity.user_account import UserAccount
+    from entity.user_profile import UserProfile
+
+    profile = UserProfile.create_profile("donee", "x")
+    a1 = UserAccount.create_account(
+        "a1@x.com", "pw", "A1", "1990-01-01", "1", profile.profile_id
+    )
+    a2 = UserAccount.create_account(
+        "a2@x.com", "pw", "A2", "1990-01-01", "1", profile.profile_id
+    )
+    activity = _make_activity()
+    activity.save_fundraising_activity()
+
+    FavouriteList.save_fundraising_activity(a1.account_id, activity.activity_id)
+    FavouriteList.save_fundraising_activity(a2.account_id, activity.activity_id)
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 2
+
+    FavouriteList.delete_favourite(activity.activity_id, a1.account_id)
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 1
+
+    # Duplicate save attempts should not double-bump the counter.
+    FavouriteList.save_fundraising_activity(a2.account_id, activity.activity_id)
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        activity.activity_id
+    ) == 1

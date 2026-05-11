@@ -29,6 +29,8 @@ class FundraisingActivity:
     status: str
     activity_id: Optional[int] = None
     owner_account_id: Optional[int] = None
+    view_count: int = 0
+    save_count: int = 0
 
     def save_fundraising_activity(self) -> bool:
         with get_connection() as conn:
@@ -58,7 +60,7 @@ class FundraisingActivity:
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id "
+                "start_date, end_date, status, owner_account_id, view_count, save_count "
                 "FROM fundraising_activity WHERE activity_id = ?",
                 (activity_id,),
             ).fetchone()
@@ -71,7 +73,7 @@ class FundraisingActivity:
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id "
+                "start_date, end_date, status, owner_account_id, view_count, save_count "
                 "FROM fundraising_activity ORDER BY activity_id"
             ).fetchall()
         return [cls._from_row(row) for row in rows]
@@ -94,7 +96,7 @@ class FundraisingActivity:
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id "
+                "start_date, end_date, status, owner_account_id, view_count, save_count "
                 "FROM fundraising_activity WHERE owner_account_id = ? "
                 "ORDER BY activity_id",
                 (owner_account_id,),
@@ -137,7 +139,7 @@ class FundraisingActivity:
         like = f"%{search_criteria}%"
         sql = (
             "SELECT activity_id, title, description, target_amount, category, "
-            "start_date, end_date, status, owner_account_id "
+            "start_date, end_date, status, owner_account_id, view_count, save_count "
             "FROM fundraising_activity "
             "WHERE (title LIKE ? OR description LIKE ? OR category LIKE ?)"
         )
@@ -173,7 +175,7 @@ class FundraisingActivity:
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id "
+                "start_date, end_date, status, owner_account_id, view_count, save_count "
                 "FROM fundraising_activity "
                 "WHERE activity_id = ? AND status = 'completed'",
                 (activity_id,),
@@ -181,6 +183,51 @@ class FundraisingActivity:
         if row is None:
             return None
         return cls._from_row(row)
+
+    @classmethod
+    def view_fundraising_activity_view_count(cls, activity_id: int) -> int:
+        """US-28. Returns 0 when the activity is missing."""
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT view_count FROM fundraising_activity WHERE activity_id = ?",
+                (activity_id,),
+            ).fetchone()
+        return int(row["view_count"]) if row is not None else 0
+
+    @classmethod
+    def view_fundraising_activity_save_count(cls, activity_id: int) -> int:
+        """US-29. Returns 0 when the activity is missing."""
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT save_count FROM fundraising_activity WHERE activity_id = ?",
+                (activity_id,),
+            ).fetchone()
+        return int(row["save_count"]) if row is not None else 0
+
+    @classmethod
+    def increment_view_count(cls, activity_id: int) -> bool:
+        """Bump view_count by 1. Called by the donee view flow. Not on any
+        Sprint 4 diagram — logged in docs/todo.md as a needed diagram update."""
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity SET view_count = view_count + 1 "
+                "WHERE activity_id = ?",
+                (activity_id,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def increment_save_count(cls, activity_id: int, delta: int = 1) -> bool:
+        """Bump save_count by `delta` (use +1 on favourite, -1 on unfavourite).
+        Floors at 0. Not on any Sprint 4 diagram — logged in docs/todo.md."""
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET save_count = MAX(save_count + ?, 0) "
+                "WHERE activity_id = ?",
+                (delta, activity_id),
+            )
+        return cursor.rowcount > 0
 
     @classmethod
     def _from_row(cls, row) -> "FundraisingActivity":
@@ -194,4 +241,6 @@ class FundraisingActivity:
             end_date=row["end_date"],
             status=row["status"],
             owner_account_id=row["owner_account_id"],
+            view_count=row["view_count"] if "view_count" in row.keys() else 0,
+            save_count=row["save_count"] if "save_count" in row.keys() else 0,
         )

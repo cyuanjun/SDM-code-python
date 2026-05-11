@@ -9,12 +9,14 @@ from datetime import date
 
 import streamlit as st
 
-from boundary.create_fundraising_activity_page import DEFAULT_CATEGORIES
 from controller.update_fundraiser_activity_controller import (
     UpdateFundraiserActivityController,
 )
 from controller.view_fundraiser_activity_controller import (
     ViewFundraiserActivityController,
+)
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
 )
 from entity.fundraising_activity import FundraisingActivity
 
@@ -62,9 +64,15 @@ class UpdateFundraiserActivityPage:
             start_value = date.today()
             end_value = date.today()
 
-        category_options = list(DEFAULT_CATEGORIES)
+        category_options = [
+            c.category_name
+            for c in ViewFundraisingActivityCategoryController().view_all_categories()
+            if c.status == "active"
+        ]
         if current.category not in category_options:
             category_options.append(current.category)
+        if not category_options:
+            category_options = [current.category]
 
         with st.form("update_fra_form"):
             title = st.text_input("Title", value=current.title)

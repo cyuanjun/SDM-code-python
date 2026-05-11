@@ -9,10 +9,16 @@ from __future__ import annotations
 import streamlit as st
 
 from boundary.create_account_page import CreateAccountPage
+from boundary.create_fundraising_activity_category_page import (
+    CreateFundraisingActivityCategoryPage,
+)
 from boundary.create_fundraising_activity_page import CreateFundraisingActivityPage
 from boundary.create_profile_page import CreateProfilePage
 from boundary.delete_favourite_page import DeleteFavouritePage
 from boundary.delete_user_profile_page import DeleteUserProfilePage
+from boundary.generate_daily_report_page import GenerateDailyReportPage
+from boundary.generate_monthly_report_page import GenerateMonthlyReportPage
+from boundary.generate_weekly_report_page import GenerateWeeklyReportPage
 from boundary.info_page import InfoPage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
@@ -20,19 +26,31 @@ from boundary.save_fundraiser_activity_page import SaveFundraiserActivityPage
 from boundary.search_completed_activity_page import SearchCompletedActivityPage
 from boundary.search_favourite_page import SearchFavouritePage
 from boundary.search_fundraiser_activity_page import SearchFundraiserActivityPage
+from boundary.search_fundraising_activity_category_page import (
+    SearchFundraisingActivityCategoryPage,
+)
 from boundary.search_fundraising_activity_page import SearchFundraisingActivityPage
 from boundary.search_user_account_page import SearchUserAccountPage
 from boundary.search_user_profile_page import SearchUserProfilePage
+from boundary.suspend_fundraising_activity_category_page import (
+    SuspendFundraisingActivityCategoryPage,
+)
 from boundary.suspend_fundraising_activity_page import (
     SuspendFundraisingActivityPage,
 )
 from boundary.suspend_user_account_page import SuspendUserAccountPage
 from boundary.update_fundraiser_activity_page import UpdateFundraiserActivityPage
+from boundary.update_fundraising_activity_category_page import (
+    UpdateFundraisingActivityCategoryPage,
+)
 from boundary.update_user_account_page import UpdateUserAccountPage
 from boundary.update_user_profile_page import UpdateUserProfilePage
 from boundary.view_completed_activity_page import ViewCompletedActivityPage
 from boundary.view_favourite_list_page import ViewFavouriteListPage
 from boundary.view_fundraiser_activity_page import ViewFundraiserActivityPage
+from boundary.view_fundraising_activity_category_page import (
+    ViewFundraisingActivityCategoryPage,
+)
 from boundary.view_fundraising_activity_page import ViewFundraisingActivityPage
 from boundary.view_user_account_page import ViewUserAccountPage
 from boundary.view_user_profile_page import ViewUserProfilePage
@@ -64,6 +82,14 @@ PAGES = {
     "[Donee] View my favourites": ViewFavouriteListPage,
     "[Donee] Search my favourites": SearchFavouritePage,
     "[Donee] Delete a favourite": DeleteFavouritePage,
+    "[PM] Create FRA category": CreateFundraisingActivityCategoryPage,
+    "[PM] View FRA category": ViewFundraisingActivityCategoryPage,
+    "[PM] Update FRA category": UpdateFundraisingActivityCategoryPage,
+    "[PM] Suspend FRA category": SuspendFundraisingActivityCategoryPage,
+    "[PM] Search FRA categories": SearchFundraisingActivityCategoryPage,
+    "[PM] Generate daily report": GenerateDailyReportPage,
+    "[PM] Generate weekly report": GenerateWeeklyReportPage,
+    "[PM] Generate monthly report": GenerateMonthlyReportPage,
     ".info (debug)": InfoPage,
 }
 

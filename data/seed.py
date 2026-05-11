@@ -12,6 +12,8 @@ from datetime import date, timedelta
 from faker import Faker
 
 from entity.fundraising_activity import FundraisingActivity
+from entity.fundraising_activity_category import FundraisingActivityCategory
+from entity.platform_manager import PlatformManager
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 from persistence.db import DB_PATH, init_db
@@ -23,6 +25,13 @@ fake = Faker()
 ROLES = ("admin", "fundraiser", "donee", "platform_manager")
 CATEGORIES = ("medical", "education", "disaster_relief", "community", "other")
 STATUSES = ("active", "completed", "suspended")
+CATEGORY_DESCRIPTIONS = {
+    "medical": "Medical emergencies, treatment, and ongoing care.",
+    "education": "Tuition, supplies, and school-related needs.",
+    "disaster_relief": "Response and recovery after natural disasters.",
+    "community": "Local projects supporting neighbourhoods and groups.",
+    "other": "Causes not covered by the listed categories.",
+}
 
 
 def seed() -> None:
@@ -77,10 +86,30 @@ def seed() -> None:
             if FavouriteList.save_fundraising_activity(account_id, activity_id):
                 favourites_added += 1
 
+    category_ids: list[int] = []
+    for name in CATEGORIES:
+        if FundraisingActivityCategory.create_category(
+            name, CATEGORY_DESCRIPTIONS[name]
+        ):
+            category_ids.append(name)
+
+    platform_manager_ids: list[int] = []
+    for _ in range(max(RECORD_COUNT // 2, 1)):
+        pm = PlatformManager.create_platform_manager(
+            username=fake.unique.user_name(),
+            password="password123",
+            email=fake.unique.email(),
+            name=fake.name(),
+        )
+        if pm is not None and pm.platform_manager_id is not None:
+            platform_manager_ids.append(pm.platform_manager_id)
+
     print(
         f"Seeded {len(profile_ids)} profiles, {len(account_ids)} accounts, "
         f"{len(activity_ids)} fundraising activities, "
-        f"and {favourites_added} favourites into {DB_PATH}"
+        f"{favourites_added} favourites, "
+        f"{len(category_ids)} categories, "
+        f"and {len(platform_manager_ids)} platform managers into {DB_PATH}"
     )
 
 

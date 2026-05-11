@@ -1,4 +1,9 @@
-"""CreateFundraisingActivityPage <<Boundary>> — Sprint 1 diagram US-13."""
+"""CreateFundraisingActivityPage <<Boundary>> — Sprint 1 diagram US-13.
+
+Sprint 4 update: replaced the hardcoded DEFAULT_CATEGORIES tuple with a
+lookup against the fundraising_activity_category table (US-34..38). Falls
+back to a free-text input when no active categories exist yet.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -8,18 +13,32 @@ import streamlit as st
 from controller.create_fundraising_activity_controller import (
     CreateFundraisingActivityController,
 )
-
-DEFAULT_CATEGORIES = ("medical", "education", "disaster_relief", "community", "other")
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
 
 
 class CreateFundraisingActivityPage:
     def render(self) -> None:
         st.header("Create fundraising activity")
+        active_categories = [
+            c
+            for c in ViewFundraisingActivityCategoryController().view_all_categories()
+            if c.status == "active"
+        ]
         with st.form("create_fsa_form"):
             title = st.text_input("Title")
             description = st.text_area("Description")
             target_amount = st.number_input("Target amount", min_value=0.0, step=100.0)
-            category = st.selectbox("Category", DEFAULT_CATEGORIES)
+            if active_categories:
+                category = st.selectbox(
+                    "Category", [c.category_name for c in active_categories]
+                )
+            else:
+                st.caption(
+                    "No active categories yet — ask a Platform Manager to create one."
+                )
+                category = st.text_input("Category")
             start_date = st.date_input("Start date", value=date.today())
             end_date = st.date_input("End date", value=date.today())
             submitted = st.form_submit_button("Create activity")
@@ -28,7 +47,7 @@ class CreateFundraisingActivityPage:
             return
 
         if not self.validate_fundraising_activity(
-            title, description, target_amount, start_date, end_date
+            title, description, target_amount, start_date, end_date, category
         ):
             self.display_fundraising_activity_validation_error()
             return
@@ -57,8 +76,11 @@ class CreateFundraisingActivityPage:
         target_amount: float,
         start_date: date,
         end_date: date,
+        category: str = "",
     ) -> bool:
         if not title.strip() or not description.strip():
+            return False
+        if not (category or "").strip():
             return False
         if target_amount <= 0:
             return False

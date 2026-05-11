@@ -28,11 +28,28 @@ CREATE TABLE IF NOT EXISTS fundraising_activity (
     start_date    TEXT NOT NULL,
     end_date      TEXT NOT NULL,
     status        TEXT NOT NULL,
-    owner_account_id INTEGER REFERENCES user_account(account_id)
+    owner_account_id INTEGER REFERENCES user_account(account_id),
+    view_count    INTEGER NOT NULL DEFAULT 0,
+    save_count    INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS favourite_list (
     account_id  INTEGER NOT NULL REFERENCES user_account(account_id) ON DELETE CASCADE,
     activity_id INTEGER NOT NULL REFERENCES fundraising_activity(activity_id) ON DELETE CASCADE,
     PRIMARY KEY (account_id, activity_id)
+);
+
+CREATE TABLE IF NOT EXISTS fundraising_activity_category (
+    category_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_name TEXT NOT NULL UNIQUE,
+    description   TEXT,
+    status        TEXT NOT NULL DEFAULT 'active'
+);
+
+CREATE TABLE IF NOT EXISTS platform_manager (
+    platform_manager_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username  TEXT NOT NULL UNIQUE,
+    password  TEXT NOT NULL,
+    email     TEXT NOT NULL UNIQUE,
+    name      TEXT NOT NULL
 );
