@@ -25,31 +25,31 @@ These hold across every sprint:
 
 ## Sprint 1
 
-### US-1 — Admin: create user profile · [photo_..._56](../diagrams/sprint-1_diagrams/photo_6307534012964082256_y.jpg)
+### US-1 — Admin: create user profile · [diagram](../diagrams/sprint-1_diagrams/US-01.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | `CreateProfilePage.displaySucess()` on the class diagram is misspelled. Sequence diagram and code use `displaySuccess()` / `display_success()`. | new — log in todo.md |
 | **[E]** | `UserProfile` has `profile_id` (auto PK) and `suspended` fields not on the diagram. `profile_id` is implied by the design; `suspended` was added for US-9 / Sprint 2 hardening. | todo.md "Diagram updates needed before final marking" (existing schema-migration entry covers `suspended`) |
 
-### US-6 — Admin: create user account · [photo_..._57](../diagrams/sprint-1_diagrams/photo_6307534012964082257_y.jpg)
+### US-6 — Admin: create user account · [diagram](../diagrams/sprint-1_diagrams/US-06.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[E]** | `UserAccount.account_id` (auto PK) and `UserAccount.suspended` fields not on the US-6 diagram. | todo.md — Sprint 2 schema migration entry (`account_id` introduced) |
 | **[D]** | `UserAccount.create_account` returns `None` on duplicate email; the diagram shows the alt branch but does not specify the return value. Implementation interprets the "if UserAccount exists" branch as `return None`. | implicit — no diagram update needed |
 
-### US-11 — Admin: log in · [photo_..._60](../diagrams/sprint-1_diagrams/photo_6307534012964082260_y.jpg)
+### US-11 — Admin: log in · [diagram](../diagrams/sprint-1_diagrams/US-11.jpg)
 
 No new differences beyond the project-wide ID type observation. Sequence-only image; class-diagram counterpart shared with US-18.
 
-### US-12 — Admin: log out · [photo_..._61](../diagrams/sprint-1_diagrams/photo_6307534012964082261_x.jpg)
+### US-12 — Admin: log out · [diagram](../diagrams/sprint-1_diagrams/US-12.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Sequence draws the self-call as `Logout()` (capital L); class diagram has `logout()`. Code uses `logout()`. | new — single project-wide note (covers US-12/19/27/40) |
 
-### US-13 — Fundraiser: create fundraising activity · [photo_..._67](../diagrams/sprint-1_diagrams/photo_6307534012964082267_y.jpg)
+### US-13 — Fundraiser: create fundraising activity · [diagram](../diagrams/sprint-1_diagrams/US-13.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -58,39 +58,39 @@ No new differences beyond the project-wide ID type observation. Sequence-only im
 | **[D]** | `status` is hardcoded to `"active"` in the controller; the diagram shows status as a normal entity field. | todo.md "Temporary placeholders" |
 | **[E]** | Many later additions on `FundraisingActivity` that aren't on the US-13 class diagram (`view_fundraising_activity_details`, `view_fundraiser_activity`, `view_activities_by_owner`, `update_fundraiser_activity`, `submit_search_criteria`, `suspend_fundraising_activity`, `view_completed_activity`, `view_all_fundraising_activities`). Each is logged under its own user story below. | todo.md (multiple entries) |
 
-### US-18 — Fundraiser: log in · [photo_..._53](../diagrams/sprint-1_diagrams/photo_6307534012964082253_y.jpg)
+### US-18 — Fundraiser: log in · [diagram](../diagrams/sprint-1_diagrams/US-18.jpg)
 
 No new differences. (Same login flow as US-11; class-diagram details shared.)
 
-### US-19 — Fundraiser: log out · [photo_..._54](../diagrams/sprint-1_diagrams/photo_6307534012964082254_y.jpg)
+### US-19 — Fundraiser: log out · [diagram](../diagrams/sprint-1_diagrams/US-19.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Sequence actor is labelled "Platform manager" but the story is for the Fundraiser. | todo.md "Open design questions" (existing entry) |
 | **[T]** | `Logout()` capitalisation — see project-wide note. | covered above |
 
-### US-21 — Donee: view fundraising activity · [photo_..._68](../diagrams/sprint-1_diagrams/photo_6307534012964082268_y.jpg)
+### US-21 — Donee: view fundraising activity · [diagram](../diagrams/sprint-1_diagrams/US-21.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[E]** | `ViewFundraisingActivityController.view_all_fundraising_activities()` and `FundraisingActivity.view_all_fundraising_activities()` exist in code but are not on the US-21 class diagram. Powers the donee's clickable-list pre-step. | todo.md "Diagram updates needed before final marking" |
 
-### US-26 — Donee: log in · [photo_..._58](../diagrams/sprint-1_diagrams/photo_6307534012964082258_y.jpg)
+### US-26 — Donee: log in · [diagram](../diagrams/sprint-1_diagrams/US-26.jpg)
 
 No new differences.
 
-### US-27 — Donee: log out · [photo_..._59](../diagrams/sprint-1_diagrams/photo_6307534012964082259_y.jpg)
+### US-27 — Donee: log out · [diagram](../diagrams/sprint-1_diagrams/US-27.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | `Logout()` capitalisation — see project-wide note. | covered above |
 | **[T]** | An "Entity Relationship Diagram" label is placed below the sequence diagram but no actual ERD is drawn. Cosmetic. | new |
 
-### US-39 — Platform Manager: log in · [photo_..._63](../diagrams/sprint-1_diagrams/photo_6307534012964082263_y.jpg)
+### US-39 — Platform Manager: log in · [diagram](../diagrams/sprint-1_diagrams/US-39.jpg)
 
 No new differences.
 
-### US-40 — Platform Manager: log out · [photo_..._64](../diagrams/sprint-1_diagrams/photo_6307534012964082264_y.jpg)
+### US-40 — Platform Manager: log out · [diagram](../diagrams/sprint-1_diagrams/US-40.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -100,17 +100,17 @@ No new differences.
 
 ## Sprint 2
 
-### US-2 — Admin: view user profile · [photo_..._329](../diagrams/sprint-2_diagrams/photo_6307534012964082329_y.jpg)
+### US-2 — Admin: view user profile · [diagram](../diagrams/sprint-2_diagrams/US-02.jpg)
 
 No new diagram-vs-code differences. The pragmatic `view_all_profiles` extension lives on a separate `ViewProfilesController` (used by both US-2 and the create-account profile dropdown) and is already logged in todo.md.
 
-### US-3 — Admin: update user profile · [photo_..._330](../diagrams/sprint-2_diagrams/photo_6307534012964082330_y.jpg)
+### US-3 — Admin: update user profile · [diagram](../diagrams/sprint-2_diagrams/US-03.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | `UpdateUserProfilePage.displaySucess()` on the class diagram is misspelled. Sequence and code use the correct spelling. | new — log in todo.md (this typo recurs on US-1, US-3, US-4, US-8, US-15) |
 
-### US-7 — Admin: view user account · [photo_..._331](../diagrams/sprint-2_diagrams/photo_6307534012964082331_y.jpg)
+### US-7 — Admin: view user account · [diagram](../diagrams/sprint-2_diagrams/US-07.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -118,7 +118,7 @@ No new diagram-vs-code differences. The pragmatic `view_all_profiles` extension 
 | **[T]** | Entity class diagram method signature is `viewUserAccount(userAccount: UserAccount): UserAccount`. Parameter should be `accountId: String` to match the controller and sequence. Code uses `view_user_account(account_id)`. | new — log in todo.md |
 | **[E]** | `UserAccount.view_all_user_accounts()` and `ViewUserAccountController.view_all_user_accounts()` not on diagram. | todo.md (existing entry) |
 
-### US-8 — Admin: update user account · [photo_..._332](../diagrams/sprint-2_diagrams/photo_6307534012964082332_y.jpg)
+### US-8 — Admin: update user account · [diagram](../diagrams/sprint-2_diagrams/US-08.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -126,21 +126,21 @@ No new diagram-vs-code differences. The pragmatic `view_all_profiles` extension 
 | **[T]** | Sequence lifelines labelled `UpdateUserProfilePage` / `UpdateUserProfileController` / `UserProfile`. Should be `UpdateUserAccount*` / `UserAccount`. | new — log in todo.md |
 | **[D]** | DOB type changed between US-6 (`DOB: String`) and US-8 (`DOB: Date`). Code stores ISO string. Cosmetic at the code layer; reconcile diagrams. | new |
 
-### US-14 — Fundraiser: view their FSA · [photo_..._333](../diagrams/sprint-2_diagrams/photo_6307534012964082333_y.jpg)
+### US-14 — Fundraiser: view their FSA · [diagram](../diagrams/sprint-2_diagrams/US-14.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Boundary class method `displayFundraisingActivity(userAccount: UserAccount): void` — parameter type should be `FundraisingActivity`, not `UserAccount`. Sequence and code agree. | todo.md "Sprint 2 diagram typos" (existing entry) |
 | **[E]** | `FundraisingActivity.view_activities_by_owner` and the matching controller method exist but aren't on the US-14 / US-15 diagrams. Used to scope the fundraiser's list to their own activities. | todo.md (existing entry) |
 
-### US-15 — Fundraiser: update their FSA · [photo_..._334](../diagrams/sprint-2_diagrams/photo_6307534012964082334_y.jpg)
+### US-15 — Fundraiser: update their FSA · [diagram](../diagrams/sprint-2_diagrams/US-15.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | `UpdateFundraiserActivityPage.displaySucess()` typo (class diagram). | covered by US-3 entry |
 | **[T]** | Sequence shows controller `UpdateUserProfileController` and entity `UserProfile`. Should be `UpdateFundraiserActivityController` / `FundraisingActivity`. | todo.md "Sprint 2 diagram typos" (existing entry) |
 
-### US-20 — Donee: search FSAs · [photo_..._335](../diagrams/sprint-2_diagrams/photo_6307534012964082335_y.jpg)
+### US-20 — Donee: search FSAs · [diagram](../diagrams/sprint-2_diagrams/US-20.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -149,14 +149,14 @@ No new diagram-vs-code differences. The pragmatic `view_all_profiles` extension 
 | **[T]** | Boundary class method on diagram is `displayMatchingFundraisingActivities()` with no parameter; the sequence (and code) takes `(activityList: List<FundraisingActivity>)`. | new |
 | **[D]** | `FundraisingActivity.submit_search_criteria` signature widened in Sprint 3 to `(search_criteria, owner_account_id=None, status=None)` — the US-17, US-20, US-30 class diagrams need to match. | todo.md "Diagram updates needed before final marking" — Sprint 3 (existing entry) |
 
-### US-22 — Donee: save FSA to favourites · [photo_..._336](../diagrams/sprint-2_diagrams/photo_6307534012964082336_y.jpg)
+### US-22 — Donee: save FSA to favourites · [diagram](../diagrams/sprint-2_diagrams/US-22.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Entity class header reads `FundraisingActivity` but the fields (`accountId, activityId`) and method describe `FavouriteList`. | todo.md "Sprint 2 diagram typos" (existing entry) |
 | **[T]** | Sequence boundary lifeline reads `SaveFundraisigActivityPage` (missing `n`), and the controller lifeline is `SaveFundraisingActivityController` (with `ing`) — class diagram uses `SaveFundraiserActivityPage` / `SaveFundraiserActivityController` (with `er`). Three names for two classes, all in the same diagram. Code uses the class-diagram names. | new |
 
-### US-24 — Donee: view favourites · [photo_..._338](../diagrams/sprint-2_diagrams/photo_6307534012964082338_y.jpg)
+### US-24 — Donee: view favourites · [diagram](../diagrams/sprint-2_diagrams/US-24.jpg)
 
 No diagram-vs-code differences for this story.
 
@@ -166,20 +166,20 @@ No diagram-vs-code differences for this story.
 
 All ten implemented stories were already documented in [todo.md](todo.md) when Sprint 3 landed. This catalogue restates them for completeness and adds anything noticed during this re-review.
 
-### US-4 — Admin: delete user profile · [photo_..._607](../diagrams/sprint-3_diagrams/photo_6323100215690334607_y.jpg)
+### US-4 — Admin: delete user profile · [diagram](../diagrams/sprint-3_diagrams/US-04.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | `DeleteUserProfilePage.displaySucess()` typo (class diagram). | todo.md "Sprint 3 diagram typos" (existing entry) |
 | **[D]** | `UserProfile.delete_user_profile` returns `False` on FK violation when an account references the profile. Diagram doesn't specify this. | todo.md "Sprint 3 (added 2026-05-05)" (existing entry) |
 
-### US-5 — Admin: search user profiles · [photo_..._608](../diagrams/sprint-3_diagrams/photo_6323100215690334608_y.jpg)
+### US-5 — Admin: search user profiles · [diagram](../diagrams/sprint-3_diagrams/US-05.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Sequence lifelines labelled `RemoveUserProfilePage` / `RemoveUserProfileController`. Should be `Search…`. | todo.md "Sprint 3 diagram typos" (existing entry) |
 
-### US-9 — Admin: suspend user account · [photo_..._609](../diagrams/sprint-3_diagrams/photo_6323100215690334609_y.jpg)
+### US-9 — Admin: suspend user account · [diagram](../diagrams/sprint-3_diagrams/US-09.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -187,7 +187,7 @@ All ten implemented stories were already documented in [todo.md](todo.md) when S
 
 No code differences.
 
-### US-10 — Admin: search user accounts · [photo_..._610](../diagrams/sprint-3_diagrams/photo_6323100215690334610_y.jpg)
+### US-10 — Admin: search user accounts · [diagram](../diagrams/sprint-3_diagrams/US-10.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -195,11 +195,11 @@ No code differences.
 | **[T]** | Controller class return type `List<UserProfile>` — should be `List<UserAccount>`. | todo.md (existing entry) |
 | **[T]** | Entity class return type `List<UserProfile>` — should be `List<UserAccount>`. | todo.md (existing entry) |
 
-### US-16 — Fundraiser: suspend FSA · [photo_..._611](../diagrams/sprint-3_diagrams/photo_6323100215690334611_y.jpg)
+### US-16 — Fundraiser: suspend FSA · [diagram](../diagrams/sprint-3_diagrams/US-16.jpg)
 
 No diagram-vs-code differences.
 
-### US-17 — Fundraiser: search FSAs · [photo_..._612](../diagrams/sprint-3_diagrams/photo_6323100215690334612_y.jpg)
+### US-17 — Fundraiser: search FSAs · [diagram](../diagrams/sprint-3_diagrams/US-17.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -207,35 +207,35 @@ No diagram-vs-code differences.
 | **[T]** | Entity class return type appears to read `List<FundraisingAcitivity>` (typo, `i`/`t` swapped). Should be `List<FundraisingActivity>`. | new |
 | **[D]** | Signature widened — see US-20. | todo.md (existing entry) |
 
-### US-23 — Donee: delete favourite · [photo_..._613](../diagrams/sprint-3_diagrams/photo_6323100215690334613_y.jpg)
+### US-23 — Donee: delete favourite · [diagram](../diagrams/sprint-3_diagrams/US-23.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[D]** | Code parameter order is `delete_favourite(activity_id, account_id)` matching the diagram exactly; supersedes the Sprint 2 placeholder `remove_favourite(account_id, activity_id)`. The Sprint 2 placeholder is now removed. | todo.md "Diagram updates needed before final marking" (existing entry, marked resolved) |
 | **[T]** | `FavouriteList` field order on this diagram (`activityId, accountId`) flips between US-22 / US-24 (`accountId, activityId`) and US-23 / US-25 (`activityId, accountId`). Code stores them in the table as `(account_id, activity_id)` (composite PK). Cosmetic — pick one ordering across all four diagrams. | new |
 
-### US-25 — Donee: search favourites · [photo_..._614](../diagrams/sprint-3_diagrams/photo_6323100215690334614_y.jpg)
+### US-25 — Donee: search favourites · [diagram](../diagrams/sprint-3_diagrams/US-25.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[D]** | Implementation widens `FavouriteList.submit_search_criteria` to `(search_criteria, account_id=None)` — without the account filter the method would leak other donees' favourites. Diagram needs the `account_id` parameter. | todo.md (entity-extension comment exists; consider adding a dedicated line) |
 | **[T]** | Field-order inconsistency — see US-23. | covered |
 
-### US-30 — Fundraiser: search completed FSAs · [photo_..._615](../diagrams/sprint-3_diagrams/photo_6323100215690334615_y.jpg)
+### US-30 — Fundraiser: search completed FSAs · [diagram](../diagrams/sprint-3_diagrams/US-30.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Sequence end call `displayMatchingFavourite(activityList: List<FavouriteList>)` — should be `displayMatchingCompletedActivity(activityList: List<FundraisingActivity>)`. | todo.md "Sprint 3 diagram typos" (existing entry) |
 | **[D]** | Signature widened — see US-20. | todo.md (existing entry) |
 
-### US-31 — Fundraiser: view completed FSA · [photo_..._616](../diagrams/sprint-3_diagrams/photo_6323100215690334616_y.jpg)
+### US-31 — Fundraiser: view completed FSA · [diagram](../diagrams/sprint-3_diagrams/US-31.jpg)
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
 | **[T]** | Sequence lifelines labelled `SearchCompletedActivityPage` / `SearchCompletedActivityController`. Should be `View…`. | todo.md "Sprint 3 diagram typos" (existing entry) |
 | **[T]** | Boundary class method signature `displayCompletedActivity(fundraisingActivity: FundraisingActivity)` is missing the `: void` return type marker. Cosmetic. | new |
 
-### US-32 — Donee: search donation history · [photo_..._617](../diagrams/sprint-3_diagrams/photo_6323100215690334617_y.jpg) — DEFERRED
+### US-32 — Donee: search donation history · [diagram](../diagrams/sprint-3_diagrams/US-32.jpg) — DEFERRED
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
@@ -243,7 +243,7 @@ No diagram-vs-code differences.
 | **[T]** | Sequence end call `displayMatchingFavourite(activityList: List<FavouriteList>)` — same typo as US-30; should be `displayMatchingCompletedActivity(...List<FundraisingActivity>)`. | todo.md "Sprint 3 diagram typos" (existing entry) |
 | **[T]** | Class names `SearchCompletedActivityPage` / `SearchCompletedActivityController` collide with US-30 (different actor, same names). Resolve in the Sprint 4 redesign once a `Donation` entity exists. | new (see issues.md) |
 
-### US-33 — Donee: view donation history · [photo_..._618](../diagrams/sprint-3_diagrams/photo_6323100215690334618_y.jpg) — DEFERRED
+### US-33 — Donee: view donation history · [diagram](../diagrams/sprint-3_diagrams/US-33.jpg) — DEFERRED
 
 | Tag | Difference | Where it's tracked |
 |---|---|---|
