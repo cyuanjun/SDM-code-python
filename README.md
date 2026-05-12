@@ -59,4 +59,4 @@ Total: **41 of 43 user stories** implemented across 34 Streamlit pages and 107 p
 
 ## Debug utilities
 
-The sidebar includes a `.info (debug)` page that shows row counts, full table dumps, the live schema, and supports row-click delete with friendly FK-violation handling. Bypasses the B-C-E layers because it is not a use case. **Hide before the final live demo** — see [docs/todo.md](docs/todo.md).
+The sidebar includes a `.info (debug)` page that shows row counts for all six tables, per-table dumps in tabs, the live schema, and row-click delete with composite-PK support (for `favourite_list`) and friendly FK-violation handling. Bypasses the B-C-E layers because it is not a use case. **Hide before the final live demo** — see [docs/todo.md](docs/todo.md).

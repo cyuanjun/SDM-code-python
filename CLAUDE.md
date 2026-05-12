@@ -110,11 +110,11 @@ SDM-code/
 
 These are the non-obvious wiring choices a future session would otherwise have to reverse-engineer:
 
-- **Routing.** `app.py` holds a single `PAGES` dict mapping a sidebar label to a Boundary class. `main()` calls `page_cls().render()` on the selection — every Boundary class must expose a no-arg `render(self)` method. Sidebar labels are prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`) so role-gating can be deferred.
-- **Session.** Cross-page state (the logged-in user) lives in `st.session_state["user"]` as a `UserAccount` instance. Login writes it; logout clears it; pages read it directly.
+- **Routing.** `app.py` holds a single `PAGES` dict mapping a sidebar label to a Boundary class. `main()` calls `page_cls().render()` on the selection — every Boundary class must expose a no-arg `render(self)` method. Sidebar labels are prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`, `[PM]`) so role-gating can be deferred.
+- **Session.** Cross-page state (the logged-in user) lives in `st.session_state["user"]` as a `UserAccount` instance. Login writes it; logout clears it; pages read it directly. After login the sidebar renders `Signed in as <name> (<role>) <email>` via a `ViewUserProfileController` lookup on the session user's `profile_id`.
 - **DB access.** `persistence/db.py` exposes `get_connection()` (returns a `sqlite3.Connection` with `row_factory = sqlite3.Row` and `PRAGMA foreign_keys = ON`) and `init_db()` (executes `schema.sql`). Entities open their own connections per operation — there is no ORM and no shared session.
 - **Test isolation.** [tests/conftest.py](tests/conftest.py) defines an `autouse` fixture that monkey-patches `persistence.db.DB_PATH` to a `tmp_path` file and re-initialises the schema before every test. Never write tests that assume `app.db`; just call entity methods and the fixture handles the rest.
-- **Seed data.** `data/seed.py` is destructive — it deletes `app.db` then re-seeds. `RECORD_COUNT` defaults to 10; bump to 100 only for the marking demo.
+- **Seed data.** `data/seed.py` is destructive — it deletes `app.db` then re-seeds. `RECORD_COUNT` defaults to 10; bump to 100 only for the marking demo. The first `len(ROLES)` profiles + accounts are pinned one-per-role so admin / fundraiser / donee / platform_manager always exist; the seed also writes 3 sample reports (daily / weekly / monthly) tied to the pinned PM so the `report` table isn't empty.
 
 ## TDD expectations
 

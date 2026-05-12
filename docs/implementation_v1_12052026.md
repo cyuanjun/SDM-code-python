@@ -72,11 +72,13 @@ Fundraiser metrics, platform-manager category management, platform-manager repor
 - Wired `FavouriteList.save_fundraising_activity` / `delete_favourite` to bump and decrement `fundraising_activity.save_count`. View count is bumped on the donee's `selectFundraisingActivity` click.
 - Sidebar prefixed `[PM]` for the eight new platform-manager pages.
 
-**Post-Sprint-4 polish (2026-05-12):**
+**Post-Sprint-4 polish (2026-05-12 → 2026-05-13):**
 - Dropped the speculative `platform_manager` table and `PlatformManager` entity — PMs are now `user_account` rows with `profile.role = 'platform_manager'`, matching the Sprint 1 US-39 sequence diagram (see [issues.md](issues.md) "Resolved").
 - Reports persist on every generate: new `report` table, `Report._generate` INSERTs and returns the row's real `report_id` (resolves the "Reports on the fly" open question — option (b) per [issues.md](issues.md)).
 - Login UX: [boundary/login_page.py](../boundary/login_page.py) now calls `st.rerun()` on success so the sidebar reflects the new session state on the same submit. [app.py](../app.py) sidebar shows `Signed in as <name> (<role>) <email>` via a `ViewUserProfileController` lookup instead of just the raw email.
 - All 41 diagram photos renamed from `photo_<long-id>_y.jpg` to `US-XX.jpg` under their existing sprint subfolders. [docs/differences.md](differences.md) link targets and link text updated.
+- `InfoPage` debug utility expanded from 3 to all 6 tables (added `favourite_list`, `fundraising_activity_category`, `report`); composite-PK delete supported for `favourite_list`; per-table empty-state hints so the `report` tab points to the PM Generate-report flow instead of `python -m data.seed`. (2026-05-13)
+- [data/seed.py](../data/seed.py) now writes 3 sample reports (daily/weekly/monthly) tied to the pinned PM account so the `report` table is populated out of the box. The seed run also exercises the persistence path. (2026-05-13)
 
 ---
 
@@ -169,7 +171,7 @@ Decisions surfaced during Sprint 4 that the team should resolve before final sub
 source .venv/bin/activate
 pytest                            # 107 passed in ~0.3s
 python -m persistence.db          # creates app.db with empty schema (Sprint 4 tables included)
-python -m data.seed               # populates 10 profiles, 10 accounts, 10 FRAs, ~20 favourites, 5 categories — one account per role guaranteed
+python -m data.seed               # populates 10 profiles, 10 accounts, 10 FRAs, ~20 favourites, 5 categories, 3 sample reports — one account per role guaranteed
 streamlit run app.py              # serves the 34-page sidebar on http://localhost:8501
 ```
 

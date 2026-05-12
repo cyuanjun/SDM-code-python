@@ -240,7 +240,7 @@ All input/format validation lives here. None of these classes import from `entit
 - `CreateAccountPage` — US-6 (profile picked via dropdown sourced from `ViewProfilesController`)
 - `CreateFundraisingActivityPage` — US-13 (now stamps `owner_account_id` from `st.session_state["user"].account_id`)
 - `ViewFundraisingActivityPage` — US-21 (clickable table → details + back)
-- `InfoPage` — debug utility (row-click delete with FK error handling); hide before final demo
+- `InfoPage` — debug utility. Six metric tiles + six tabs (one per table: `user_profile`, `user_account`, `fundraising_activity`, `favourite_list`, `fundraising_activity_category`, `report`); row-click delete with composite-PK support for `favourite_list` and FK-violation error handling. Hide before final demo
 
 ### Sprint 2 (new)
 
@@ -360,12 +360,12 @@ Run with `pytest`.
 
 Idempotent (drops & recreates `app.db`). Row counts are governed by `RECORD_COUNT` at the top of the file (default **10**, intended to be bumped to **100** before the marking demo per the project spec). Populates:
 
-- `RECORD_COUNT` user profiles (random role + Faker sentence)
-- `RECORD_COUNT` user accounts (Faker name/email/dob/phone, password `password123`, random profile FK)
+- `RECORD_COUNT` user profiles — the first `len(ROLES)` are pinned one-per-role (admin / fundraiser / donee / platform_manager) so the demo always has at least one of each; the rest are random
+- `RECORD_COUNT` user accounts (Faker name/email/dob/phone, password `password123`) — the first `len(ROLES)` accounts are pinned to the matching pinned profile so every role has a logged-in-able account, including PM
 - `RECORD_COUNT` fundraising activities (random category/status/dates/amount, random `owner_account_id` FK)
 - `RECORD_COUNT * 2` favourite-list save attempts (deduped by composite PK; also bumps each parent activity's `save_count`)
 - 5 fundraising activity categories (medical, education, disaster_relief, community, other)
-- `RECORD_COUNT // 2` platform managers (Faker username/email/name, password `password123`)
+- 3 sample reports — one daily (yesterday), one weekly (last 7 days), one monthly (last 30 days) — written by the pinned PM's `account_id` so the `report` table is populated out of the box
 
 Run with `python -m data.seed`.
 
