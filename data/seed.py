@@ -13,6 +13,7 @@ from faker import Faker
 
 from entity.fundraising_activity import FundraisingActivity
 from entity.fundraising_activity_category import FundraisingActivityCategory
+from entity.report import Report
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 from persistence.db import DB_PATH, init_db
@@ -101,11 +102,29 @@ def seed() -> None:
         ):
             category_ids.append(name)
 
+    # Sample reports so the marker can see the persisted `report` table without
+    # logging in as a PM first. The pinning above guarantees account_ids[3] is
+    # the platform_manager account (ROLES.index("platform_manager") == 3).
+    reports_added = 0
+    pm_index = ROLES.index("platform_manager")
+    if pm_index < len(account_ids):
+        pm_account_id = account_ids[pm_index]
+        today = date.today()
+        yesterday = (today - timedelta(days=1)).isoformat()
+        week_start = (today - timedelta(days=6)).isoformat()
+        month_start = (today - timedelta(days=29)).isoformat()
+        today_iso = today.isoformat()
+        Report.generate_daily_report(yesterday, yesterday, pm_account_id)
+        Report.generate_weekly_report(week_start, today_iso, pm_account_id)
+        Report.generate_monthly_report(month_start, today_iso, pm_account_id)
+        reports_added = 3
+
     print(
         f"Seeded {len(profile_ids)} profiles, {len(account_ids)} accounts, "
         f"{len(activity_ids)} fundraising activities, "
         f"{favourites_added} favourites, "
-        f"and {len(category_ids)} categories into {DB_PATH}"
+        f"{len(category_ids)} categories, "
+        f"and {reports_added} reports into {DB_PATH}"
     )
 
 

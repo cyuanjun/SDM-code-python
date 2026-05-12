@@ -17,11 +17,24 @@ import streamlit as st
 
 from persistence.db import DB_PATH, get_connection
 
-TABLES = ("user_profile", "user_account", "fundraising_activity")
+TABLES = (
+    "user_profile",
+    "user_account",
+    "fundraising_activity",
+    "favourite_list",
+    "fundraising_activity_category",
+    "report",
+)
 PK_COLS = {
     "user_profile": "profile_id",
     "user_account": "email",
     "fundraising_activity": "activity_id",
+    "favourite_list": ("account_id", "activity_id"),
+    "fundraising_activity_category": "category_id",
+    "report": "report_id",
+}
+EMPTY_HINTS = {
+    "report": "Log in as a PM and use `[PM] Generate daily/weekly/monthly report`.",
 }
 
 
@@ -70,11 +83,13 @@ class InfoPage:
             st.caption("Click a row to enable delete.")
             return
 
-        pk_col = PK_COLS[table]
-        pk_value = rows[selected[0]][pk_col]
+        pk_spec = PK_COLS[table]
+        pk_cols = (pk_spec,) if isinstance(pk_spec, str) else pk_spec
+        pk_values = tuple(rows[selected[0]][c] for c in pk_cols)
         left, right = st.columns([3, 1])
         with left:
-            st.write(f"Selected **{pk_col}** = `{pk_value}`")
+            shown = ", ".join(f"**{c}** = `{v}`" for c, v in zip(pk_cols, pk_values))
+            st.write(f"Selected {shown}")
         with right:
             if st.button(
                 "Delete row",
@@ -82,12 +97,13 @@ class InfoPage:
                 type="primary",
                 width="stretch",
             ):
-                self._delete(table, pk_col, pk_value)
+                self._delete(table, pk_cols, pk_values)
 
-    def _delete(self, table: str, pk_col: str, pk_value) -> None:
+    def _delete(self, table: str, pk_cols: tuple, pk_values: tuple) -> None:
+        where = " AND ".join(f"{c} = ?" for c in pk_cols)
         try:
             with get_connection() as conn:
-                conn.execute(f"DELETE FROM {table} WHERE {pk_col} = ?", (pk_value,))
+                conn.execute(f"DELETE FROM {table} WHERE {where}", pk_values)
         except sqlite3.IntegrityError as e:
             st.session_state["info_flash"] = (
                 "error",
@@ -95,9 +111,10 @@ class InfoPage:
                 f"Delete dependents first. ({e})",
             )
         else:
+            pretty = ", ".join(f"{c}={v}" for c, v in zip(pk_cols, pk_values))
             st.session_state["info_flash"] = (
                 "success",
-                f"Deleted from `{table}` where {pk_col} = {pk_value}.",
+                f"Deleted from `{table}` where {pretty}.",
             )
         st.rerun()
 
