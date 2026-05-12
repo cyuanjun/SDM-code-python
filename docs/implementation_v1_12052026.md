@@ -3,7 +3,7 @@
 A point-in-time report of the SDM Online Fundraising System after Sprint 4 lands. Cross-references the live docs but is meant to be read standalone for marking / handover.
 
 - **Live references:** [implementation.md](implementation.md) (full code index), [todo.md](todo.md) (deferred work + diagram catchup), [issues.md](issues.md) (open design questions), [differences.md](differences.md) (per-user-story diagram-vs-code diff), [../CLAUDE.md](../CLAUDE.md) (architecture rules).
-- **Scope of this snapshot:** Sprints 1–4 complete. 41 of 43 user stories implemented across 34 Streamlit pages, 7 entities, 33 controllers, 110 passing tests.
+- **Scope of this snapshot:** Sprints 1–4 complete. 41 of 43 user stories implemented across 34 Streamlit pages, 6 entities, 35 controllers, 107 passing tests.
 
 ---
 
@@ -65,12 +65,18 @@ Fundraiser metrics, platform-manager category management, platform-manager repor
 | US-36 | PM: update FRA category | `update_fundraising_activity_category` |
 | US-37 | PM: search FRA categories | `submit_search_criteria` |
 | US-38 | PM: suspend FRA category | `suspend_fundraising_activity_category` |
-| US-41 / US-42 / US-43 | PM: daily / weekly / monthly report | new entity `Report` (on-the-fly, no `report` table); `platform_manager_id` is the logged-in PM's `user_account.account_id` |
+| US-41 / US-42 / US-43 | PM: daily / weekly / monthly report | new entity `Report` + new `report` table; every generate persists a row and returns the Report with the real `report_id`. `platform_manager_id` is the logged-in PM's `user_account.account_id` |
 
 **Cross-cutting Sprint 4 changes:**
 - Replaced hardcoded `DEFAULT_CATEGORIES` in [boundary/create_fundraising_activity_page.py](../boundary/create_fundraising_activity_page.py) and [boundary/update_fundraiser_activity_page.py](../boundary/update_fundraiser_activity_page.py) with a live lookup against `fundraising_activity_category`.
 - Wired `FavouriteList.save_fundraising_activity` / `delete_favourite` to bump and decrement `fundraising_activity.save_count`. View count is bumped on the donee's `selectFundraisingActivity` click.
 - Sidebar prefixed `[PM]` for the eight new platform-manager pages.
+
+**Post-Sprint-4 polish (2026-05-12):**
+- Dropped the speculative `platform_manager` table and `PlatformManager` entity — PMs are now `user_account` rows with `profile.role = 'platform_manager'`, matching the Sprint 1 US-39 sequence diagram (see [issues.md](issues.md) "Resolved").
+- Reports persist on every generate: new `report` table, `Report._generate` INSERTs and returns the row's real `report_id` (resolves the "Reports on the fly" open question — option (b) per [issues.md](issues.md)).
+- Login UX: [boundary/login_page.py](../boundary/login_page.py) now calls `st.rerun()` on success so the sidebar reflects the new session state on the same submit. [app.py](../app.py) sidebar shows `Signed in as <name> (<role>) <email>` via a `ViewUserProfileController` lookup instead of just the raw email.
+- All 41 diagram photos renamed from `photo_<long-id>_y.jpg` to `US-XX.jpg` under their existing sprint subfolders. [docs/differences.md](differences.md) link targets and link text updated.
 
 ---
 

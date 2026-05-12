@@ -330,7 +330,7 @@ Sprint 3 added no new tables or columns — `status` and `suspended` were alread
 
 ## 8. Application entry ([app.py](../app.py))
 
-Streamlit entry. `layout="wide"`. Sidebar shows sign-in status and a radio for the 34 pages, prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`, `[PM]`, plus `.info (debug)`). No role-based gating yet — see [issues.md](issues.md) ("Admin pages have no authentication / RBAC gate"). PM pages are not gated either (consistent stance — see "Platform Manager actor has no login flow" in [issues.md](issues.md)).
+Streamlit entry. `layout="wide"`. Sidebar shows sign-in status as `Signed in as <name> (<role>) <email>` via a [`ViewUserProfileController`](../controller/view_user_profile_controller.py) lookup on the session user's `profile_id`, and a radio for the 34 pages, prefixed by actor (`[Admin]`, `[Fundraiser]`, `[Donee]`, `[PM]`, plus `.info (debug)`). No role-based gating yet — see [issues.md](issues.md) ("Admin pages have no authentication / RBAC gate"). PMs authenticate through the shared `LoginPage` (Sprint 1 US-39 diagram); they live in `user_account` with `profile.role = 'platform_manager'`.
 
 ---
 
