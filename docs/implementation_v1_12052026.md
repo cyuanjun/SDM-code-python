@@ -131,7 +131,8 @@ These are intentional departures. Each has a logged justification.
 - **`FavouriteList.submit_search_criteria` widened.** US-25 diagram does not show account scoping but without it the method would leak other donees' favourites. Implementation takes an optional `account_id`. Diagram must be updated.
 - **`UserProfile.delete_user_profile` FK semantics.** US-4 diagram does not specify behaviour when an account references the profile. Implementation returns `False` (safe delete). Diagram should add this clause.
 - **Sprint 4 category-entity naming.** Diagrams use `ViewFRACategory`, `updateFRACategory`, `suspendFRACategory`. Implementation uses the full-word forms (`view_fundraising_activity_category`, `update_fundraising_activity_category`, `suspend_fundraising_activity_category`) to stay consistent with Sprint 1–3 naming (e.g. `suspend_fundraising_activity`, `view_user_profile`). `submitSeachCriteria` also normalised to the project-standard `submit_search_criteria`. Logged under [todo.md](todo.md) "Sprint 4 naming deviations".
-- **Sprint 4 schema migration on `fundraising_activity`.** `view_count` and `save_count` columns were added (default 0). Plus the new table `fundraising_activity_category`. Reflect in the persistent / data design diagrams. (The Sprint 4 `platform_manager` table was added and then removed on 2026-05-12 — see [issues.md](issues.md) "Resolved" — so it should not appear on the final diagrams.)
+- **Sprint 4 schema migration on `fundraising_activity`.** `view_count` and `save_count` columns were added (default 0). Plus the new tables `fundraising_activity_category` and `report` (added 2026-05-12 to persist generated reports). Reflect both new tables in the persistent / data design diagrams. (The Sprint 4 `platform_manager` table was added and then removed on 2026-05-12 — see [issues.md](issues.md) "Resolved" — so it should *not* appear on the final diagrams.)
+- **`generate_*_report` gain a `platform_manager_id` parameter (added 2026-05-12).** US-41 / US-42 / US-43 class diagrams show `generateDailyReport(startDate, endDate): Report` and equivalents — no PM id on the wire. Implementation threads `platform_manager_id` from `st.session_state["user"].account_id` through Boundary → Controller → Entity so `Report.platformManagerId` is the actual logged-in PM. Update the three report class + sequence diagrams to include the extra parameter.
 - **Earlier schema migration** (already logged): `account_id` added to `user_account`; `owner_email` renamed to `owner_account_id` on `fundraising_activity`.
 
 ### 3.3 Pragmatic methods not in any class diagram (CLAUDE.md Exception A)
@@ -166,9 +167,9 @@ Decisions surfaced during Sprint 4 that the team should resolve before final sub
 
 ```bash
 source .venv/bin/activate
-pytest                            # 110 passed in ~0.3s
+pytest                            # 107 passed in ~0.3s
 python -m persistence.db          # creates app.db with empty schema (Sprint 4 tables included)
-python -m data.seed               # populates 10 profiles, 10 accounts, 10 FRAs, 20 favourites, 5 categories, 5 PMs
+python -m data.seed               # populates 10 profiles, 10 accounts, 10 FRAs, ~20 favourites, 5 categories — one account per role guaranteed
 streamlit run app.py              # serves the 34-page sidebar on http://localhost:8501
 ```
 
@@ -188,21 +189,20 @@ CI runs `pytest -v` on every push via [.github/workflows/ci.yml](../.github/work
 | Layer | Count |
 |---|---|
 | Boundary classes | 34 (incl. `InfoPage` debug utility) |
-| Controller classes | 33 |
+| Controller classes | 35 |
 | Entity classes | 6 (`UserProfile`, `UserAccount`, `FundraisingActivity`, `FavouriteList`, `FundraisingActivityCategory`, `Report`) |
 | Tables | 6 (`user_profile`, `user_account`, `fundraising_activity`, `favourite_list`, `fundraising_activity_category`, `report`) |
 | User stories — implemented | 41 of 43 |
 | User stories — deferred | 2 (US-32, US-33) |
-| pytest tests | 110, all green |
+| pytest tests | 107, all green |
 | Sidebar pages | 34 (`[Admin]` 10, `[Fundraiser]` 7, `[Donee]` 6, `[PM]` 8, shared 2, debug 1) |
 
 ---
 
 ## 7. What to do next (suggested order)
 
-1. **Diagram catchup pass** — apply the full [todo.md](todo.md) "Diagram updates needed before final marking" list to the source diagrams. Without this, the marker will see deviations not justified by an updated diagram.
-2. **Decide on report persistence** (§4 item 1) — one-line decision unblocks a small diagram tweak.
-3. **Decide on donate flow** (§4 item 2) — needed to unblock US-32/33 and make Sprint 4 reports meaningful.
-4. **Hardening sprint** — RBAC, ownership checks, password hashing. Single connected change; do it last.
-5. **Bump `RECORD_COUNT` to 100** in [data/seed.py](../data/seed.py) and re-run `python -m data.seed` before recording the marking demo.
-6. **Hide `InfoPage`** before the final live demo (logged in [todo.md](todo.md) "Debug-only artifacts").
+1. **Diagram catchup pass** — apply the full [todo.md](todo.md) "Diagram updates needed before final marking" list to the source diagrams. Highlights: new `report` table on the data diagram, `platform_manager_id` parameter added to all three `generate_*_report` signatures, all `view_all_*` Exception-A helpers, the Sprint 4 category-entity naming normalisation. Without this, the marker will see deviations not justified by an updated diagram.
+2. **Decide on donate flow** (§4 item 1) — needed to unblock US-32/33 and make Sprint 4 reports meaningful.
+3. **Hardening sprint** (§4 items 2 + 3) — RBAC menu gating, ownership checks on fundraiser writes, password hashing. Single connected change; do it last.
+4. **Bump `RECORD_COUNT` to 100** in [data/seed.py](../data/seed.py) and re-run `python -m data.seed` before recording the marking demo.
+5. **Hide `InfoPage`** before the final live demo (logged in [todo.md](todo.md) "Debug-only artifacts").
