@@ -14,6 +14,9 @@ from controller.generate_monthly_report_controller import (
 class GenerateMonthlyReportPage:
     def render(self) -> None:
         st.header("Generate monthly report")
+        if "user" not in st.session_state:
+            st.warning("Log in to generate a report.")
+            return
         today = date.today()
         cols = st.columns(2)
         year = cols[0].number_input(
@@ -28,14 +31,16 @@ class GenerateMonthlyReportPage:
 
         if st.button("Generate monthly report", type="primary"):
             self.click_generate_monthly_report_button(
-                first.isoformat(), last.isoformat()
+                first.isoformat(),
+                last.isoformat(),
+                st.session_state["user"].account_id,
             )
 
     def click_generate_monthly_report_button(
-        self, start_date: str, end_date: str
+        self, start_date: str, end_date: str, platform_manager_id: int
     ) -> None:
         report = GenerateMonthlyReportController().generate_monthly_report(
-            start_date, end_date
+            start_date, end_date, platform_manager_id
         )
         self.display_report(report)
 

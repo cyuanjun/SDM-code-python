@@ -54,6 +54,7 @@ from boundary.view_fundraising_activity_category_page import (
 from boundary.view_fundraising_activity_page import ViewFundraisingActivityPage
 from boundary.view_user_account_page import ViewUserAccountPage
 from boundary.view_user_profile_page import ViewUserProfilePage
+from controller.view_user_profile_controller import ViewUserProfileController
 from persistence.db import init_db
 
 PAGES = {
@@ -100,7 +101,12 @@ def main() -> None:
 
     st.sidebar.title("SDM Fundraising")
     if "user" in st.session_state:
-        st.sidebar.success(f"Signed in as {st.session_state['user'].email}")
+        user = st.session_state["user"]
+        profile = ViewUserProfileController().view_user_profile(user.profile_id)
+        role = profile.role if profile else "unknown"
+        st.sidebar.success(
+            f"Signed in as\n\n**{user.name}** ({role})\n\n{user.email}"
+        )
     else:
         st.sidebar.info("Not signed in")
 

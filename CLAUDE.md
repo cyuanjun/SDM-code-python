@@ -152,9 +152,9 @@ Sprints 1–4 are implemented (41 of 43 user stories, 34 Streamlit pages). See `
 
 Active design gaps and known shortcuts that have NOT been addressed yet:
 
-- **Plain-text passwords** in [entity/user_account.py](entity/user_account.py) and [entity/platform_manager.py](entity/platform_manager.py) — hashing scheduled for a hardening sprint.
+- **Plain-text passwords** in [entity/user_account.py](entity/user_account.py) — hashing scheduled for a hardening sprint.
 - **No RBAC / no menu gating in `app.py`** — every sidebar page is reachable by anyone, even unauthenticated. Pages are prefixed `[Admin]` / `[Fundraiser]` / `[Donee]` / `[PM]` for legibility only. See the "High" entry in [docs/issues.md](docs/issues.md).
 - **Ownership not enforced** at the entity layer for `update_fundraiser_activity` (US-15) and `suspend_fundraising_activity` (US-16). "Medium" entry in [docs/issues.md](docs/issues.md).
-- **Platform Manager has no login flow** — the `platform_manager` table exists and is seeded but `app.py` doesn't sign PMs in. Reports source `platformManagerId` from the first seeded row.
 - **Reports run with zero donations** — the `Report` entity exposes donation totals but no `donation` table or "donate" use case exists yet; US-32 / US-33 remain deferred. See [docs/issues.md](docs/issues.md).
-- **US-39 / US-40** — no diagrams supplied; status unknown.
+
+US-39 / US-40 (PM login / logout) reuse the shared `LoginPage` / `LogoutPage` per the Sprint 1 US-39 sequence diagram — PMs are `user_account` rows with `profile.role = 'platform_manager'`. The separate `platform_manager` table and entity introduced in Sprint 4 were removed on 2026-05-12; see [docs/issues.md](docs/issues.md) "Resolved" for the rationale.

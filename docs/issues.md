@@ -69,23 +69,31 @@ The entity should refuse cross-tenant writes, not trust the caller.
 - Add tests asserting cross-tenant suspend/update returns `False` and leaves the row unchanged.
 - Diagram impact: US-15 and US-16 class + sequence diagrams gain `ownerAccountId: String` on the entity, controller, and message arrows. Log under [todo.md](todo.md) "Diagram updates needed before final marking".
 
-## Reports are generated on the fly with no `report` table (open question)
+## Resolved
 
-**Problem.** Sprint 4 US-41 / US-42 / US-43 introduce a `Report` entity with `reportId: Integer` and `generatedAt: Date` fields, which imply persistence. The Sprint 4 sequence diagrams only show generate-and-display — no save step. There is no story for "view past reports" either.
+### Reports were generated on the fly with no `report` table (resolved 2026-05-12)
 
-**Decision (2026-05-11).** Generate on the fly for now. Reports are returned from the entity as in-memory objects, never persisted; `reportId` defaults to `0` and `generatedAt` is set to `datetime.now()` at generation time.
+**Original problem.** Sprint 4 US-41 / US-42 / US-43 introduced a `Report` entity with `reportId: Integer` and `generatedAt: Date` fields, which imply persistence. The sequence diagrams only showed generate-and-display — no save step. Implementation initially returned in-memory `Report` objects with `report_id = 0`.
 
-**What unblocks deciding.** Confirm with the team whether:
+**Resolution.** Persistence-only — every `generate_*_report` call INSERTs into a new `report` table and returns the `Report` with the real `report_id`. This matches the class diagram's `reportId: Integer` field without adding a new use case. No "view past reports" UI was added (no story exists for it); past rows are inspectable through the `.info (debug)` page.
 
-- (a) Reports should never be persisted (current behaviour is correct, just remove `reportId` from the diagram).
-- (b) Each generation should write a row to a new `report` table for audit (adds a story, makes `reportId` meaningful, and probably wants a "view past reports" use case).
+Concrete changes:
+- [persistence/schema.sql](../persistence/schema.sql) — new `report` table with all `Report` fields. `platform_manager_id` is a nullable FK to `user_account.account_id`.
+- [entity/report.py](../entity/report.py) — `_generate` now INSERTs and returns the Report with the real PK; `generated_at` is captured once and stored as ISO.
+- [tests/test_report.py](../tests/test_report.py) — new tests assert `report_id > 0`, the row exists, and three consecutive generates produce three rows.
 
-Either way, the existing US-41–43 diagrams will need a small update.
+**Residual diagram catchup.** The new `report` table needs to land in the persistent / data design diagrams before final submission. Logged in [docs/todo.md](todo.md).
 
-## Platform Manager actor has no login flow (Sprint 4 scoping decision)
+### Platform Manager actor had no login flow (resolved 2026-05-12)
 
-**Problem.** Sprint 4 introduces the Platform Manager actor for category management and reports, but no login/authentication story was supplied for the role.
+**Original problem.** Sprint 4 introduced a separate `platform_manager` table and PM-actor pages (US-34–US-38 categories, US-41–US-43 reports) but no login flow. `Report.platformManagerId` was sourced from the first seeded PM row as a placeholder.
 
-**Decision (2026-05-11).** Mirror the existing RBAC stance for Admin/Fundraiser/Donee: a `platform_manager` table exists and is seeded, but PM pages do not gate on login. The `Report.platformManagerId` field is populated from the first seeded PM row (see [docs/todo.md](todo.md) "Temporary placeholders"). When the project finally addresses RBAC in a hardening sprint, PM gets the same gate as Admin.
+**Resolution.** Re-read the Sprint 1 US-39 sequence diagram, which already specifies PM authentication as `Platform Manager → LoginPage → LoginController.login(email, password) → UserAccount.login(email, password) → return UserAccount`. The shared login flow was the diagram-correct answer all along; the gap was that no `user_account` row had been seeded with `profile.role = 'platform_manager'`.
 
-**What unblocks it.** The same fix as the existing RBAC item above — gate the sidebar by role and read the session user's role to populate `Report.platformManagerId` for real.
+Concrete changes:
+- Deleted `entity/platform_manager.py`, `tests/test_platform_manager.py`, and the `platform_manager` table in [persistence/schema.sql](../persistence/schema.sql).
+- [data/seed.py](../data/seed.py) now pins one profile + one `user_account` per role (admin, fundraiser, donee, platform_manager) so the demo always has a logged-in-able PM.
+- [entity/report.py](../entity/report.py)'s three `generate_*_report` methods now accept `platform_manager_id` as a parameter (the logged-in PM's `account_id`); the three report controllers + boundaries thread it from `st.session_state["user"].account_id`. The `pms[0]` placeholder is gone.
+- US-39 / US-40 are now exactly equivalent to US-11 / US-18 / US-26 — same `LoginPage`, same `LogoutPage`, same `UserAccount.login`. No deferred work remains.
+
+**Residual diagram catchup.** The threading of `platform_manager_id` through the report stack is a small signature deviation from the US-41/42/43 diagrams (which show `generateDailyReport(startDate, endDate)`). Logged in [docs/todo.md](todo.md) "Sprint 4 (added 2026-05-11)" → the `platform_manager_id` parameter entry, dated 2026-05-12.

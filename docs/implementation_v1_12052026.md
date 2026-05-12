@@ -27,7 +27,7 @@ Onboarding + core flows for all four actors.
 | US-39 | Platform Manager: log in |
 | US-40 | Platform Manager: log out |
 
-Note: US-39 / US-40 PM login reuses the shared `LoginPage` + `UserAccount.login()`. The supplied diagrams predate Sprint 4's separate `platform_manager` table, so a real PM today logs in via a `UserAccount` row whose profile.role is `platform_manager`.
+Note: US-39 / US-40 PM login reuses the shared `LoginPage` + `UserAccount.login()` exactly as the Sprint 1 US-39 sequence diagram specifies. PMs are seeded as `user_account` rows with `profile.role = 'platform_manager'`. (The separate `platform_manager` table that Sprint 4 introduced was removed on 2026-05-12 — it had no diagram backing and duplicated `user_account` data.)
 
 ### Sprint 2 (9 stories) — closed
 Admin/fundraiser CRUD + donee discovery.
@@ -65,7 +65,7 @@ Fundraiser metrics, platform-manager category management, platform-manager repor
 | US-36 | PM: update FRA category | `update_fundraising_activity_category` |
 | US-37 | PM: search FRA categories | `submit_search_criteria` |
 | US-38 | PM: suspend FRA category | `suspend_fundraising_activity_category` |
-| US-41 / US-42 / US-43 | PM: daily / weekly / monthly report | new entity `Report` (on-the-fly, no `report` table), new entity + table `platform_manager` |
+| US-41 / US-42 / US-43 | PM: daily / weekly / monthly report | new entity `Report` (on-the-fly, no `report` table); `platform_manager_id` is the logged-in PM's `user_account.account_id` |
 
 **Cross-cutting Sprint 4 changes:**
 - Replaced hardcoded `DEFAULT_CATEGORIES` in [boundary/create_fundraising_activity_page.py](../boundary/create_fundraising_activity_page.py) and [boundary/update_fundraiser_activity_page.py](../boundary/update_fundraiser_activity_page.py) with a live lookup against `fundraising_activity_category`.
@@ -83,26 +83,24 @@ Fundraiser metrics, platform-manager category management, platform-manager repor
 | US-32 | Donee: search donation history | **Deferred** | Blocked on a missing donate use case + `Donation` entity. The Sprint 3 and Sprint 4 diagram drops both omitted a "donate" story, so there is no way to produce donation rows. Logged in [issues.md](issues.md). |
 | US-33 | Donee: view donation history | **Deferred** | Same blocker as US-32. |
 
-**US-32 / US-33 are the only two un-implemented stories.** US-39 / US-40 (PM login / logout) are implemented via the shared `LoginPage` and `LogoutPage` — identical status to US-11 / US-18 / US-26 for the other three roles, and listed under §1 "Sprint 1 — 12 stories". Sprint 4 introduced the separate `platform_manager` table without re-drawing the PM login flow; that *architectural* gap is tracked as the "Platform Manager has no dedicated login flow" item in §2.2 below, not as a missing user story.
+**US-32 / US-33 are the only two un-implemented stories.** US-39 / US-40 (PM login / logout) are implemented via the shared `LoginPage` and `LogoutPage` per the Sprint 1 US-39 sequence diagram — identical status to US-11 / US-18 / US-26 for the other three roles, and listed under §1 "Sprint 1 — 12 stories". The separate `platform_manager` table that Sprint 4 introduced was removed on 2026-05-12; see [issues.md](issues.md) "Resolved" for the rationale.
 
 ### 2.2 Active design gaps (have implementations, but with known shortcuts)
 
 | Item | Severity | Where logged |
 |---|---|---|
-| Plain-text passwords in [entity/user_account.py](../entity/user_account.py) and [entity/platform_manager.py](../entity/platform_manager.py) | Low (hardening) | [todo.md](todo.md), [issues.md](issues.md) |
+| Plain-text passwords in [entity/user_account.py](../entity/user_account.py) | Low (hardening) | [todo.md](todo.md), [issues.md](issues.md) |
 | No RBAC / no menu gating in `app.py` — all 34 sidebar pages are visible and reachable by anonymous visitors | **High** | [issues.md](issues.md) |
 | Ownership not enforced at the entity layer for `update_fundraiser_activity` (US-15) and `suspend_fundraising_activity` (US-16) — boundary filters today, no defense-in-depth | **Medium** | [issues.md](issues.md) |
 | `Report.totalDonationAmount` / `totalDonationCount` always 0 because no donations exist | Knock-on from US-32/33 | [issues.md](issues.md); also surfaced as a caption on every generate-report page |
-| Platform Manager has no login flow — `platform_manager` table is seeded but `app.py` doesn't sign PMs in. `Report.platformManagerId` is sourced from the first seeded row | Medium | [issues.md](issues.md) |
-| Reports are generated on the fly with no `report` table — `reportId` is 0, `generatedAt` is `datetime.now()` | Open question — see §4 | [issues.md](issues.md) |
 | Donee viewing an FRA increments `view_count` even when the viewer is the activity's owner — owner-self-views inflate the metric | Cosmetic | [todo.md](todo.md) Sprint 4 entry |
 
 ### 2.3 Why those choices
 
 - **US-32/33 deferred (decided 2026-05-05, reconfirmed 2026-05-11).** Implementing them mid-sprint would require designing a `Donation` entity, a "donate" use case, a `donation` table, Faker seeding, and new sequence/class diagrams — all without a supplied diagram to anchor it. Scope expansion was rejected.
 - **RBAC deferred to hardening.** A partial fix (only Sprint 3 / Sprint 4 admin pages) would create inconsistency with Sprint 1/2 admin pages. A clean fix is one connected refactor and was queued accordingly.
-- **Platform Manager actor without login (decided 2026-05-11).** Mirrors the existing RBAC stance: actor pages exist and are reachable; full gating is the hardening sprint's job. The `platform_manager` table is real so that the `Report` entity has somewhere to source `platformManagerId` for the on-the-fly flow.
-- **Reports on the fly, no `report` table (decided 2026-05-11).** Diagrams show only generate-and-display, no save step or view-past-reports story. Storing reports without a "view past reports" use case would add a schema for no user-visible benefit. Logged as an open question instead.
+- **Platform Manager actor's separate table was a Sprint 4 deviation (resolved 2026-05-12).** Re-reading the Sprint 1 US-39 sequence diagram showed PMs were specified to authenticate via `UserAccount.login`. The `platform_manager` table introduced in Sprint 4 had no diagram backing and duplicated `user_account` data. Removed; PMs are now seeded as `user_account` rows with `profile.role = 'platform_manager'`. See [issues.md](issues.md) "Resolved" for the full cleanup.
+- **Reports persisted on every generate (resolved 2026-05-12).** The Sprint 4 `Report` class diagram declares `reportId: Integer`, which implies persistence. Implementation now INSERTs a row on every `generate_*_report` call and returns the `Report` with the real PK. No "view past reports" UI was added — that would be a new use case without a diagram; past rows are inspectable via `.info (debug)`. See [issues.md](issues.md) "Resolved".
 
 ---
 
@@ -127,7 +125,7 @@ These are intentional departures. Each has a logged justification.
 - **`FavouriteList.submit_search_criteria` widened.** US-25 diagram does not show account scoping but without it the method would leak other donees' favourites. Implementation takes an optional `account_id`. Diagram must be updated.
 - **`UserProfile.delete_user_profile` FK semantics.** US-4 diagram does not specify behaviour when an account references the profile. Implementation returns `False` (safe delete). Diagram should add this clause.
 - **Sprint 4 category-entity naming.** Diagrams use `ViewFRACategory`, `updateFRACategory`, `suspendFRACategory`. Implementation uses the full-word forms (`view_fundraising_activity_category`, `update_fundraising_activity_category`, `suspend_fundraising_activity_category`) to stay consistent with Sprint 1–3 naming (e.g. `suspend_fundraising_activity`, `view_user_profile`). `submitSeachCriteria` also normalised to the project-standard `submit_search_criteria`. Logged under [todo.md](todo.md) "Sprint 4 naming deviations".
-- **Sprint 4 schema migration on `fundraising_activity`.** `view_count` and `save_count` columns were added (default 0). Plus the new tables `fundraising_activity_category` and `platform_manager`. Reflect in the persistent / data design diagrams.
+- **Sprint 4 schema migration on `fundraising_activity`.** `view_count` and `save_count` columns were added (default 0). Plus the new table `fundraising_activity_category`. Reflect in the persistent / data design diagrams. (The Sprint 4 `platform_manager` table was added and then removed on 2026-05-12 — see [issues.md](issues.md) "Resolved" — so it should not appear on the final diagrams.)
 - **Earlier schema migration** (already logged): `account_id` added to `user_account`; `owner_email` renamed to `owner_account_id` on `fundraising_activity`.
 
 ### 3.3 Pragmatic methods not in any class diagram (CLAUDE.md Exception A)
@@ -151,12 +149,10 @@ The US-28 / US-29 class diagrams place `displayFundraisingActivityViewCount` and
 
 Decisions surfaced during Sprint 4 that the team should resolve before final submission. All logged in [issues.md](issues.md).
 
-1. **Report persistence.** Generate-on-the-fly today (`report_id = 0`, `generated_at = datetime.now()`). Two options: (a) keep ephemeral, drop `reportId` from the diagrams; (b) add a `report` table + a "view past reports" story. Sprint 4 chose (a) provisionally.
-2. **Donate flow / `Donation` entity.** Required to unblock US-32 / US-33 and to give the Sprint 4 reports non-zero donation totals. Needs a user story, an entity, a table, seed data, and updated US-32 / US-33 diagrams.
-3. **Platform Manager login.** Currently no dedicated login. Either fold into existing `UserAccount.login()` by reusing `profile.role`, or add a separate login page that reads from the new `platform_manager` table.
-4. **Ownership writes (hardening).** Add `owner_account_id` to `update_fundraiser_activity(...)` and `suspend_fundraising_activity(...)` for defence-in-depth. Diagram impact: US-15 / US-16 gain `ownerAccountId` on entity, controller, and message arrows.
-5. **RBAC menu gating in `app.py`.** All 34 pages reachable by anonymous visitors today. Either cheap stopgap (require `session_state["user"]` on every admin/PM page) or proper role-keyed sidebar.
-6. **Owner-self-view counts as a view.** Cosmetic; current behaviour inflates the fundraiser's own view metric. Easy fix once the counter-bump path takes an optional account_id.
+1. **Donate flow / `Donation` entity.** Required to unblock US-32 / US-33 and to give the Sprint 4 reports non-zero donation totals. Needs a user story, an entity, a table, seed data, and updated US-32 / US-33 diagrams.
+2. **Ownership writes (hardening).** Add `owner_account_id` to `update_fundraiser_activity(...)` and `suspend_fundraising_activity(...)` for defence-in-depth. Diagram impact: US-15 / US-16 gain `ownerAccountId` on entity, controller, and message arrows.
+3. **RBAC menu gating in `app.py`.** All 34 pages reachable by anonymous visitors today. Either cheap stopgap (require `session_state["user"]` on every admin/PM page) or proper role-keyed sidebar.
+4. **Owner-self-view counts as a view.** Cosmetic; current behaviour inflates the fundraiser's own view metric. Easy fix once the counter-bump path takes an optional account_id.
 
 ---
 
@@ -187,8 +183,8 @@ CI runs `pytest -v` on every push via [.github/workflows/ci.yml](../.github/work
 |---|---|
 | Boundary classes | 34 (incl. `InfoPage` debug utility) |
 | Controller classes | 33 |
-| Entity classes | 7 (`UserProfile`, `UserAccount`, `FundraisingActivity`, `FavouriteList`, `FundraisingActivityCategory`, `PlatformManager`, `Report`) |
-| Tables | 6 (`user_profile`, `user_account`, `fundraising_activity`, `favourite_list`, `fundraising_activity_category`, `platform_manager`) — `Report` has no table |
+| Entity classes | 6 (`UserProfile`, `UserAccount`, `FundraisingActivity`, `FavouriteList`, `FundraisingActivityCategory`, `Report`) |
+| Tables | 6 (`user_profile`, `user_account`, `fundraising_activity`, `favourite_list`, `fundraising_activity_category`, `report`) |
 | User stories — implemented | 41 of 43 |
 | User stories — deferred | 2 (US-32, US-33) |
 | pytest tests | 110, all green |

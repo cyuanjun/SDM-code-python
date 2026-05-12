@@ -28,7 +28,7 @@ streamlit run app.py              # launches the UI on http://localhost:8501
 pytest
 ```
 
-110 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+107 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -55,7 +55,7 @@ pytest
 
 **Sprint 4** (10 stories): fundraiser views FRA view/save counts (US-28/29); platform manager category management — create/view/update/search/suspend (US-34..38); platform manager daily/weekly/monthly reports (US-41..43). US-32 / US-33 (donee donation history) **still deferred** — blocked on a missing donate use case and `Donation` entity; reports therefore show zero donation totals.
 
-Total: **41 of 43 user stories** implemented across 34 Streamlit pages and 110 passing tests. US-32 / US-33 remain the only deferred stories with diagrams; US-39 / US-40 were not in any supplied diagram set.
+Total: **41 of 43 user stories** implemented across 34 Streamlit pages and 107 passing tests. Only US-32 / US-33 (donee donation history) remain deferred — blocked on a missing donate use case and `Donation` entity. US-39 / US-40 (PM login / logout) reuse the shared `LoginPage` / `LogoutPage` per the Sprint 1 US-39 sequence diagram.
 
 ## Debug utilities
 

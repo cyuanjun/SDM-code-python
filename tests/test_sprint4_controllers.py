@@ -110,21 +110,24 @@ def test_view_fundraising_activity_save_count_controller_delegates():
 
 def test_generate_daily_report_controller_delegates():
     report = GenerateDailyReportController().generate_daily_report(
-        "2026-05-01", "2026-05-01"
+        "2026-05-01", "2026-05-01", None
     )
     assert report.report_type == "daily"
     assert report.start_date == "2026-05-01"
+    assert report.platform_manager_id is None
 
 
 def test_generate_weekly_report_controller_delegates():
     report = GenerateWeeklyReportController().generate_weekly_report(
-        "2026-05-01", "2026-05-07"
+        "2026-05-01", "2026-05-07", None
     )
     assert report.report_type == "weekly"
+    assert report.platform_manager_id is None
 
 
 def test_generate_monthly_report_controller_delegates():
     report = GenerateMonthlyReportController().generate_monthly_report(
-        "2026-05-01", "2026-05-31"
+        "2026-05-01", "2026-05-31", None
     )
     assert report.report_type == "monthly"
+    assert report.platform_manager_id is None

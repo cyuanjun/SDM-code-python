@@ -13,7 +13,6 @@ from faker import Faker
 
 from entity.fundraising_activity import FundraisingActivity
 from entity.fundraising_activity_category import FundraisingActivityCategory
-from entity.platform_manager import PlatformManager
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 from persistence.db import DB_PATH, init_db
@@ -39,22 +38,31 @@ def seed() -> None:
         DB_PATH.unlink()
     init_db()
 
+    # First len(ROLES) profiles pin one per role so the demo always has at
+    # least one of each (including platform_manager, who needs an account
+    # to log in via the shared LoginPage — see Sprint 1 US-39 diagram).
     profile_ids: list[int] = []
-    for _ in range(RECORD_COUNT):
-        role = random.choice(ROLES)
+    for i in range(RECORD_COUNT):
+        role = ROLES[i] if i < len(ROLES) else random.choice(ROLES)
         profile = UserProfile.create_profile(role, fake.sentence(nb_words=6))
         if profile and profile.profile_id is not None:
             profile_ids.append(profile.profile_id)
 
     account_ids: list[int] = []
-    for _ in range(RECORD_COUNT):
+    for i in range(RECORD_COUNT):
+        # Same pinning for accounts: first len(ROLES) accounts each take a
+        # different role's profile, so every role has a logged-in-able account.
+        if i < len(ROLES) and i < len(profile_ids):
+            profile_id = profile_ids[i]
+        else:
+            profile_id = random.choice(profile_ids)
         account = UserAccount.create_account(
             email=fake.unique.email(),
             password="password123",
             name=fake.name(),
             dob=fake.date_of_birth(minimum_age=18, maximum_age=70).isoformat(),
             phone_num=fake.msisdn(),
-            profile_id=random.choice(profile_ids),
+            profile_id=profile_id,
         )
         if account is not None and account.account_id is not None:
             account_ids.append(account.account_id)
@@ -93,23 +101,11 @@ def seed() -> None:
         ):
             category_ids.append(name)
 
-    platform_manager_ids: list[int] = []
-    for _ in range(max(RECORD_COUNT // 2, 1)):
-        pm = PlatformManager.create_platform_manager(
-            username=fake.unique.user_name(),
-            password="password123",
-            email=fake.unique.email(),
-            name=fake.name(),
-        )
-        if pm is not None and pm.platform_manager_id is not None:
-            platform_manager_ids.append(pm.platform_manager_id)
-
     print(
         f"Seeded {len(profile_ids)} profiles, {len(account_ids)} accounts, "
         f"{len(activity_ids)} fundraising activities, "
         f"{favourites_added} favourites, "
-        f"{len(category_ids)} categories, "
-        f"and {len(platform_manager_ids)} platform managers into {DB_PATH}"
+        f"and {len(category_ids)} categories into {DB_PATH}"
     )
 
 

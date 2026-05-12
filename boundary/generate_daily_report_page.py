@@ -11,19 +11,24 @@ from controller.generate_daily_report_controller import GenerateDailyReportContr
 class GenerateDailyReportPage:
     def render(self) -> None:
         st.header("Generate daily report")
+        if "user" not in st.session_state:
+            st.warning("Log in to generate a report.")
+            return
         today = date.today()
         report_date = st.date_input("Report date", value=today)
 
         if st.button("Generate daily report", type="primary"):
             self.click_generate_daily_report_button(
-                report_date.isoformat(), report_date.isoformat()
+                report_date.isoformat(),
+                report_date.isoformat(),
+                st.session_state["user"].account_id,
             )
 
     def click_generate_daily_report_button(
-        self, start_date: str, end_date: str
+        self, start_date: str, end_date: str, platform_manager_id: int
     ) -> None:
         report = GenerateDailyReportController().generate_daily_report(
-            start_date, end_date
+            start_date, end_date, platform_manager_id
         )
         self.display_report(report)
 

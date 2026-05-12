@@ -11,7 +11,7 @@ A complete index of what is implemented in the codebase as of Sprint 4. Cross-re
 | Language | Python 3 |
 | UI | Streamlit (`layout="wide"`) |
 | Persistence | SQLite via stdlib `sqlite3` (single file `app.db`) |
-| Tests | pytest (110 tests as of Sprint 4) |
+| Tests | pytest (107 tests as of Sprint 4) |
 | Seed data | Faker — `RECORD_COUNT` rows per table (default 10 for fast dev; bump to 100 for the marking demo) |
 | CI | GitHub Actions |
 
@@ -100,7 +100,7 @@ US-32 and US-33 (donee donation history) were planned for Sprint 3 but deferred 
 | US-42 | PM: generate weekly report | `GenerateWeeklyReportPage` | `GenerateWeeklyReportController` | `Report.generate_weekly_report` |
 | US-43 | PM: generate monthly report | `GenerateMonthlyReportPage` | `GenerateMonthlyReportController` | `Report.generate_monthly_report` |
 
-US-32 / US-33 (donee donation history) remain deferred — still blocked on the missing donate use case and `Donation` entity. US-39 / US-40 not in the supplied Sprint 4 diagrams. See [issues.md](issues.md) and [todo.md](todo.md).
+US-32 / US-33 (donee donation history) remain deferred — still blocked on the missing donate use case and `Donation` entity. US-39 / US-40 (PM login / logout) reuse the shared `LoginPage` / `LogoutPage` per the Sprint 1 US-39 sequence diagram; the separate `platform_manager` table introduced in Sprint 4 was removed on 2026-05-12. See [issues.md](issues.md) and [todo.md](todo.md).
 
 ---
 
@@ -159,18 +159,15 @@ Fields: `category_id, category_name (UNIQUE), description, status` (`active` by 
 - `submit_search_criteria(search_criteria) -> list[FundraisingActivityCategory]` (classmethod) — US-37
 - `suspend_fundraising_activity_category(category_id) -> bool` (classmethod) — US-38
 
-### `PlatformManager` — [entity/platform_manager.py](../entity/platform_manager.py) (NEW Sprint 4)
-Fields: `platform_manager_id, username (UNIQUE), password, email (UNIQUE), name`.
-Minimal scaffold: the diagrams introduce the Platform Manager actor for Sprint 4 but supply no login story. The table exists to satisfy `Report.platformManagerId`; PM pages are accessible like other admin pages (RBAC deferred — see [issues.md](issues.md)).
-- `create_platform_manager(username, password, email, name) -> PlatformManager | None` (classmethod). None on uniqueness conflict
-- `view_all_platform_managers() -> list[PlatformManager]` (classmethod). Used by `Report` to source `platformManagerId`
-
 ### `Report` — [entity/report.py](../entity/report.py) (NEW Sprint 4)
-Generated on the fly — no `report` table; `report_id` defaults to 0 and `generated_at` is set at call time. Open question logged in [issues.md](issues.md).
+Persisted on every generate (resolved 2026-05-12 — see [issues.md](issues.md) "Resolved"). `_generate` INSERTs into the new `report` table and returns the `Report` with the real `report_id`; `generated_at` is captured once and stored as ISO.
 Fields: `report_id, report_type, start_date, end_date, generated_at, platform_manager_id, total_donation_amount, total_donation_count, total_activity_count, total_fundraiser_count, total_donee_count`.
-- `generate_daily_report(start_date, end_date) -> Report` (classmethod) — US-41
-- `generate_weekly_report(start_date, end_date) -> Report` (classmethod) — US-42
-- `generate_monthly_report(start_date, end_date) -> Report` (classmethod) — US-43
+
+`platform_manager_id` is the logged-in PM's `user_account.account_id` (Sprint 1 US-39: PMs authenticate via `UserAccount.login`). Threaded through Boundary → Controller → Entity rather than fabricated; a small signature deviation from the US-41/42/43 diagrams is logged in [todo.md](todo.md).
+
+- `generate_daily_report(start_date, end_date, platform_manager_id) -> Report` (classmethod) — US-41
+- `generate_weekly_report(start_date, end_date, platform_manager_id) -> Report` (classmethod) — US-42
+- `generate_monthly_report(start_date, end_date, platform_manager_id) -> Report` (classmethod) — US-43
 
 Scoping: activities counted by `start_date BETWEEN ? AND ?`; fundraiser / donee counts are platform-wide totals (no `created_at` on `user_account`). Donation totals are always 0 — see [issues.md](issues.md) "Donation tracking missing".
 
@@ -321,7 +318,7 @@ All input/format validation lives here. None of these classes import from `entit
 | `fundraising_activity` | `activity_id` (PK, AUTOINC), `title`, `description`, `target_amount`, `category`, `start_date`, `end_date`, `status`, `owner_account_id` (FK), `view_count`, `save_count` | **Sprint 2 migration:** `owner_email` → `owner_account_id`. **Sprint 4:** `view_count` and `save_count` (NOT NULL DEFAULT 0) |
 | `favourite_list` | `account_id` (FK), `activity_id` (FK), composite PK | **NEW Sprint 2.** `ON DELETE CASCADE` on both FKs |
 | `fundraising_activity_category` | `category_id` (PK, AUTOINC), `category_name` (UNIQUE), `description`, `status` | **NEW Sprint 4.** Status flips to `suspended` via US-38 |
-| `platform_manager` | `platform_manager_id` (PK, AUTOINC), `username` (UNIQUE), `password`, `email` (UNIQUE), `name` | **NEW Sprint 4.** No login flow yet; reports source `platformManagerId` from the first row |
+| `report` | `report_id` (PK, AUTOINC), `report_type`, `start_date`, `end_date`, `generated_at`, `platform_manager_id` (nullable FK to `user_account.account_id`), `total_donation_amount`, `total_donation_count`, `total_activity_count`, `total_fundraiser_count`, `total_donee_count` | **NEW Sprint 4 (added 2026-05-12).** Every `generate_*_report` call INSERTs a row |
 
 Sprint 3 added no new tables or columns — `status` and `suspended` were already present.
 
@@ -339,7 +336,7 @@ Streamlit entry. `layout="wide"`. Sidebar shows sign-in status and a radio for t
 
 ## 9. Tests ([tests/](../tests/))
 
-110 tests, all green.
+107 tests, all green.
 
 | File | What it covers |
 |---|---|
@@ -349,7 +346,6 @@ Streamlit entry. `layout="wide"`. Sidebar shows sign-in status and a radio for t
 | [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) | save / view-details / view-all / view-fundraiser-activity / view-by-owner / update / search; **Sprint 3:** suspend / view-completed / search-by-owner / search-by-status / search-by-owner-and-status; **Sprint 4:** view/save count getters / increment / decrement / floor-at-zero / favourite-counter sync |
 | [tests/test_favourite_list.py](../tests/test_favourite_list.py) | save / duplicate / view-empty; **Sprint 3:** delete-favourite / delete-no-match / search-by-text-and-account |
 | [tests/test_fundraising_activity_category.py](../tests/test_fundraising_activity_category.py) | **Sprint 4:** create / duplicate / view / view-all / update / search / suspend (US-34..38) |
-| [tests/test_platform_manager.py](../tests/test_platform_manager.py) | **Sprint 4:** create / duplicate-username / duplicate-email / view-all |
 | [tests/test_report.py](../tests/test_report.py) | **Sprint 4:** daily/weekly/monthly report-type / activity window filter / fundraiser+donee counts / zero-donation totals / platform-manager-id fallback |
 | [tests/test_controllers.py](../tests/test_controllers.py) | Sprint 1 controller delegation contracts |
 | [tests/test_sprint2_controllers.py](../tests/test_sprint2_controllers.py) | All 9 Sprint 2 controllers — pure-delegation pin |
@@ -395,6 +391,3 @@ See [todo.md](todo.md) for the full list and [issues.md](issues.md) for active d
 - Role-based menu / route guards — admin and PM pages currently reachable by anonymous visitors. Tracked as **High** in [issues.md](issues.md)
 - Entity-layer ownership check on `update_fundraiser_activity` and `suspend_fundraising_activity` — boundary filters today, no defense-in-depth. Tracked as **Medium** in [issues.md](issues.md)
 - US-32 / US-33 (donee donation-history search & view) — still blocked on a `donation` entity + table and a donate use case. Knock-on effect: Sprint 4 reports show zero donation totals.
-- US-39 / US-40 — no diagrams supplied with the Sprint 4 batch.
-- Platform Manager login flow — `platform_manager` table exists but no login page yet; PM pages accessible like other admin pages.
-- Report persistence — currently on-the-fly only; team to decide whether each generation writes a `report` row for audit (open question in [issues.md](issues.md)).

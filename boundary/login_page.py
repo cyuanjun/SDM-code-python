@@ -28,6 +28,7 @@ class LoginPage:
         if user is not None:
             st.session_state["user"] = user
             self.display_success()
+            st.rerun()
         else:
             self.display_error()
 

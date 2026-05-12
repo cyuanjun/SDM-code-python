@@ -11,6 +11,9 @@ from controller.generate_weekly_report_controller import GenerateWeeklyReportCon
 class GenerateWeeklyReportPage:
     def render(self) -> None:
         st.header("Generate weekly report")
+        if "user" not in st.session_state:
+            st.warning("Log in to generate a report.")
+            return
         today = date.today()
         default_start = today - timedelta(days=6)
         cols = st.columns(2)
@@ -23,14 +26,16 @@ class GenerateWeeklyReportPage:
 
         if st.button("Generate weekly report", type="primary"):
             self.click_generate_weekly_report_button(
-                start_date.isoformat(), end_date.isoformat()
+                start_date.isoformat(),
+                end_date.isoformat(),
+                st.session_state["user"].account_id,
             )
 
     def click_generate_weekly_report_button(
-        self, start_date: str, end_date: str
+        self, start_date: str, end_date: str, platform_manager_id: int
     ) -> None:
         report = GenerateWeeklyReportController().generate_weekly_report(
-            start_date, end_date
+            start_date, end_date, platform_manager_id
         )
         self.display_report(report)
 
