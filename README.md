@@ -27,7 +27,7 @@ A seed script will land once at least one entity exists.
 pytest
 ```
 
-Only a placeholder smoke test on this branch ([tests/test_smoke.py](tests/test_smoke.py)) so pytest collects at least one item and CI stays green. Real tests get written test-first as each entity is rebuilt. CI still runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+Only a placeholder smoke test on this branch ([tests/test_smoke.py](tests/test_smoke.py)) so pytest collects at least one item and CI stays green. Real tests get written test-first as each entity is rebuilt — and every entity method ships with **both a happy-path and a negative test** (missing rows, uniqueness/FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. See [CLAUDE.md](CLAUDE.md) "TDD expectations". CI still runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
