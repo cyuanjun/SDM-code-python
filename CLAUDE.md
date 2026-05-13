@@ -121,6 +121,8 @@ These are the non-obvious wiring choices a future session would otherwise have t
 - Every new Entity gets `tests/test_<entity>.py` written **before** the entity body is implemented.
 - Every new Controller gets one delegation test (controller forwards to entity, returns entity's result).
 - Boundary pages get smoke tests only (`render()` doesn't raise) — Streamlit UIs are hard to unit-test, that's expected.
+- **Every entity method gets at least one negative test alongside its happy-path test.** Cover the failure paths the diagram or schema implies — `None` / `False` returns for missing rows, uniqueness violations, FK violations, invalid input, empty results, cross-tenant access where ownership applies. A test file with only happy-path cases is incomplete.
+- **Every controller delegation test is mirrored by a negative-path delegation test** — when the entity returns `None` / `False` / `[]`, the controller must forward that unchanged.
 - Run `pytest` locally and in CI on every push.
 
 ## Sprint workflow
