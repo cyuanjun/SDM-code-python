@@ -1,98 +1,13 @@
-"""Streamlit entry point. Drives navigation through st.session_state.
-
-Sprint 2 expanded the page count significantly. Pages are grouped by actor
-in the sidebar with a leading bracket prefix so non-relevant pages are easy
-to skip. Role-based menu gating remains a deferred decision (see docs/todo.md).
+"""Streamlit entry point. Revamp branch placeholder — pages will be wired
+back in as each user story is rebuilt against the reworked diagrams.
 """
 from __future__ import annotations
 
 import streamlit as st
 
-from boundary.create_account_page import CreateAccountPage
-from boundary.create_fundraising_activity_category_page import (
-    CreateFundraisingActivityCategoryPage,
-)
-from boundary.create_fundraising_activity_page import CreateFundraisingActivityPage
-from boundary.create_profile_page import CreateProfilePage
-from boundary.delete_favourite_page import DeleteFavouritePage
-from boundary.delete_user_profile_page import DeleteUserProfilePage
-from boundary.generate_daily_report_page import GenerateDailyReportPage
-from boundary.generate_monthly_report_page import GenerateMonthlyReportPage
-from boundary.generate_weekly_report_page import GenerateWeeklyReportPage
-from boundary.info_page import InfoPage
-from boundary.login_page import LoginPage
-from boundary.logout_page import LogoutPage
-from boundary.save_fundraiser_activity_page import SaveFundraiserActivityPage
-from boundary.search_completed_activity_page import SearchCompletedActivityPage
-from boundary.search_favourite_page import SearchFavouritePage
-from boundary.search_fundraiser_activity_page import SearchFundraiserActivityPage
-from boundary.search_fundraising_activity_category_page import (
-    SearchFundraisingActivityCategoryPage,
-)
-from boundary.search_fundraising_activity_page import SearchFundraisingActivityPage
-from boundary.search_user_account_page import SearchUserAccountPage
-from boundary.search_user_profile_page import SearchUserProfilePage
-from boundary.suspend_fundraising_activity_category_page import (
-    SuspendFundraisingActivityCategoryPage,
-)
-from boundary.suspend_fundraising_activity_page import (
-    SuspendFundraisingActivityPage,
-)
-from boundary.suspend_user_account_page import SuspendUserAccountPage
-from boundary.update_fundraiser_activity_page import UpdateFundraiserActivityPage
-from boundary.update_fundraising_activity_category_page import (
-    UpdateFundraisingActivityCategoryPage,
-)
-from boundary.update_user_account_page import UpdateUserAccountPage
-from boundary.update_user_profile_page import UpdateUserProfilePage
-from boundary.view_completed_activity_page import ViewCompletedActivityPage
-from boundary.view_favourite_list_page import ViewFavouriteListPage
-from boundary.view_fundraiser_activity_page import ViewFundraiserActivityPage
-from boundary.view_fundraising_activity_category_page import (
-    ViewFundraisingActivityCategoryPage,
-)
-from boundary.view_fundraising_activity_page import ViewFundraisingActivityPage
-from boundary.view_user_account_page import ViewUserAccountPage
-from boundary.view_user_profile_page import ViewUserProfilePage
-from controller.view_user_profile_controller import ViewUserProfileController
 from persistence.db import init_db
 
-PAGES = {
-    "Log in": LoginPage,
-    "Log out": LogoutPage,
-    "[Admin] Create user profile": CreateProfilePage,
-    "[Admin] View user profile": ViewUserProfilePage,
-    "[Admin] Update user profile": UpdateUserProfilePage,
-    "[Admin] Delete user profile": DeleteUserProfilePage,
-    "[Admin] Search user profiles": SearchUserProfilePage,
-    "[Admin] Create user account": CreateAccountPage,
-    "[Admin] View user account": ViewUserAccountPage,
-    "[Admin] Update user account": UpdateUserAccountPage,
-    "[Admin] Suspend user account": SuspendUserAccountPage,
-    "[Admin] Search user accounts": SearchUserAccountPage,
-    "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
-    "[Fundraiser] View my fundraising activity": ViewFundraiserActivityPage,
-    "[Fundraiser] Update my fundraising activity": UpdateFundraiserActivityPage,
-    "[Fundraiser] Suspend my fundraising activity": SuspendFundraisingActivityPage,
-    "[Fundraiser] Search my fundraising activities": SearchFundraisingActivityPage,
-    "[Fundraiser] Search my completed activities": SearchCompletedActivityPage,
-    "[Fundraiser] View my completed activities": ViewCompletedActivityPage,
-    "[Donee] View fundraising activity": ViewFundraisingActivityPage,
-    "[Donee] Search fundraising activities": SearchFundraiserActivityPage,
-    "[Donee] Save to favourites": SaveFundraiserActivityPage,
-    "[Donee] View my favourites": ViewFavouriteListPage,
-    "[Donee] Search my favourites": SearchFavouritePage,
-    "[Donee] Delete a favourite": DeleteFavouritePage,
-    "[PM] Create FRA category": CreateFundraisingActivityCategoryPage,
-    "[PM] View FRA category": ViewFundraisingActivityCategoryPage,
-    "[PM] Update FRA category": UpdateFundraisingActivityCategoryPage,
-    "[PM] Suspend FRA category": SuspendFundraisingActivityCategoryPage,
-    "[PM] Search FRA categories": SearchFundraisingActivityCategoryPage,
-    "[PM] Generate daily report": GenerateDailyReportPage,
-    "[PM] Generate weekly report": GenerateWeeklyReportPage,
-    "[PM] Generate monthly report": GenerateMonthlyReportPage,
-    ".info (debug)": InfoPage,
-}
+PAGES: dict = {}
 
 
 def main() -> None:
@@ -100,19 +15,17 @@ def main() -> None:
     init_db()
 
     st.sidebar.title("SDM Fundraising")
-    if "user" in st.session_state:
-        user = st.session_state["user"]
-        profile = ViewUserProfileController().view_user_profile(user.profile_id)
-        role = profile.role if profile else "unknown"
-        st.sidebar.success(
-            f"Signed in as\n\n**{user.name}** ({role})\n\n{user.email}"
-        )
-    else:
-        st.sidebar.info("Not signed in")
+    st.sidebar.info("Revamp branch — no pages wired yet")
 
-    selection = st.sidebar.radio("Page", list(PAGES.keys()))
-    page_cls = PAGES[selection]
-    page_cls().render()
+    st.title("SDM Online Fundraising System")
+    st.write(
+        "This branch is rebuilding from reworked diagrams. "
+        "Pages will appear in the sidebar as each user story lands."
+    )
+
+    if PAGES:
+        selection = st.sidebar.radio("Page", list(PAGES.keys()))
+        PAGES[selection]().render()
 
 
 if __name__ == "__main__":

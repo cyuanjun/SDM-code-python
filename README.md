@@ -1,13 +1,11 @@
-# SDM Online Fundraising System
+# SDM Online Fundraising System — revamp branch
 
-CSIT314 group project — an online fundraising system matching fundraisers with donees. Built with Python + Streamlit + SQLite, following a B-C-E (Boundary-Controller-Entity) OOP architecture.
+CSIT314 group project. This branch is rebuilding the system from scratch against reworked UML diagrams. Architecture conventions (B-C-E, OOP backend, diagram-as-contract) carry over from main; see [CLAUDE.md](CLAUDE.md).
 
 - [CLAUDE.md](CLAUDE.md) — architecture conventions and the diagram-as-contract rule
-- [docs/implementation.md](docs/implementation.md) — full reference of every file, class, and method
-- [docs/todo.md](docs/todo.md) — temporary placeholders, deferred work, and diagram updates owed before final marking
-- [docs/issues.md](docs/issues.md) — active design gaps and known security/scope items (RBAC, ownership-check, donation tracking)
-- [docs/differences.md](docs/differences.md) — per-user-story catalogue of every divergence between the BCE/sequence diagrams and the code
-- [diagrams/](diagrams/) — source-of-truth UML class and sequence diagrams, organised by sprint
+- [docs/todo.md](docs/todo.md) — revamp checkpoints and architecture items carried over
+- [docs/issues.md](docs/issues.md) — active design gaps (RBAC, ownership-check, donation tracking)
+- [diagrams/](diagrams/) — UML diagrams (drop the reworked versions here)
 
 ## Quickstart
 
@@ -16,11 +14,12 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m persistence.db          # creates app.db with empty tables
-python -m data.seed               # populates ~10 records per table (bump RECORD_COUNT to 100 in data/seed.py for the marking demo)
+python -m persistence.db          # initialises app.db (currently no tables — schema rebuilds story by story)
 
-streamlit run app.py              # launches the UI on http://localhost:8501
+streamlit run app.py              # launches the placeholder UI on http://localhost:8501
 ```
+
+A seed script will land once at least one entity exists.
 
 ## Run tests
 
@@ -28,35 +27,23 @@ streamlit run app.py              # launches the UI on http://localhost:8501
 pytest
 ```
 
-107 tests, all green. CI runs the same suite via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+Only a placeholder smoke test on this branch ([tests/test_smoke.py](tests/test_smoke.py)) so pytest collects at least one item and CI stays green. Real tests get written test-first as each entity is rebuilt. CI still runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
 | Path | Layer | Purpose |
 |---|---|---|
-| `app.py` | — | Streamlit entry + session-based router (wide layout) |
-| `boundary/` | Boundary | Streamlit page modules — one per use case (+ `info_page.py` debug utility) |
-| `controller/` | Controller | Pure delegators between Boundary and Entity |
-| `entity/` | Entity | Business objects + persistence |
-| `persistence/` | — | SQLite connection helper + schema |
-| `data/seed.py` | — | Test data generator (Faker) |
-| `tests/` | — | pytest tests (TDD) |
-| `docs/` | — | implementation reference, todo list, active issues, diagram-vs-code differences |
-| `diagrams/` | — | source UML diagrams (class + sequence), organised by sprint |
+| `app.py` | — | Streamlit entry + session-based router (currently a placeholder) |
+| `boundary/` | Boundary | Streamlit page modules — empty, refills as stories land |
+| `controller/` | Controller | Pure delegators between Boundary and Entity — empty |
+| `entity/` | Entity | Business objects + persistence — empty |
+| `persistence/` | — | SQLite connection helper (`db.py`) + schema (currently empty) |
+| `data/` | — | Faker seed — TBD |
+| `tests/` | — | pytest tests + `conftest.py` fixture (preserved) |
+| `docs/` | — | todo list, active issues |
+| `diagrams/` | — | source UML diagrams (reworked versions to be dropped in) |
 | `.github/workflows/ci.yml` | — | CI: runs pytest on push/PR |
 
 ## Coverage so far
 
-**Sprint 1** (12 stories): create profile/account, login/logout for all four actors, create fundraising activity, view fundraising activity (donee).
-
-**Sprint 2** (9 stories): admin view/update profile (US-2/3) and account (US-7/8); fundraiser view/update their own FSAs (US-14/15); donee search FSAs (US-20), save to favourites (US-22), view favourites (US-24).
-
-**Sprint 3** (10 stories): admin delete/search profile (US-4/5) and suspend/search account (US-9/10); fundraiser suspend/search own FSAs (US-16/17), search/view their completed FSAs (US-30/31); donee delete favourite (US-23) and search favourites (US-25). US-32 / US-33 (donee donation history) deferred to Sprint 4 — see [docs/issues.md](docs/issues.md).
-
-**Sprint 4** (10 stories): fundraiser views FRA view/save counts (US-28/29); platform manager category management — create/view/update/search/suspend (US-34..38); platform manager daily/weekly/monthly reports (US-41..43). US-32 / US-33 (donee donation history) **still deferred** — blocked on a missing donate use case and `Donation` entity; reports therefore show zero donation totals.
-
-Total: **41 of 43 user stories** implemented across 34 Streamlit pages and 107 passing tests. Only US-32 / US-33 (donee donation history) remain deferred — blocked on a missing donate use case and `Donation` entity. US-39 / US-40 (PM login / logout) reuse the shared `LoginPage` / `LogoutPage` per the Sprint 1 US-39 sequence diagram.
-
-## Debug utilities
-
-The sidebar includes a `.info (debug)` page that shows row counts for all six tables, per-table dumps in tabs, the live schema, and row-click delete with composite-PK support (for `favourite_list`) and friendly FK-violation handling. Bypasses the B-C-E layers because it is not a use case. **Hide before the final live demo** — see [docs/todo.md](docs/todo.md).
+Nothing implemented yet on this branch. Sprint 1 stories will be the first to land.
