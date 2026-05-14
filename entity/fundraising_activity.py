@@ -143,6 +143,22 @@ class FundraisingActivity:
         return cursor.rowcount > 0
 
     @classmethod
+    def unsuspend_my_fundraising_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> bool:
+        """Exception A — mirror of suspend so the UI can toggle.
+        Logged in docs/diagram_typos.md."""
+        owner_rowid = parse_id(owner_account_id)
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity SET suspended = 0 "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (rowid, owner_rowid),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def search_my_fundraising_activity(
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:

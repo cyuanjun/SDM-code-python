@@ -20,6 +20,9 @@ from controller.search_user_profile_controller import (
 from controller.suspend_user_profile_controller import (
     SuspendUserProfileController,
 )
+from controller.unsuspend_user_profile_controller import (
+    UnsuspendUserProfileController,
+)
 from controller.update_user_profile_controller import (
     UpdateUserProfileController,
 )
@@ -125,15 +128,27 @@ class ManageUserProfilePage:
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
-            if not profile.suspended and st.button("🚫 Suspend"):
-                ok = SuspendUserProfileController().suspend_user_profile(
-                    profile.profile_id
-                )
-                if ok:
-                    st.success("Profile suspended.")
-                    st.rerun()
-                else:
-                    st.error("Could not suspend profile.")
+            if profile.suspended:
+                if st.button("✅ Unsuspend"):
+                    ok = (
+                        UnsuspendUserProfileController()
+                        .unsuspend_user_profile(profile.profile_id)
+                    )
+                    if ok:
+                        st.success("Profile unsuspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend profile.")
+            else:
+                if st.button("🚫 Suspend"):
+                    ok = SuspendUserProfileController().suspend_user_profile(
+                        profile.profile_id
+                    )
+                    if ok:
+                        st.success("Profile suspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend profile.")
 
     def _render_edit_form(self, profile) -> None:
         with st.form("manage_profile_edit_form"):

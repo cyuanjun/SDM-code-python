@@ -64,3 +64,18 @@ The diagrams themselves don't need to change — the per-US classes are still re
 | `ManageFundraisingActivityCategoryPage` | `CreateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoryPage`, `UpdateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoriesPage` (suspend button on view detail) |
 
 The 8th sidebar entry (`GenerateReportPage`) was already shared across US-41/42/43 on the diagrams; nothing changes there.
+
+## Unsuspend toggle (Exception A, UX)
+
+Added 2026-05-15. The diagrams define `suspend*` methods on `UserProfile` (US-4), `UserAccount` (US-9), `FundraisingActivity` (US-16), and `FundraisingActivityCategory` (US-38) — but no corresponding **unsuspend** methods. Once suspended, the only way to clear the flag through the diagram-defined surface was via the update form (toggling the `suspended` checkbox), which is awkward.
+
+To support a toggle button in the consolidated `Manage*` pages, four `unsuspend_*` Exception A methods were added (and four pure-delegator controllers):
+
+| Entity | Suspend (diagram-defined) | Unsuspend (Exception A) |
+|---|---|---|
+| `UserProfile` | `suspend_user_profile(profile_id)` (US-4) | `unsuspend_user_profile(profile_id)` |
+| `UserAccount` | `suspend_user_account(account_id)` (US-9) | `unsuspend_user_account(account_id)` |
+| `FundraisingActivity` | `suspend_my_fundraising_activity(owner, fra_id)` (US-16) | `unsuspend_my_fundraising_activity(owner, fra_id)` |
+| `FundraisingActivityCategory` | `suspend_fundraising_activity_category(fra_cat_id)` (US-38) | `unsuspend_fundraising_activity_category(fra_cat_id)` |
+
+Each unsuspend method mirrors its suspend twin's signature, ownership scoping, and return type. Add them to the relevant class + sequence diagrams before final marking, or define a new "unsuspend" use case per actor.

@@ -108,6 +108,19 @@ class FundraisingActivityCategory:
         return cursor.rowcount > 0
 
     @classmethod
+    def unsuspend_fundraising_activity_category(cls, fra_cat_id: str) -> bool:
+        """Exception A — mirror of suspend so the UI can toggle.
+        Logged in docs/diagram_typos.md."""
+        rowid = parse_id(fra_cat_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity_category "
+                "SET suspended = 0 WHERE fra_cat_id = ?",
+                (rowid,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def view_all_categories(cls) -> list["FundraisingActivityCategory"]:
         """Exception A: list-all for the boundary picker on US-35 / US-36 /
         US-38. Logged in docs/todo.md."""

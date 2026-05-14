@@ -19,6 +19,9 @@ from controller.search_fundraising_activity_category_controller import (
 from controller.suspend_fundraising_activity_category_controller import (
     SuspendFundraisingActivityCategoryController,
 )
+from controller.unsuspend_fundraising_activity_category_controller import (
+    UnsuspendFundraisingActivityCategoryController,
+)
 from controller.update_fundraising_activity_category_controller import (
     UpdateFundraisingActivityCategoryController,
 )
@@ -132,16 +135,32 @@ class ManageFundraisingActivityCategoryPage:
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
-            if not category.suspended and st.button("🚫 Suspend"):
-                ok = (
-                    SuspendFundraisingActivityCategoryController()
-                    .suspend_fundraising_activity_category(category.fra_cat_id)
-                )
-                if ok:
-                    st.success("Category suspended.")
-                    st.rerun()
-                else:
-                    st.error("Could not suspend.")
+            if category.suspended:
+                if st.button("✅ Unsuspend"):
+                    ok = (
+                        UnsuspendFundraisingActivityCategoryController()
+                        .unsuspend_fundraising_activity_category(
+                            category.fra_cat_id
+                        )
+                    )
+                    if ok:
+                        st.success("Category unsuspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend.")
+            else:
+                if st.button("🚫 Suspend"):
+                    ok = (
+                        SuspendFundraisingActivityCategoryController()
+                        .suspend_fundraising_activity_category(
+                            category.fra_cat_id
+                        )
+                    )
+                    if ok:
+                        st.success("Category suspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend.")
 
     def _render_edit_form(self, category) -> None:
         with st.form("manage_fra_cat_edit_form"):

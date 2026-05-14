@@ -19,6 +19,9 @@ from controller.search_user_account_controller import (
 from controller.suspend_user_account_controller import (
     SuspendUserAccountController,
 )
+from controller.unsuspend_user_account_controller import (
+    UnsuspendUserAccountController,
+)
 from controller.update_user_account_controller import (
     UpdateUserAccountController,
 )
@@ -158,15 +161,27 @@ class ManageUserAccountPage:
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
-            if not account.suspended and st.button("🚫 Suspend"):
-                ok = SuspendUserAccountController().suspend_user_account(
-                    account.account_id
-                )
-                if ok:
-                    st.success("Account suspended.")
-                    st.rerun()
-                else:
-                    st.error("Could not suspend account.")
+            if account.suspended:
+                if st.button("✅ Unsuspend"):
+                    ok = (
+                        UnsuspendUserAccountController()
+                        .unsuspend_user_account(account.account_id)
+                    )
+                    if ok:
+                        st.success("Account unsuspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend account.")
+            else:
+                if st.button("🚫 Suspend"):
+                    ok = SuspendUserAccountController().suspend_user_account(
+                        account.account_id
+                    )
+                    if ok:
+                        st.success("Account suspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend account.")
 
     def _render_edit_form(self, account) -> None:
         profiles = ViewProfilesController().view_all_profiles()

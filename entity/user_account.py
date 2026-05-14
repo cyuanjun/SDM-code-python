@@ -156,6 +156,18 @@ class UserAccount:
         return cursor.rowcount > 0
 
     @classmethod
+    def unsuspend_user_account(cls, account_id: str) -> bool:
+        """Exception A — mirror of suspend so the UI can toggle.
+        Logged in docs/diagram_typos.md."""
+        rowid = parse_id(account_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_account SET suspended = 0 WHERE account_id = ?",
+                (rowid,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def search_user_account(cls, search_criteria: str) -> list["UserAccount"]:
         """US-10 — admin searches accounts by criteria. Case-insensitive
         substring match against email or name."""

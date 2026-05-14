@@ -92,6 +92,18 @@ class UserProfile:
         return cursor.rowcount > 0
 
     @classmethod
+    def unsuspend_user_profile(cls, profile_id: str) -> bool:
+        """Exception A — mirror of suspend so the UI can toggle.
+        Logged in docs/diagram_typos.md."""
+        rowid = parse_id(profile_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_profile SET suspended = 0 WHERE profile_id = ?",
+                (rowid,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def search_user_profile(cls, search_criteria: str) -> list["UserProfile"]:
         """US-5 — admin searches profiles by criteria. Case-insensitive
         substring match against role and description."""

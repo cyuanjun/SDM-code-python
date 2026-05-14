@@ -25,6 +25,9 @@ from controller.search_my_fundraising_activity_controller import (
 from controller.suspend_my_fundraising_activity_controller import (
     SuspendMyFundraisingActivityController,
 )
+from controller.unsuspend_my_fundraising_activity_controller import (
+    UnsuspendMyFundraisingActivityController,
+)
 from controller.update_my_fundraising_activity_controller import (
     UpdateMyFundraisingActivityController,
 )
@@ -237,20 +240,36 @@ class ManageMyFundraisingActivityPage:
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
-            if (not activity.completed and not activity.suspended
-                    and st.button("🚫 Suspend donations")):
-                ok = (
-                    SuspendMyFundraisingActivityController()
-                    .suspend_my_fundraising_activity(
-                        owner_account_id=owner_account_id,
-                        fra_id=activity.fra_id,
+            if activity.completed:
+                pass  # completed activities aren't suspendable
+            elif activity.suspended:
+                if st.button("✅ Unsuspend donations"):
+                    ok = (
+                        UnsuspendMyFundraisingActivityController()
+                        .unsuspend_my_fundraising_activity(
+                            owner_account_id=owner_account_id,
+                            fra_id=activity.fra_id,
+                        )
                     )
-                )
-                if ok:
-                    st.success("Activity suspended.")
-                    st.rerun()
-                else:
-                    st.error("Could not suspend.")
+                    if ok:
+                        st.success("Activity unsuspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend.")
+            else:
+                if st.button("🚫 Suspend donations"):
+                    ok = (
+                        SuspendMyFundraisingActivityController()
+                        .suspend_my_fundraising_activity(
+                            owner_account_id=owner_account_id,
+                            fra_id=activity.fra_id,
+                        )
+                    )
+                    if ok:
+                        st.success("Activity suspended.")
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend.")
 
     def _render_edit_form(self, activity, owner_account_id: str) -> None:
         with st.form("manage_my_fra_edit_form"):
