@@ -22,6 +22,24 @@ Code follows the corrected version in each case. Logged 2026-05-14.
 - **[US-20.jpg](../diagrams/sprint-2_diagrams/US-20.jpg) boundary class name:** `ViewFundraisingActivities` (no `Page` suffix). Project rule mandates the `Page` suffix on every Boundary class — implementation uses `ViewFundraisingActivitiesPage`.
 - **[US-24.jpg](../diagrams/sprint-2_diagrams/US-24.jpg) return type:** `viewFavourite(accountId: String): Favourite` — returns a single Favourite, but the user story is "view all my favourites" which implies many. Should be `viewFavourites(accountId: String): List<Favourite>` (note plural method name too). Implementation uses the list version.
 
+## Sprint 3 diagram typos (fix in the source diagrams before marking)
+
+Code follows the corrected version in each case. Logged 2026-05-15.
+
+- **[US-09.jpg](../diagrams/sprint-3_diagrams/US-09.jpg) `UserAccount.profileId: Integer`.** Same typo flagged in Sprint 1 US-11 (and fixed there). Re-introduced here; should be `String`.
+- **[US-09.jpg](../diagrams/sprint-3_diagrams/US-09.jpg) boundary class mismatch:** class diagram lists `ViewUserAccountPage`, sequence diagram shows `SuspendUserAccountPage`. Implementation reuses the Sprint 2 `ViewUserAccountPage` (same pattern as US-4 reusing `ViewUserProfilePage`): the suspend button is added to the existing view-detail page. Pick one and reconcile.
+- **[US-16.jpg](../diagrams/sprint-3_diagrams/US-16.jpg) boundary class:** lists `ViewFundraisingActivityPage` (the donee's view, US-21). Should be `ViewMyFundraisingActivityPage` (fundraiser's own, US-14) since the actor is the fundraiser and the activity is theirs. Implementation extends the US-14 page.
+- **[US-16.jpg](../diagrams/sprint-3_diagrams/US-16.jpg) entity attribute typo:** `suspended: Bool` (other entities use `Boolean`). Should be `Boolean` uniformly.
+- **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) signature mismatch:** class shows `searchFavourite(viewMode: String, searchCriteria: String, accountId: String)`; sequence shows `searchFavourite(searchCriteria: String, accountId: String)`. The `viewMode` parameter is not exercised in the sequence — implementation uses the 2-param sequence version.
+- **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) boundary class:** named `ViewFundraisingActivitiesPage` — collides with the Sprint 2 US-20 boundary. Implementation uses `SearchFavouritePage` to avoid the collision and match the user story ("search my favourites list").
+- **[US-32.jpg](../diagrams/sprint-3_diagrams/US-32.jpg) `accountId: Integer` on the controller + entity.** Should be `String` to match every other account-id surface.
+
+## Sprint 3 deviation: no "make donation" use case on any diagram
+
+The US-32 / US-33 diagrams introduce a `Donation` entity (`donationId, accountId, FRAId, amount: Decimal, donationDate: Date`) and methods to search + view donation history, but no Sprint 1–3 diagram defines a "donate" use case. With no entry point the donation table would be permanently empty and US-32/33 would have nothing to show.
+
+Workaround (2026-05-15): `data/seed.py` will create a handful of demo donations tied to a seeded donee account so US-32/33 are visible end-to-end. Document either: (a) add a `Donate` use case + page on the diagrams before final marking, or (b) explicitly document that donations are seeded for demo purposes only.
+
 ## Diagram updates needed before final marking (Exception A)
 
 Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry below is an off-diagram method added to an Entity (plus a matching pure-delegator controller) to power a list/dropdown the Boundary needs. Each must land on the relevant class diagram before final marking.
