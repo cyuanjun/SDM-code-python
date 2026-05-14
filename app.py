@@ -6,6 +6,9 @@ from __future__ import annotations
 import streamlit as st
 
 from boundary.create_account_page import CreateAccountPage
+from boundary.create_fundraising_activity_page import (
+    CreateFundraisingActivityPage,
+)
 from boundary.create_profile_page import CreateProfilePage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
@@ -16,6 +19,7 @@ PAGES: dict = {
     "Log out": LogoutPage,
     "[Admin] Create user profile": CreateProfilePage,
     "[Admin] Create user account": CreateAccountPage,
+    "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
 }
 
 

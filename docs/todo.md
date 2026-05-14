@@ -9,6 +9,8 @@ Code follows the corrected (consensus) version in each case. Logged 2026-05-14 w
 - ~~**US-11.jpg `UserAccount.profileId: Integer`**~~ — **resolved 2026-05-14**: corrected diagram drops in with `profileId: String`.
 - ~~**US-01.jpg `UserProfile.suspended: String`**~~ — **resolved 2026-05-14**: corrected diagram drops in with `suspended: Boolean`.
 - **No `displayError` / `displayValidationError` on any boundary class diagram.** Every Sprint 1 boundary shows only `displaySuccess(...)`. Validation must live in the Boundary per the project rule, so an error-display method is implicit. Add `displayError(): void` (or equivalent) to every Sprint 1 boundary class diagram before final marking, or document the convention that error display is implicit.
+- **[US-13.jpg](../diagrams/sprint-1_diagrams/US-13.jpg) `createFundraisingActivity` is missing `ownerAccountId: String`.** The entity declares `ownerAccountId: String` as an attribute, but the method signature doesn't accept it — so the column would never be populated. Implementation adds it as a 7th parameter; the boundary supplies it from `st.session_state["user"].account_id`. Add the parameter to the class + sequence diagrams.
+- **Login failure path not on diagrams.** Every login diagram (US-11/18/26/39) shows `login(email, password): UserAccount` with no `null` or failure return. Implementation returns `None` on no-match so the boundary can show an error. Document the failure branch explicitly on the four login class diagrams.
 
 ## Diagram updates needed before final marking (Exception A)
 

@@ -20,3 +20,18 @@ CREATE TABLE IF NOT EXISTS user_account (
     profile_id INTEGER NOT NULL REFERENCES user_profile(profile_id),
     suspended  INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS fundraising_activity (
+    fra_id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    title            TEXT NOT NULL,
+    description      TEXT NOT NULL,
+    target_amount    TEXT NOT NULL,
+    category         TEXT NOT NULL,
+    start_date       TEXT NOT NULL,
+    end_date         TEXT NOT NULL,
+    completed        INTEGER NOT NULL DEFAULT 0,
+    suspended        INTEGER NOT NULL DEFAULT 0,
+    owner_account_id INTEGER NOT NULL REFERENCES user_account(account_id),
+    view_count       INTEGER NOT NULL DEFAULT 0,
+    save_count       INTEGER NOT NULL DEFAULT 0
+);
