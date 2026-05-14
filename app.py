@@ -34,17 +34,16 @@ def main() -> None:
     seed_default_admin()
 
     st.sidebar.title("SDM Fundraising")
-    st.sidebar.info("Revamp branch — no pages wired yet")
+    if "user" in st.session_state:
+        user = st.session_state["user"]
+        st.sidebar.success(
+            f"Signed in as\n\n**{user.name}**\n\n{user.email}"
+        )
+    else:
+        st.sidebar.info("Not signed in")
 
-    st.title("SDM Online Fundraising System")
-    st.write(
-        "This branch is rebuilding from reworked diagrams. "
-        "Pages will appear in the sidebar as each user story lands."
-    )
-
-    if PAGES:
-        selection = st.sidebar.radio("Page", list(PAGES.keys()))
-        PAGES[selection]().render()
+    selection = st.sidebar.radio("Page", list(PAGES.keys()))
+    PAGES[selection]().render()
 
 
 if __name__ == "__main__":
