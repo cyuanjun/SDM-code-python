@@ -466,3 +466,123 @@ def test_search_my_fundraising_activity_returns_empty_for_no_activities() -> Non
         owner_account_id=owner.account_id, search_criteria="x",
     )
     assert results == []
+
+
+def _seed_completed_activity(
+    owner: UserAccount, title: str = "Done"
+) -> FundraisingActivity:
+    activity = FundraisingActivity.create_fundraising_activity(
+        title=title, description=f"{title} desc",
+        target_amount=Decimal("100"), category="x",
+        start_date=date(2025, 1, 1), end_date=date(2025, 6, 1),
+        owner_account_id=owner.account_id,
+    )
+    # Mark it completed via direct update — no "complete" use case exists.
+    updated = FundraisingActivity(
+        title=activity.title, description=activity.description,
+        target_amount=activity.target_amount, category=activity.category,
+        start_date=activity.start_date, end_date=activity.end_date,
+        owner_account_id=owner.account_id,
+        completed=True, suspended=False,
+    )
+    FundraisingActivity.update_fundraiser_activity(
+        owner_account_id=owner.account_id,
+        fra_id=activity.fra_id,
+        updated_activity=updated,
+    )
+    return activity
+
+
+def test_search_my_completed_fra_matches_only_completed_and_owner_scoped() -> None:
+    owner = _seed_fundraiser_account()
+    completed = _seed_completed_activity(owner, title="Hospital fund")
+    ongoing = _seed_activity(owner, title="Hospital research")  # NOT completed
+    assert ongoing.completed is False
+    assert completed.fra_id != ongoing.fra_id
+
+    results = FundraisingActivity.search_my_completed_fra(
+        owner_account_id=owner.account_id, search_criteria="hospital",
+    )
+
+    assert [a.fra_id for a in results] == [completed.fra_id]
+
+
+def test_search_my_completed_fra_excludes_other_owners_completed_activities() -> None:
+    owner = _seed_fundraiser_account()
+    _seed_completed_activity(owner, title="Mine done")
+
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+    _seed_completed_activity(other, title="Theirs done")
+
+    results = FundraisingActivity.search_my_completed_fra(
+        owner_account_id=owner.account_id, search_criteria="done",
+    )
+    assert [a.title for a in results] == ["Mine done"]
+
+
+def test_search_my_completed_fra_returns_empty_for_no_matches() -> None:
+    """Negative path: owner has no completed activities → []."""
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Still going")  # not completed
+
+    assert (
+        FundraisingActivity.search_my_completed_fra(
+            owner_account_id=owner.account_id, search_criteria="going"
+        )
+        == []
+    )
+
+
+def test_view_my_completed_activity_returns_activity_for_correct_owner() -> None:
+    owner = _seed_fundraiser_account()
+    completed = _seed_completed_activity(owner)
+
+    fetched = FundraisingActivity.view_my_completed_activity(
+        owner_account_id=owner.account_id, fra_id=completed.fra_id,
+    )
+    assert fetched is not None
+    assert fetched.fra_id == completed.fra_id
+    assert fetched.completed is True
+
+
+def test_view_my_completed_activity_returns_none_for_not_completed() -> None:
+    """Negative path: ongoing activity isn't returned by the 'completed'
+    view even if the caller owns it."""
+    owner = _seed_fundraiser_account()
+    ongoing = _seed_activity(owner)
+    assert ongoing.completed is False
+
+    assert (
+        FundraisingActivity.view_my_completed_activity(
+            owner_account_id=owner.account_id, fra_id=ongoing.fra_id
+        )
+        is None
+    )
+
+
+def test_view_my_completed_activity_returns_none_for_wrong_owner() -> None:
+    owner = _seed_fundraiser_account()
+    completed = _seed_completed_activity(owner)
+
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+
+    assert (
+        FundraisingActivity.view_my_completed_activity(
+            owner_account_id=other.account_id, fra_id=completed.fra_id
+        )
+        is None
+    )

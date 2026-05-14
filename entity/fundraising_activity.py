@@ -165,6 +165,46 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
+    def search_my_completed_fra(
+        cls, owner_account_id: str, search_criteria: str
+    ) -> list["FundraisingActivity"]:
+        """US-30 — fundraiser searches their completed activities. Scoped
+        to owner + completed = 1."""
+        owner_rowid = parse_id(owner_account_id)
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE owner_account_id = ? AND completed = 1 AND ("
+                "  LOWER(title) LIKE ? OR LOWER(description) LIKE ? "
+                "  OR LOWER(category) LIKE ?"
+                ") ORDER BY fra_id",
+                (owner_rowid, like, like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def view_my_completed_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> Optional["FundraisingActivity"]:
+        """US-31 — fundraiser views one of their completed activities.
+        Returns None if the row is missing, owned by someone else, OR
+        not yet completed."""
+        owner_rowid = parse_id(owner_account_id)
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE fra_id = ? AND owner_account_id = ? AND completed = 1",
+                (rowid, owner_rowid),
+            ).fetchone()
+        return None if row is None else cls._from_row(row)
+
+    @classmethod
     def search_fundraising_activity(
         cls, search_criteria: str
     ) -> list["FundraisingActivity"]:
