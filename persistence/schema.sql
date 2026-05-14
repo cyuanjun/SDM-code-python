@@ -35,3 +35,9 @@ CREATE TABLE IF NOT EXISTS fundraising_activity (
     view_count       INTEGER NOT NULL DEFAULT 0,
     save_count       INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS favourite (
+    account_id INTEGER NOT NULL REFERENCES user_account(account_id) ON DELETE CASCADE,
+    fra_id     INTEGER NOT NULL REFERENCES fundraising_activity(fra_id) ON DELETE CASCADE,
+    PRIMARY KEY (account_id, fra_id)
+);

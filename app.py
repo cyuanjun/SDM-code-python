@@ -15,6 +15,7 @@ from boundary.logout_page import LogoutPage
 from boundary.update_my_fundraising_activity_page import (
     UpdateMyFundraisingActivityPage,
 )
+from boundary.view_favourite_page import ViewFavouritePage
 from boundary.view_fundraising_activities_page import (
     ViewFundraisingActivitiesPage,
 )
@@ -45,6 +46,7 @@ PAGES: dict = {
     "[Fundraiser] Update my fundraising activity": UpdateMyFundraisingActivityPage,
     "[Donee] View fundraising activity": ViewFundraisingActivityPage,
     "[Donee] Search fundraising activities": ViewFundraisingActivitiesPage,
+    "[Donee] My favourites": ViewFavouritePage,
 }
 
 

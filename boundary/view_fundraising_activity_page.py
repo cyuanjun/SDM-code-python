@@ -1,16 +1,20 @@
-"""ViewFundraisingActivityPage <<Boundary>> — Sprint 1 US-21.
+"""ViewFundraisingActivityPage <<Boundary>> — Sprint 1 US-21 + Sprint 2 US-22.
 
-Diagram contract (US-21.jpg):
-    + displayFundraisingActivity(fundraisingActivity: FundraisingActivity): void
+Diagram contracts:
+    US-21.jpg: + displayFundraisingActivity(fundraisingActivity: FundraisingActivity): void
+    US-22.jpg: + displaySuccess(): void  (save-to-favourites; same boundary class)
 
-US-21's diagram shows the donee picking an activity by id; the page
-serves both the list view (Exception A `view_all_fundraising_activities`)
-and the detail view (`viewFundraisingActivity(activityId)`).
+US-22 places the "save to favourites" button on this same page —
+the diagram explicitly names ViewFundraisingActivityPage as the
+boundary for both view and save.
 """
 from __future__ import annotations
 
 import streamlit as st
 
+from controller.save_fundraising_activity_controller import (
+    SaveFundraisingActivityController,
+)
 from controller.view_fundraising_activity_controller import (
     ViewFundraisingActivityController,
 )
@@ -80,3 +84,26 @@ class ViewFundraisingActivityPage:
         if activity.suspended:
             st.warning("This activity is currently suspended.")
         st.write(activity.description)
+
+        # US-22: donee saves this activity to their favourites.
+        user = st.session_state.get("user")
+        if user is not None:
+            if st.button("⭐ Save to favourites"):
+                ok = (
+                    SaveFundraisingActivityController()
+                    .save_fundraising_activity(
+                        account_id=user.account_id, fra_id=activity.fra_id
+                    )
+                )
+                if ok:
+                    self.display_success()
+                else:
+                    self.display_save_error()
+
+    @staticmethod
+    def display_success() -> None:
+        st.success("Saved to your favourites.")
+
+    @staticmethod
+    def display_save_error() -> None:
+        st.info("Already in your favourites.")
