@@ -1,14 +1,22 @@
-"""ViewUserAccountPage <<Boundary>> — Sprint 2 US-7.
+"""ViewUserAccountPage <<Boundary>> — Sprint 2 US-7 + Sprint 3 US-9.
 
-Diagram contract (US-07.jpg):
-    + displayUserAccount(account: UserAccount): void
+Diagram contracts:
+    US-07.jpg: + displayUserAccount(account: UserAccount): void
+    US-09.jpg: + displaySuccess(): void  (suspend; class diagram lists this
+                                          page; sequence diagram names
+                                          SuspendUserAccountPage — typo
+                                          logged in docs/todo.md.)
 
 List-then-detail pattern. The list uses Exception A view_all_user_accounts.
+US-9 adds a "Suspend" button on the detail view.
 """
 from __future__ import annotations
 
 import streamlit as st
 
+from controller.suspend_user_account_controller import (
+    SuspendUserAccountController,
+)
 from controller.view_user_account_controller import ViewUserAccountController
 
 SELECTED_KEY = "selected_account_id"
@@ -61,8 +69,7 @@ class ViewUserAccountPage:
             st.session_state[SELECTED_KEY] = accounts[selected[0]].account_id
             st.rerun()
 
-    @staticmethod
-    def display_user_account(account) -> None:
+    def display_user_account(self, account) -> None:
         st.subheader(account.name)
         st.write(f"**Account ID:** {account.account_id}")
         st.write(f"**Email:** {account.email}")
@@ -70,3 +77,23 @@ class ViewUserAccountPage:
         st.write(f"**Phone:** {account.phone_num}")
         st.write(f"**Profile:** {account.profile_id}")
         st.write(f"**Suspended:** {'yes' if account.suspended else 'no'}")
+
+        # US-9: admin suspends this account.
+        if not account.suspended:
+            if st.button("🚫 Suspend this account"):
+                ok = SuspendUserAccountController().suspend_user_account(
+                    account.account_id
+                )
+                if ok:
+                    self.display_success()
+                    st.rerun()
+                else:
+                    self.display_error()
+
+    @staticmethod
+    def display_success() -> None:
+        st.success("Account suspended.")
+
+    @staticmethod
+    def display_error() -> None:
+        st.error("Could not suspend account.")

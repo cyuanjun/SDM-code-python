@@ -243,3 +243,72 @@ def test_update_user_account_does_not_mutate_other_rows() -> None:
     assert untouched is not None
     assert untouched.email == "b@x.com"
     assert untouched.name == "B"
+
+
+def test_suspend_user_account_returns_true_and_sets_suspended_flag() -> None:
+    created = _seed_account()
+    assert created.suspended is False
+
+    assert UserAccount.suspend_user_account(created.account_id) is True
+
+    fetched = UserAccount.view_user_account(created.account_id)
+    assert fetched is not None
+    assert fetched.suspended is True
+
+
+def test_suspend_user_account_returns_false_for_missing_id() -> None:
+    assert UserAccount.suspend_user_account("acc_999") is False
+
+
+def test_suspended_account_cannot_log_in() -> None:
+    """Negative path: suspending an account should block its login. This is
+    a behavioural consequence of the suspended flag; the login query will
+    need to filter out suspended rows."""
+    created = _seed_account(email="suspend-me@x.com", password="secret")
+
+    UserAccount.suspend_user_account(created.account_id)
+
+    assert UserAccount.login("suspend-me@x.com", "secret") is None
+
+
+def test_search_user_account_matches_email_substring_case_insensitive() -> None:
+    profile = _seed_profile()
+    UserAccount.create_account(
+        email="ada@x.com", password="p", name="Ada", dob=date(1990, 1, 1),
+        phone_num="1", profile_id=profile.profile_id,
+    )
+    UserAccount.create_account(
+        email="bob@y.com", password="p", name="Bob", dob=date(1990, 1, 1),
+        phone_num="2", profile_id=profile.profile_id,
+    )
+
+    results = UserAccount.search_user_account("ADA")
+    assert [a.email for a in results] == ["ada@x.com"]
+
+
+def test_search_user_account_matches_name_substring() -> None:
+    profile = _seed_profile()
+    UserAccount.create_account(
+        email="a@x.com", password="p", name="Alice Smith", dob=date(1990, 1, 1),
+        phone_num="1", profile_id=profile.profile_id,
+    )
+    UserAccount.create_account(
+        email="b@x.com", password="p", name="Bob Jones", dob=date(1990, 1, 1),
+        phone_num="2", profile_id=profile.profile_id,
+    )
+
+    results = UserAccount.search_user_account("smith")
+    assert [a.name for a in results] == ["Alice Smith"]
+
+
+def test_search_user_account_returns_empty_for_no_match() -> None:
+    profile = _seed_profile()
+    UserAccount.create_account(
+        email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
+        phone_num="0", profile_id=profile.profile_id,
+    )
+    assert UserAccount.search_user_account("nothing") == []
+
+
+def test_search_user_account_returns_empty_on_empty_db() -> None:
+    assert UserAccount.search_user_account("anything") == []

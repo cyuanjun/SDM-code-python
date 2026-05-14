@@ -137,8 +137,35 @@ class UserAccount:
             row = conn.execute(
                 "SELECT account_id, email, password, name, dob, phone_num, "
                 "profile_id, suspended FROM user_account "
-                "WHERE email = ? AND password = ? "
+                "WHERE email = ? AND password = ? AND suspended = 0 "
                 "ORDER BY account_id LIMIT 1",
                 (email, password),
             ).fetchone()
         return None if row is None else cls._from_row(row)
+
+    @classmethod
+    def suspend_user_account(cls, account_id: str) -> bool:
+        """US-9 — admin suspends an account. Returns True on rowcount > 0,
+        False when no row matches."""
+        rowid = parse_id(account_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_account SET suspended = 1 WHERE account_id = ?",
+                (rowid,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def search_user_account(cls, search_criteria: str) -> list["UserAccount"]:
+        """US-10 — admin searches accounts by criteria. Case-insensitive
+        substring match against email or name."""
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account "
+                "WHERE LOWER(email) LIKE ? OR LOWER(name) LIKE ? "
+                "ORDER BY account_id",
+                (like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
