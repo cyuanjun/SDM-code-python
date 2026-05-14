@@ -1,135 +1,157 @@
-"""Tests for data/seed.py — bootstrap admin must be idempotent and reachable
-via the login flow."""
+"""Tests for data/seed.py — every seeded role account must be idempotent
+and reachable via the login flow."""
 from __future__ import annotations
+
+from datetime import date
 
 from data.seed import (
     DEFAULT_ADMIN_EMAIL,
     DEFAULT_ADMIN_PASSWORD,
+    DEFAULT_DONEE_EMAIL,
+    DEFAULT_DONEE_PASSWORD,
+    DEFAULT_FUNDRAISER_EMAIL,
+    DEFAULT_FUNDRAISER_PASSWORD,
     DEFAULT_PM_EMAIL,
     DEFAULT_PM_PASSWORD,
     seed_default_admin,
+    seed_default_donee,
+    seed_default_fundraiser,
     seed_default_platform_manager,
     seed_demo_donations,
 )
 from entity.donation import Donation
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
+from persistence.db import get_connection
 
 
-def test_seed_creates_default_admin_on_empty_db() -> None:
+def _account_count() -> int:
+    with get_connection() as conn:
+        return conn.execute(
+            "SELECT COUNT(*) AS n FROM user_account"
+        ).fetchone()["n"]
+
+
+def test_seed_admin_creates_account_on_empty_db() -> None:
     seed_default_admin()
-
     admin = UserAccount.login(DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD)
-
     assert admin is not None
     assert admin.email == DEFAULT_ADMIN_EMAIL
-    assert admin.profile_id == "prof_001"
 
 
-def test_seed_creates_admin_profile_too() -> None:
-    seed_default_admin()
-
-    profiles = UserProfile.view_all_profiles()
-
-    assert len(profiles) == 1
-    assert profiles[0].role == "admin"
-
-
-def test_seed_is_idempotent() -> None:
-    """Negative path: running the seed twice must not create duplicate
-    admin profiles or accounts."""
+def test_seed_admin_is_idempotent() -> None:
     seed_default_admin()
     seed_default_admin()
     seed_default_admin()
-
-    profiles = UserProfile.view_all_profiles()
-    assert len(profiles) == 1
-
-    with __import__("persistence.db", fromlist=["get_connection"]).get_connection() as conn:
-        count = conn.execute("SELECT COUNT(*) AS n FROM user_account").fetchone()["n"]
-    assert count == 1
+    assert _account_count() == 1
 
 
-def test_seed_reuses_existing_admin_profile_when_present() -> None:
-    """Negative path: if an admin profile already exists (e.g. created
-    manually by a previous user) the seed must not create a second one."""
+def test_seed_admin_reuses_existing_admin_profile() -> None:
+    """Negative path: an admin profile already exists — the seed must use
+    it instead of creating a second."""
     existing = UserProfile.create_profile(
         role="admin", description="manually created"
     )
-
     seed_default_admin()
-
     profiles = UserProfile.view_all_profiles()
     assert len(profiles) == 1
     assert profiles[0].profile_id == existing.profile_id
 
 
-def test_seed_does_not_run_when_admin_account_already_exists() -> None:
-    """Negative path: an admin account already exists (created by a real
-    person, not the seed); seed must not create a duplicate."""
-    profile = UserProfile.create_profile(role="admin", description="real admin")
-    UserAccount.create_account(
-        email="real@example.com", password="real-password", name="Real",
-        dob=__import__("datetime").date(1990, 1, 1), phone_num="1",
-        profile_id=profile.profile_id,
+def test_seed_fundraiser_creates_account_on_empty_db() -> None:
+    seed_default_fundraiser()
+    fr = UserAccount.login(
+        DEFAULT_FUNDRAISER_EMAIL, DEFAULT_FUNDRAISER_PASSWORD
     )
-
-    seed_default_admin()
-
-    with __import__("persistence.db", fromlist=["get_connection"]).get_connection() as conn:
-        count = conn.execute("SELECT COUNT(*) AS n FROM user_account").fetchone()["n"]
-    assert count == 1
-    # The default admin's email was never inserted.
-    assert UserAccount.login(DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD) is None
+    assert fr is not None
+    assert fr.email == DEFAULT_FUNDRAISER_EMAIL
 
 
-def test_seed_demo_donations_creates_donations_on_empty_db() -> None:
-    seed_demo_donations()
-
-    with __import__("persistence.db", fromlist=["get_connection"]).get_connection() as conn:
-        count = conn.execute("SELECT COUNT(*) AS n FROM donation").fetchone()["n"]
-    assert count > 0
-
-
-def test_seed_demo_donations_is_idempotent() -> None:
-    """Negative path: running the donations seed twice doesn't add more rows."""
-    seed_demo_donations()
-    seed_demo_donations()
-    seed_demo_donations()
-
-    with __import__("persistence.db", fromlist=["get_connection"]).get_connection() as conn:
-        count = conn.execute("SELECT COUNT(*) AS n FROM donation").fetchone()["n"]
-    # Same count as a single seed run.
-    assert count == 3
+def test_seed_fundraiser_is_idempotent() -> None:
+    seed_default_fundraiser()
+    seed_default_fundraiser()
+    seed_default_fundraiser()
+    assert _account_count() == 1
 
 
-def test_seed_demo_donations_visible_via_search_for_seeded_donee() -> None:
-    """Seeded donations should be reachable through the US-32 search path
-    for the demo donee."""
-    seed_demo_donations()
-
-    # The seeded demo donee should now exist; fetch it via login.
-    donee = UserAccount.login("demo-donee@example.com", "demo")
+def test_seed_donee_creates_account_on_empty_db() -> None:
+    seed_default_donee()
+    donee = UserAccount.login(DEFAULT_DONEE_EMAIL, DEFAULT_DONEE_PASSWORD)
     assert donee is not None
-
-    results = Donation.search_donation_history(
-        search_criteria="hospital", account_id=donee.account_id
-    )
-    assert len(results) == 3
+    assert donee.email == DEFAULT_DONEE_EMAIL
 
 
-def test_seed_default_pm_creates_pm_on_empty_db() -> None:
+def test_seed_donee_is_idempotent() -> None:
+    seed_default_donee()
+    seed_default_donee()
+    assert _account_count() == 1
+
+
+def test_seed_pm_creates_account_on_empty_db() -> None:
     seed_default_platform_manager()
     pm = UserAccount.login(DEFAULT_PM_EMAIL, DEFAULT_PM_PASSWORD)
     assert pm is not None
     assert pm.email == DEFAULT_PM_EMAIL
 
 
-def test_seed_default_pm_is_idempotent() -> None:
-    """Negative path: running the PM seed twice doesn't create duplicates."""
+def test_seed_pm_is_idempotent() -> None:
     seed_default_platform_manager()
     seed_default_platform_manager()
-    seed_default_platform_manager()
+    assert _account_count() == 1
 
-    pms = [p for p in UserProfile.view_all_profiles() if p.role == "platform_manager"]
-    assert len(pms) == 1
+
+def test_seed_all_four_roles_creates_four_accounts() -> None:
+    seed_default_admin()
+    seed_default_fundraiser()
+    seed_default_donee()
+    seed_default_platform_manager()
+    assert _account_count() == 4
+
+
+def test_seed_does_not_overwrite_existing_account_with_same_role() -> None:
+    """Negative path: someone already has a real fundraiser account
+    under a different email. The seed must still insert its own role
+    account (matched by email, not role) without clobbering the existing
+    one."""
+    profile = UserProfile.create_profile(
+        role="fundraiser", description="real"
+    )
+    UserAccount.create_account(
+        email="real-fundraiser@x.com", password="real-pwd", name="Real",
+        dob=date(1990, 1, 1), phone_num="1",
+        profile_id=profile.profile_id,
+    )
+
+    seed_default_fundraiser()
+
+    assert _account_count() == 2
+    assert UserAccount.login("real-fundraiser@x.com", "real-pwd") is not None
+    assert UserAccount.login(
+        DEFAULT_FUNDRAISER_EMAIL, DEFAULT_FUNDRAISER_PASSWORD
+    ) is not None
+
+
+def test_seed_demo_donations_creates_three_rows_on_empty_db() -> None:
+    seed_demo_donations()
+    with get_connection() as conn:
+        n = conn.execute("SELECT COUNT(*) AS n FROM donation").fetchone()["n"]
+    assert n == 3
+
+
+def test_seed_demo_donations_is_idempotent() -> None:
+    seed_demo_donations()
+    seed_demo_donations()
+    seed_demo_donations()
+    with get_connection() as conn:
+        n = conn.execute("SELECT COUNT(*) AS n FROM donation").fetchone()["n"]
+    assert n == 3
+
+
+def test_seed_demo_donations_visible_via_search_for_default_donee() -> None:
+    seed_demo_donations()
+    donee = UserAccount.login(DEFAULT_DONEE_EMAIL, DEFAULT_DONEE_PASSWORD)
+    assert donee is not None
+    results = Donation.search_donation_history(
+        search_criteria="hospital", account_id=donee.account_id
+    )
+    assert len(results) == 3

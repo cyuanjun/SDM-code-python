@@ -30,6 +30,8 @@ from boundary.my_donations_page import MyDonationsPage
 from boundary.my_favourites_page import MyFavouritesPage
 from data.seed import (
     seed_default_admin,
+    seed_default_donee,
+    seed_default_fundraiser,
     seed_default_platform_manager,
     seed_demo_donations,
 )
@@ -53,6 +55,8 @@ def main() -> None:
     st.set_page_config(page_title="SDM Fundraising", layout="wide")
     init_db()
     seed_default_admin()
+    seed_default_fundraiser()
+    seed_default_donee()
     seed_default_platform_manager()
     seed_demo_donations()
 

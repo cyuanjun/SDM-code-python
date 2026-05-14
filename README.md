@@ -18,15 +18,16 @@ python -m persistence.db          # initialises app.db with all current tables
 streamlit run app.py              # launches the UI on http://localhost:8501
 ```
 
-App startup also runs [data/seed.py](data/seed.py) which idempotently creates default accounts + demo data:
+App startup also runs [data/seed.py](data/seed.py) which idempotently creates one default account per role + demo data:
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `admin@example.com` | `admin` |
-| Platform Manager | `pm@example.com` | `pm` |
-| Donee (demo) | `demo-donee@example.com` | `demo` |
+| Admin | `admin@a.com` | `123` |
+| Fundraiser | `fundraiser@a.com` | `123` |
+| Donee | `donee@a.com` | `123` |
+| Platform Manager | `pm@a.com` | `123` |
 
-A demo fundraiser is also seeded along with three sample donations so US-32 / US-33 have data to display. Logged in [docs/todo.md](docs/todo.md) as a bootstrap convention to either keep or replace with an initial-setup use case before final marking.
+Three sample donations are also seeded against a demo activity owned by the default fundraiser so US-32 / US-33 have data to display. Logged in [docs/todo.md](docs/todo.md) as a bootstrap convention to either keep or replace with an initial-setup use case before final marking.
 
 ## Run tests
 
