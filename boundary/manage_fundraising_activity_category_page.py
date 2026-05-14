@@ -1,0 +1,188 @@
+"""ManageFundraisingActivityCategoryPage <<Boundary>> — UX consolidation.
+
+NOT on any diagram. Combines US-34, 35, 36, 37, 38 (FRA category CRUD)
+into one Search/List/Detail/Update/Suspend screen with an inline Create
+form at the top.
+
+Logged in docs/diagram_typos.md as a UX deviation.
+"""
+from __future__ import annotations
+
+import streamlit as st
+
+from controller.create_fundraising_activity_category_controller import (
+    CreateFundraisingActivityCategoryController,
+)
+from controller.search_fundraising_activity_category_controller import (
+    SearchFundraisingActivityCategoryController,
+)
+from controller.suspend_fundraising_activity_category_controller import (
+    SuspendFundraisingActivityCategoryController,
+)
+from controller.update_fundraising_activity_category_controller import (
+    UpdateFundraisingActivityCategoryController,
+)
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
+from entity.fundraising_activity_category import FundraisingActivityCategory
+
+SELECTED_KEY = "manage_fra_cat_selected_id"
+EDIT_MODE_KEY = "manage_fra_cat_edit_mode"
+
+
+class ManageFundraisingActivityCategoryPage:
+    def render(self) -> None:
+        st.header("Manage fundraising activity categories")
+
+        if SELECTED_KEY in st.session_state:
+            self._render_detail()
+        else:
+            self._render_list()
+
+    def _render_list(self) -> None:
+        with st.expander("➕ Create new category"):
+            with st.form("manage_fra_cat_create_form"):
+                name = st.text_input("Category name")
+                description = st.text_area("Description")
+                if st.form_submit_button("Create"):
+                    if self._validate(name, description):
+                        CreateFundraisingActivityCategoryController().create_category(
+                            category_name=name.strip(),
+                            description=description.strip(),
+                        )
+                        st.success("Category created.")
+                        st.rerun()
+                    else:
+                        st.error(
+                            "Both category name and description are required."
+                        )
+
+        search_term = st.text_input(
+            "Search categories", placeholder="Name or description…"
+        )
+        view_controller = ViewFundraisingActivityCategoryController()
+        if search_term.strip():
+            cats = (
+                SearchFundraisingActivityCategoryController()
+                .search_fundraising_activity_category(search_term.strip())
+            )
+        else:
+            cats = view_controller.view_all_categories()
+
+        if not cats:
+            st.info(
+                "No categories match." if search_term.strip()
+                else "No categories yet."
+            )
+            return
+
+        st.caption(f"{len(cats)} category(s) — click a row to view")
+        rows = [
+            {
+                "ID": c.fra_cat_id,
+                "Name": c.category_name,
+                "Description": c.description,
+                "Suspended": "yes" if c.suspended else "no",
+            }
+            for c in cats
+        ]
+        event = st.dataframe(
+            rows,
+            width="stretch",
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+        )
+        selected = event.selection.rows
+        if selected:
+            st.session_state[SELECTED_KEY] = cats[selected[0]].fra_cat_id
+            st.rerun()
+
+    def _render_detail(self) -> None:
+        fra_cat_id = st.session_state[SELECTED_KEY]
+        current = (
+            ViewFundraisingActivityCategoryController()
+            .view_fundraising_activity_category(fra_cat_id)
+        )
+        if current is None:
+            st.error("Category no longer exists.")
+            st.session_state.pop(SELECTED_KEY, None)
+            return
+
+        if st.session_state.get(EDIT_MODE_KEY):
+            self._render_edit_form(current)
+        else:
+            self._render_view(current)
+
+        if st.button("← Back to list"):
+            st.session_state.pop(SELECTED_KEY, None)
+            st.session_state.pop(EDIT_MODE_KEY, None)
+            st.rerun()
+
+    def _render_view(self, category) -> None:
+        st.subheader(category.category_name)
+        st.write(f"**ID:** {category.fra_cat_id}")
+        st.write(f"**Description:** {category.description or '(none)'}")
+        st.write(f"**Suspended:** {'yes' if category.suspended else 'no'}")
+
+        col_update, col_suspend, _ = st.columns([1, 1, 4])
+        with col_update:
+            if st.button("✏️ Update"):
+                st.session_state[EDIT_MODE_KEY] = True
+                st.rerun()
+        with col_suspend:
+            if not category.suspended and st.button("🚫 Suspend"):
+                ok = (
+                    SuspendFundraisingActivityCategoryController()
+                    .suspend_fundraising_activity_category(category.fra_cat_id)
+                )
+                if ok:
+                    st.success("Category suspended.")
+                    st.rerun()
+                else:
+                    st.error("Could not suspend.")
+
+    def _render_edit_form(self, category) -> None:
+        with st.form("manage_fra_cat_edit_form"):
+            st.write(f"**Editing:** {category.fra_cat_id}")
+            name = st.text_input("Category name", value=category.category_name)
+            description = st.text_area("Description", value=category.description)
+            suspended = st.checkbox("Suspended", value=category.suspended)
+            col_save, col_cancel = st.columns(2)
+            with col_save:
+                submitted = st.form_submit_button("Save changes")
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+
+        if cancel:
+            st.session_state.pop(EDIT_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate(name, description):
+            st.error("Both name and description are required.")
+            return
+
+        ok = (
+            UpdateFundraisingActivityCategoryController()
+            .update_fundraising_activity_category(
+                fra_cat_id=category.fra_cat_id,
+                updated_category=FundraisingActivityCategory(
+                    category_name=name.strip(),
+                    description=description.strip(),
+                    suspended=suspended,
+                ),
+            )
+        )
+        if ok:
+            st.success("Category updated.")
+            st.session_state.pop(EDIT_MODE_KEY, None)
+            st.rerun()
+        else:
+            st.error("Update failed.")
+
+    @staticmethod
+    def _validate(name: str, description: str) -> bool:
+        return bool(name.strip()) and bool(description.strip())

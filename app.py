@@ -1,65 +1,33 @@
-"""Streamlit entry point. Sprint 1 pages are wired in here as each user
-story is rebuilt against the reworked diagrams.
+"""Streamlit entry point.
+
+The sidebar wires the UX-consolidated boundary pages (one per actor area,
+each combining the diagram-defined per-US Boundary classes via search /
+list / detail / inline create). The per-US classes still exist as
+testable artifacts and as the diagram's 1:1 mapping — they're just not
+sidebar entries.
+
+The consolidation is logged in docs/diagram_typos.md as a UX deviation.
 """
 from __future__ import annotations
 
 import streamlit as st
 
-from boundary.create_account_page import CreateAccountPage
-from boundary.create_fundraising_activity_category_page import (
-    CreateFundraisingActivityCategoryPage,
+from boundary.browse_fundraising_activity_page import (
+    BrowseFundraisingActivityPage,
 )
-from boundary.create_fundraising_activity_page import (
-    CreateFundraisingActivityPage,
-)
-from boundary.create_profile_page import CreateProfilePage
 from boundary.generate_report_page import GenerateReportPage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
-from boundary.update_fundraising_activity_category_page import (
-    UpdateFundraisingActivityCategoryPage,
+from boundary.manage_fundraising_activity_category_page import (
+    ManageFundraisingActivityCategoryPage,
 )
-from boundary.update_my_fundraising_activity_page import (
-    UpdateMyFundraisingActivityPage,
+from boundary.manage_my_fundraising_activity_page import (
+    ManageMyFundraisingActivityPage,
 )
-from boundary.view_my_completed_activity_page import (
-    ViewMyCompletedActivityPage,
-)
-from boundary.view_my_donation_histories_page import (
-    ViewMyDonationHistoriesPage,
-)
-from boundary.view_my_donation_history_page import (
-    ViewMyDonationHistoryPage,
-)
-from boundary.view_my_fundraising_activities_page import (
-    ViewMyFundraisingActivitiesPage,
-)
-from boundary.search_favourite_page import SearchFavouritePage
-from boundary.search_my_completed_activity_page import (
-    SearchMyCompletedActivityPage,
-)
-from boundary.view_favourite_page import ViewFavouritePage
-from boundary.view_fundraising_activities_page import (
-    ViewFundraisingActivitiesPage,
-)
-from boundary.view_fundraising_activity_categories_page import (
-    ViewFundraisingActivityCategoriesPage,
-)
-from boundary.view_fundraising_activity_category_page import (
-    ViewFundraisingActivityCategoryPage,
-)
-from boundary.view_fundraising_activity_page import (
-    ViewFundraisingActivityPage,
-)
-from boundary.update_user_account_page import UpdateUserAccountPage
-from boundary.update_user_profile_page import UpdateUserProfilePage
-from boundary.view_my_fundraising_activity_page import (
-    ViewMyFundraisingActivityPage,
-)
-from boundary.view_user_account_page import ViewUserAccountPage
-from boundary.view_user_accounts_page import ViewUserAccountsPage
-from boundary.view_user_profile_page import ViewUserProfilePage
-from boundary.view_user_profiles_page import ViewUserProfilesPage
+from boundary.manage_user_account_page import ManageUserAccountPage
+from boundary.manage_user_profile_page import ManageUserProfilePage
+from boundary.my_donations_page import MyDonationsPage
+from boundary.my_favourites_page import MyFavouritesPage
 from data.seed import (
     seed_default_admin,
     seed_default_platform_manager,
@@ -70,30 +38,13 @@ from persistence.db import init_db
 PAGES: dict = {
     "Log in": LoginPage,
     "Log out": LogoutPage,
-    "[Admin] Create user profile": CreateProfilePage,
-    "[Admin] View user profile": ViewUserProfilePage,
-    "[Admin] Update user profile": UpdateUserProfilePage,
-    "[Admin] Search user profiles": ViewUserProfilesPage,
-    "[Admin] Create user account": CreateAccountPage,
-    "[Admin] View user account": ViewUserAccountPage,
-    "[Admin] Update user account": UpdateUserAccountPage,
-    "[Admin] Search user accounts": ViewUserAccountsPage,
-    "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
-    "[Fundraiser] View my fundraising activity": ViewMyFundraisingActivityPage,
-    "[Fundraiser] Update my fundraising activity": UpdateMyFundraisingActivityPage,
-    "[Fundraiser] Search my fundraising activities": ViewMyFundraisingActivitiesPage,
-    "[Fundraiser] Search my completed activities": SearchMyCompletedActivityPage,
-    "[Fundraiser] View my completed activity": ViewMyCompletedActivityPage,
-    "[Donee] View fundraising activity": ViewFundraisingActivityPage,
-    "[Donee] Search fundraising activities": ViewFundraisingActivitiesPage,
-    "[Donee] My favourites": ViewFavouritePage,
-    "[Donee] Search my favourites": SearchFavouritePage,
-    "[Donee] Search my donation history": ViewMyDonationHistoriesPage,
-    "[Donee] View my donation history": ViewMyDonationHistoryPage,
-    "[PM] Create FRA category": CreateFundraisingActivityCategoryPage,
-    "[PM] View FRA category": ViewFundraisingActivityCategoryPage,
-    "[PM] Update FRA category": UpdateFundraisingActivityCategoryPage,
-    "[PM] Search FRA categories": ViewFundraisingActivityCategoriesPage,
+    "[Admin] Manage user profiles": ManageUserProfilePage,
+    "[Admin] Manage user accounts": ManageUserAccountPage,
+    "[Fundraiser] Manage my fundraising activities": ManageMyFundraisingActivityPage,
+    "[Donee] Browse fundraising activities": BrowseFundraisingActivityPage,
+    "[Donee] My favourites": MyFavouritesPage,
+    "[Donee] My donations": MyDonationsPage,
+    "[PM] Manage FRA categories": ManageFundraisingActivityCategoryPage,
     "[PM] Generate report": GenerateReportPage,
 }
 

@@ -46,3 +46,21 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/).
 - **[US-28.jpg](../diagrams/sprint-4_diagrams/US-28.jpg) / [US-29.jpg](../diagrams/sprint-4_diagrams/US-29.jpg) boundary class:** lists `ViewFundraisingActivityPage` (the donee's page from US-21) — but the actor is **Fundraiser** viewing their own counts. Implementation extends the donee page with owner-gated count display (renders only when `st.session_state["user"].account_id == activity.owner_account_id`). Either rename the boundary to `ViewMyFundraisingActivityPage` on the class diagram, or document the owner-gate convention.
 - **[US-41.jpg](../diagrams/sprint-4_diagrams/US-41.jpg) / [US-42.jpg](../diagrams/sprint-4_diagrams/US-42.jpg) / [US-43.jpg](../diagrams/sprint-4_diagrams/US-43.jpg) `generate*Report` signatures are missing `platformManagerId`.** The entity declares `platformManagerId: String` as an attribute, but the three method signatures take only `(startDate: Date, endDate: Date): Report` — so the column would never be populated. Implementation adds `platform_manager_id` as a 3rd parameter; the boundary supplies it from `st.session_state["user"].account_id`. Add the parameter to the class + sequence diagrams.
 - **[US-41.jpg](../diagrams/sprint-4_diagrams/US-41.jpg) / [US-42.jpg](../diagrams/sprint-4_diagrams/US-42.jpg) / [US-43.jpg](../diagrams/sprint-4_diagrams/US-43.jpg) shared boundary class name.** All three diagrams name the boundary class `GenerateReportPage`, but each describes a different use case. Implementation uses ONE `GenerateReportPage` with an internal radio selector for daily / weekly / monthly, routing to the three diagram-defined controllers. Either keep one shared page or rename per-story (`GenerateDailyReportPage`, etc.) — current implementation keeps the shared name.
+
+## UX consolidation (no individual diagram is wrong — the *set* deviates)
+
+Added 2026-05-15 after the design sketch consolidating per-US pages into resource-focused screens. Every diagram-defined per-US Boundary class **still exists** as a tested artifact, but the sidebar wires the seven combined pages below instead. Each combined page calls the same Controllers and Entities the per-US Boundaries do.
+
+The diagrams themselves don't need to change — the per-US classes are still real, still tested, and still 1:1 with their stories. The deviation is purely in *which* Boundary classes get wired into the sidebar. Either add a "UX wireframe" diagram showing the seven combined pages alongside the existing class diagrams, or document the consolidation as a deliberate refactor of the UI surface.
+
+| Combined page (sidebar entry) | Per-US Boundary classes it replaces in the sidebar |
+|---|---|
+| `ManageUserProfilePage` | `CreateProfilePage`, `ViewUserProfilePage`, `UpdateUserProfilePage`, `ViewUserProfilesPage` (and the suspend button on `ViewUserProfilePage`) |
+| `ManageUserAccountPage` | `CreateAccountPage`, `ViewUserAccountPage`, `UpdateUserAccountPage`, `ViewUserAccountsPage` (and the suspend button on `ViewUserAccountPage`) |
+| `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage`, `SearchMyCompletedActivityPage`, `ViewMyCompletedActivityPage` (All/Completed tabs) |
+| `BrowseFundraisingActivityPage` | `ViewFundraisingActivityPage` (donee detail + US-22 save button), `ViewFundraisingActivitiesPage` (US-20 search) |
+| `MyFavouritesPage` | `ViewFavouritePage` (with US-23 remove), `SearchFavouritePage` |
+| `MyDonationsPage` | `ViewMyDonationHistoryPage`, `ViewMyDonationHistoriesPage` |
+| `ManageFundraisingActivityCategoryPage` | `CreateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoryPage`, `UpdateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoriesPage` (suspend button on view detail) |
+
+The 8th sidebar entry (`GenerateReportPage`) was already shared across US-41/42/43 on the diagrams; nothing changes there.
