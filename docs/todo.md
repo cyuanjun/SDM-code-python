@@ -12,9 +12,8 @@ Pure **diagram typos** (signatures, attribute types, boundary class names) live 
 
 These exist because the diagrams don't define an entry point for some required data. Each is idempotent on app startup. Either formalise the seed as a "first-time setup" use case on the diagrams, or accept it as a demo-only convention.
 
-- **Default admin account** — `admin@example.com` / `admin`. Solves the chicken-and-egg admin-creates-the-first-admin problem implied by US-1 / US-6's "User admin" actor.
-- **Default platform manager account (Sprint 4)** — `pm@example.com` / `pm`. PM-only Sprint 4 stories (US-34..38, US-41..43) need a logged-in `platform_manager`; no diagram defines how the first PM exists.
-- **Demo donations (Sprint 3)** — three sample donations tied to a seeded donee + a seeded fundraiser activity. US-32 / US-33 introduce a `Donation` entity but no Sprint 1–3 diagram defines a "donate" use case, so the table would otherwise be empty.
+- **One default account per role** — `admin001@a.com`, `fundraiser001@a.com`, `donee001@a.com`, `pm001@a.com`, all with password `123`. Solves the chicken-and-egg admin-creates-the-first-admin problem implied by US-1 / US-6's "User admin" actor, and gives every role a logged-in-able starting point for the demo.
+- **Demo donations (Sprint 3)** — three sample donations tied to the seeded donee + a "Demo hospital fund" activity owned by the seeded fundraiser. US-32 / US-33 introduce a `Donation` entity but no Sprint 1–3 diagram defines a "donate" use case, so the table would otherwise be empty.
 
 ## Exception A — off-diagram entity methods to power UX
 
@@ -26,6 +25,7 @@ Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry i
 - **`FundraisingActivity.view_my_fundraising_activities(owner_account_id)`** — added in US-14 (2026-05-14) so `ViewMyFundraisingActivityPage` / `UpdateMyFundraisingActivityPage` can scope the picker to the logged-in fundraiser's own activities. Without this the fundraiser would have to know their own FRAIds verbatim. Method lives on `ViewMyFundraisingActivityController`. Add to the US-14 / US-15 class diagrams.
 - **`Donation.view_my_donations(account_id)`** — added in US-33 (2026-05-15) so `ViewMyDonationHistoryPage` can show a picker before the donee triggers `viewMyDonationHistory(donationId)`. Method lives on `ViewMyDonationHistoryController`. Add to the US-33 class diagram.
 - **`FundraisingActivity.increment_view_count(fra_id)` + `increment_save_count(fra_id, delta)`** — needed in Sprint 4 (US-28 / US-29). The diagrams only define **read** methods for the count columns, never write. Implementation fires `+1` view from US-21 (donee opens an activity), `+1` save from US-22 (favourite), `−1` save from US-23 (remove favourite). Add the increment methods + their semantics to the US-28 / US-29 sequence diagrams (or define a new use case that owns them).
+- **Four `unsuspend_*` methods** (and four pure-delegator `Unsuspend*Controller` classes) — added 2026-05-15 so the consolidated `Manage*` pages can offer a single suspend/unsuspend toggle. Mirrors `suspend_user_profile` (US-4), `suspend_user_account` (US-9), `suspend_my_fundraising_activity` (US-16), `suspend_fundraising_activity_category` (US-38). Add each unsuspend method to its parent's class diagram, or define an unsuspend use case per actor.
 
 ## Open architectural items
 

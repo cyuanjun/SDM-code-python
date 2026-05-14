@@ -35,7 +35,7 @@ Three sample donations are also seeded against a demo activity owned by the defa
 pytest
 ```
 
-340 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+371 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -46,7 +46,7 @@ pytest
 | `controller/` | Controller | Pure delegators between Boundary and Entity |
 | `entity/` | Entity | Business objects + persistence |
 | `persistence/` | — | SQLite connection helper + schema + shared ID helpers |
-| `data/seed.py` | — | Idempotent seed: admin, PM, demo donee + activity + donations |
+| `data/seed.py` | — | Idempotent seed: one account per role (admin / fundraiser / donee / PM) + a demo activity + three sample donations |
 | `tests/` | — | pytest tests + `conftest.py` fixture |
 | `docs/` | — | architectural notes (typos catalogue, todo, etc.) |
 | `diagrams/` | — | source UML diagrams (per sprint) |
@@ -61,4 +61,6 @@ pytest
 | Sprint 3 | US-4, 5, 9, 10, 16, 17, 23, 25, 30, 31, 32, 33 | ✓ Complete |
 | Sprint 4 | US-28, 29, 34, 35, 36, 37, 38, 41, 42, 43 | ✓ Complete |
 
-All 43 user stories implemented. 340 tests passing.
+All 43 user stories implemented. 371 tests passing.
+
+The sidebar is consolidated into 10 entries via per-actor `Manage*` / `Browse*` / `My*` pages (Exception C in [CLAUDE.md](CLAUDE.md)). Role-based gating filters pages by the logged-in user's role.

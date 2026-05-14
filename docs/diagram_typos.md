@@ -4,7 +4,7 @@ Consolidated list of every divergence between the source UML diagrams and the im
 
 When a typo gets fixed in the source diagram, strike it through and add a `**resolved YYYY-MM-DD**` note rather than deleting it — keeps a record of what was fixed.
 
-For *Exception A* additions (off-diagram methods added to power UX) and *architectural deviations* (default admin / PM / donation seeds, view-count increments, RBAC, ownership), see [docs/todo.md](todo.md).
+For *Exception A* additions (off-diagram methods added to power UX), *bootstrap deviations* (default role accounts + demo donation seeds), and *open architectural items* (plain-text passwords, email uniqueness), see [docs/todo.md](todo.md).
 
 ---
 
