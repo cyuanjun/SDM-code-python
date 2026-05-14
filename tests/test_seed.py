@@ -6,7 +6,9 @@ from data.seed import (
     DEFAULT_ADMIN_EMAIL,
     DEFAULT_ADMIN_PASSWORD,
     seed_default_admin,
+    seed_demo_donations,
 )
+from entity.donation import Donation
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 
@@ -76,3 +78,38 @@ def test_seed_does_not_run_when_admin_account_already_exists() -> None:
     assert count == 1
     # The default admin's email was never inserted.
     assert UserAccount.login(DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD) is None
+
+
+def test_seed_demo_donations_creates_donations_on_empty_db() -> None:
+    seed_demo_donations()
+
+    with __import__("persistence.db", fromlist=["get_connection"]).get_connection() as conn:
+        count = conn.execute("SELECT COUNT(*) AS n FROM donation").fetchone()["n"]
+    assert count > 0
+
+
+def test_seed_demo_donations_is_idempotent() -> None:
+    """Negative path: running the donations seed twice doesn't add more rows."""
+    seed_demo_donations()
+    seed_demo_donations()
+    seed_demo_donations()
+
+    with __import__("persistence.db", fromlist=["get_connection"]).get_connection() as conn:
+        count = conn.execute("SELECT COUNT(*) AS n FROM donation").fetchone()["n"]
+    # Same count as a single seed run.
+    assert count == 3
+
+
+def test_seed_demo_donations_visible_via_search_for_seeded_donee() -> None:
+    """Seeded donations should be reachable through the US-32 search path
+    for the demo donee."""
+    seed_demo_donations()
+
+    # The seeded demo donee should now exist; fetch it via login.
+    donee = UserAccount.login("demo-donee@example.com", "demo")
+    assert donee is not None
+
+    results = Donation.search_donation_history(
+        search_criteria="hospital", account_id=donee.account_id
+    )
+    assert len(results) == 3

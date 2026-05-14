@@ -18,6 +18,12 @@ from boundary.update_my_fundraising_activity_page import (
 from boundary.view_my_completed_activity_page import (
     ViewMyCompletedActivityPage,
 )
+from boundary.view_my_donation_histories_page import (
+    ViewMyDonationHistoriesPage,
+)
+from boundary.view_my_donation_history_page import (
+    ViewMyDonationHistoryPage,
+)
 from boundary.view_my_fundraising_activities_page import (
     ViewMyFundraisingActivitiesPage,
 )
@@ -41,7 +47,7 @@ from boundary.view_user_account_page import ViewUserAccountPage
 from boundary.view_user_accounts_page import ViewUserAccountsPage
 from boundary.view_user_profile_page import ViewUserProfilePage
 from boundary.view_user_profiles_page import ViewUserProfilesPage
-from data.seed import seed_default_admin
+from data.seed import seed_default_admin, seed_demo_donations
 from persistence.db import init_db
 
 PAGES: dict = {
@@ -65,6 +71,8 @@ PAGES: dict = {
     "[Donee] Search fundraising activities": ViewFundraisingActivitiesPage,
     "[Donee] My favourites": ViewFavouritePage,
     "[Donee] Search my favourites": SearchFavouritePage,
+    "[Donee] Search my donation history": ViewMyDonationHistoriesPage,
+    "[Donee] View my donation history": ViewMyDonationHistoryPage,
 }
 
 
@@ -72,6 +80,7 @@ def main() -> None:
     st.set_page_config(page_title="SDM Fundraising", layout="wide")
     init_db()
     seed_default_admin()
+    seed_demo_donations()
 
     st.sidebar.title("SDM Fundraising")
     if "user" in st.session_state:

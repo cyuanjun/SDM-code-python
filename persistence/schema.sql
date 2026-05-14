@@ -41,3 +41,11 @@ CREATE TABLE IF NOT EXISTS favourite (
     fra_id     INTEGER NOT NULL REFERENCES fundraising_activity(fra_id) ON DELETE CASCADE,
     PRIMARY KEY (account_id, fra_id)
 );
+
+CREATE TABLE IF NOT EXISTS donation (
+    donation_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id    INTEGER NOT NULL REFERENCES user_account(account_id),
+    fra_id        INTEGER NOT NULL REFERENCES fundraising_activity(fra_id),
+    amount        TEXT NOT NULL,
+    donation_date TEXT NOT NULL
+);
