@@ -1,13 +1,16 @@
-"""Streamlit entry point. Revamp branch placeholder — pages will be wired
-back in as each user story is rebuilt against the reworked diagrams.
+"""Streamlit entry point. Sprint 1 pages are wired in here as each user
+story is rebuilt against the reworked diagrams.
 """
 from __future__ import annotations
 
 import streamlit as st
 
+from boundary.create_profile_page import CreateProfilePage
 from persistence.db import init_db
 
-PAGES: dict = {}
+PAGES: dict = {
+    "[Admin] Create user profile": CreateProfilePage,
+}
 
 
 def main() -> None:

@@ -1,4 +1,11 @@
--- Schema placeholder. Revamp branch: tables will be re-derived from the new
--- entity class diagrams as Sprint 1 entities are rebuilt. Kept as an empty
--- script so persistence/db.py's init_db() and tests/conftest.py's fresh_db
--- fixture continue to function (executescript on an empty string is a no-op).
+-- Revamp schema. Tables land here as their entities are rebuilt from the
+-- reworked diagrams. Each table mirrors one Entity class.
+-- SQLite column types follow type-affinity rules; INTEGER PKs are surfaced
+-- as prefixed strings via persistence/ids.py.
+
+CREATE TABLE IF NOT EXISTS user_profile (
+    profile_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+    role        TEXT NOT NULL,
+    description TEXT,
+    suspended   INTEGER NOT NULL DEFAULT 0
+);
