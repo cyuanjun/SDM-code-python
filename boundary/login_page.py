@@ -44,7 +44,9 @@ class LoginPage:
             return
 
         st.session_state["user"] = account
-        self.display_success()
+        # Re-run so the sidebar caption (rendered at the top of app.py)
+        # picks up the new session state instead of showing "Not signed in".
+        st.rerun()
 
     @staticmethod
     def validate_credentials(email: str, password: str) -> bool:

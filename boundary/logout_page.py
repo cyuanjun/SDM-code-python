@@ -28,4 +28,6 @@ class LogoutPage:
     @staticmethod
     def logout() -> None:
         st.session_state.pop("user", None)
-        st.success("Logged out.")
+        # Re-run so the sidebar caption flips back to "Not signed in" right
+        # away instead of showing the stale signed-in summary.
+        st.rerun()
