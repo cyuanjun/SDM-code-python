@@ -6,7 +6,9 @@ list / detail / inline create). The per-US classes still exist as
 testable artifacts and as the diagram's 1:1 mapping — they're just not
 sidebar entries.
 
-The consolidation is logged in docs/diagram_typos.md as a UX deviation.
+Role-based gating: the sidebar shows only the pages allowed for the
+currently logged-in role. Defaults to logged-out view when no user is
+in session_state. The .info debug page is always visible (dev utility).
 """
 from __future__ import annotations
 
@@ -29,6 +31,7 @@ from boundary.manage_user_account_page import ManageUserAccountPage
 from boundary.manage_user_profile_page import ManageUserProfilePage
 from boundary.my_donations_page import MyDonationsPage
 from boundary.my_favourites_page import MyFavouritesPage
+from controller.view_user_profile_controller import ViewUserProfileController
 from data.seed import (
     seed_default_admin,
     seed_default_donee,
@@ -52,6 +55,47 @@ PAGES: dict = {
     ".info (debug)": InfoPage,
 }
 
+# Pages visible per role. None = not signed in.
+PAGES_BY_ROLE: dict[str | None, list[str]] = {
+    None: [
+        "Log in",
+        ".info (debug)",
+    ],
+    "admin": [
+        "Log out",
+        "[Admin] Manage user profiles",
+        "[Admin] Manage user accounts",
+        ".info (debug)",
+    ],
+    "fundraiser": [
+        "Log out",
+        "[Fundraiser] Manage my fundraising activities",
+        ".info (debug)",
+    ],
+    "donee": [
+        "Log out",
+        "[Donee] Browse fundraising activities",
+        "[Donee] My favourites",
+        "[Donee] My donations",
+        ".info (debug)",
+    ],
+    "platform_manager": [
+        "Log out",
+        "[PM] Manage FRA categories",
+        "[PM] Generate report",
+        ".info (debug)",
+    ],
+}
+
+
+def _current_role() -> str | None:
+    """Return the role of the logged-in user, or None if not signed in."""
+    user = st.session_state.get("user")
+    if user is None:
+        return None
+    profile = ViewUserProfileController().view_user_profile(user.profile_id)
+    return profile.role if profile is not None else None
+
 
 def main() -> None:
     st.set_page_config(page_title="SDM Fundraising", layout="wide")
@@ -62,16 +106,19 @@ def main() -> None:
     seed_default_platform_manager()
     seed_demo_donations()
 
+    role = _current_role()
+    allowed_labels = PAGES_BY_ROLE.get(role, PAGES_BY_ROLE[None])
+
     st.sidebar.title("SDM Fundraising")
-    if "user" in st.session_state:
+    if role is not None:
         user = st.session_state["user"]
         st.sidebar.success(
-            f"Signed in as\n\n**{user.name}**\n\n{user.email}"
+            f"Signed in as\n\n**{user.name}** ({role})\n\n{user.email}"
         )
     else:
         st.sidebar.info("Not signed in")
 
-    selection = st.sidebar.radio("Page", list(PAGES.keys()))
+    selection = st.sidebar.radio("Page", allowed_labels)
     PAGES[selection]().render()
 
 

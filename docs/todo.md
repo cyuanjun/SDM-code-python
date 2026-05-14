@@ -33,4 +33,7 @@ Stack / policy concerns, not diagram-bound. Will re-surface as the rebuild touch
 
 - **Plain-text passwords.** Sprint 1's `UserAccount` stores the password as a plain string per the diagram. Hashing (bcrypt / argon2) belongs in a hardening sprint.
 - **Email is not unique on `UserAccount`.** The US-6 diagram doesn't declare email as a unique attribute, so `createAccount` allows duplicates. Login matches the first row with matching email + password — a real concern if duplicates ever exist. Either add a uniqueness check in the diagram or document the first-match login semantics.
-- **No RBAC / menu gating in `app.py`.** Anyone can reach any page until gating lands. Sidebar entries are prefixed `[Admin]/[Fundraiser]/[Donee]/[PM]` for legibility only, not enforcement.
+
+## Resolved
+
+- ~~**No RBAC / menu gating in `app.py`.**~~ **Resolved 2026-05-15.** Sidebar now filters pages by the logged-in user's role (looked up via `ViewUserProfileController.view_user_profile`). Not signed in → only `Log in` + `.info (debug)`. Each role only sees its own actor's pages. `.info (debug)` stays visible for development; remove or hide along with the debug page before final demo.
