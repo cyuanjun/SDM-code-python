@@ -127,6 +127,26 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
+    def search_fundraising_activity(
+        cls, search_criteria: str
+    ) -> list["FundraisingActivity"]:
+        """US-20 — donee searches activities by criteria. Case-insensitive
+        substring match against title, description, or category."""
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE LOWER(title) LIKE ? "
+                "   OR LOWER(description) LIKE ? "
+                "   OR LOWER(category) LIKE ? "
+                "ORDER BY fra_id",
+                (like, like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
     def update_fundraiser_activity(
         cls,
         owner_account_id: str,

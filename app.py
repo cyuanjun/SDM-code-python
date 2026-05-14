@@ -12,11 +12,14 @@ from boundary.create_fundraising_activity_page import (
 from boundary.create_profile_page import CreateProfilePage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
-from boundary.view_fundraising_activity_page import (
-    ViewFundraisingActivityPage,
-)
 from boundary.update_my_fundraising_activity_page import (
     UpdateMyFundraisingActivityPage,
+)
+from boundary.view_fundraising_activities_page import (
+    ViewFundraisingActivitiesPage,
+)
+from boundary.view_fundraising_activity_page import (
+    ViewFundraisingActivityPage,
 )
 from boundary.update_user_account_page import UpdateUserAccountPage
 from boundary.update_user_profile_page import UpdateUserProfilePage
@@ -41,6 +44,7 @@ PAGES: dict = {
     "[Fundraiser] View my fundraising activity": ViewMyFundraisingActivityPage,
     "[Fundraiser] Update my fundraising activity": UpdateMyFundraisingActivityPage,
     "[Donee] View fundraising activity": ViewFundraisingActivityPage,
+    "[Donee] Search fundraising activities": ViewFundraisingActivitiesPage,
 }
 
 

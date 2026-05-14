@@ -315,3 +315,64 @@ def test_update_fundraiser_activity_returns_false_for_missing_fra_id() -> None:
         )
         is False
     )
+
+
+def test_search_fundraising_activity_matches_title_substring() -> None:
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Hospital fund")
+    _seed_activity(owner, title="School fundraiser")
+    _seed_activity(owner, title="Animal rescue")
+
+    results = FundraisingActivity.search_fundraising_activity("fund")
+
+    assert {a.title for a in results} == {"Hospital fund", "School fundraiser"}
+
+
+def test_search_fundraising_activity_matches_description_or_category() -> None:
+    owner = _seed_fundraiser_account()
+    FundraisingActivity.create_fundraising_activity(
+        title="A", description="medical aid for children",
+        target_amount=Decimal("1"), category="health",
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        owner_account_id=owner.account_id,
+    )
+    FundraisingActivity.create_fundraising_activity(
+        title="B", description="d", target_amount=Decimal("1"),
+        category="medical-equipment",
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        owner_account_id=owner.account_id,
+    )
+    FundraisingActivity.create_fundraising_activity(
+        title="C", description="d", target_amount=Decimal("1"),
+        category="education",
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        owner_account_id=owner.account_id,
+    )
+
+    results = FundraisingActivity.search_fundraising_activity("medical")
+
+    assert {a.title for a in results} == {"A", "B"}
+
+
+def test_search_fundraising_activity_is_case_insensitive() -> None:
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Hospital fund")
+
+    upper = FundraisingActivity.search_fundraising_activity("HOSPITAL")
+    lower = FundraisingActivity.search_fundraising_activity("hospital")
+
+    assert [a.title for a in upper] == ["Hospital fund"]
+    assert [a.title for a in lower] == ["Hospital fund"]
+
+
+def test_search_fundraising_activity_returns_empty_list_for_no_match() -> None:
+    """Negative path: no match → []."""
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Hospital fund")
+
+    assert FundraisingActivity.search_fundraising_activity("nothing") == []
+
+
+def test_search_fundraising_activity_returns_empty_list_for_empty_db() -> None:
+    """Negative path: empty DB → []."""
+    assert FundraisingActivity.search_fundraising_activity("anything") == []
