@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from persistence.db import get_connection
-from persistence.ids import format_id
+from persistence.ids import format_id, parse_id
 
 
 @dataclass
@@ -37,6 +37,26 @@ class UserProfile:
             role=role,
             description=description,
             suspended=False,
+        )
+
+    @classmethod
+    def view_user_profile(cls, profile_id: str) -> Optional["UserProfile"]:
+        """US-2 — admin views a single profile by id. Returns None for a
+        missing row (negative branch implicit in the diagram)."""
+        rowid = parse_id(profile_id)
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT profile_id, role, description, suspended "
+                "FROM user_profile WHERE profile_id = ?",
+                (rowid,),
+            ).fetchone()
+        if row is None:
+            return None
+        return cls(
+            profile_id=format_id("prof", row["profile_id"]),
+            role=row["role"],
+            description=row["description"] or "",
+            suspended=bool(row["suspended"]),
         )
 
     @classmethod

@@ -15,6 +15,7 @@ from boundary.logout_page import LogoutPage
 from boundary.view_fundraising_activity_page import (
     ViewFundraisingActivityPage,
 )
+from boundary.view_user_profile_page import ViewUserProfilePage
 from data.seed import seed_default_admin
 from persistence.db import init_db
 
@@ -22,6 +23,7 @@ PAGES: dict = {
     "Log in": LoginPage,
     "Log out": LogoutPage,
     "[Admin] Create user profile": CreateProfilePage,
+    "[Admin] View user profile": ViewUserProfilePage,
     "[Admin] Create user account": CreateAccountPage,
     "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
     "[Donee] View fundraising activity": ViewFundraisingActivityPage,

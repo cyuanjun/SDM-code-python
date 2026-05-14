@@ -61,3 +61,26 @@ def test_view_all_profiles_returns_all_persisted_profiles_in_insertion_order() -
 
     assert [p.profile_id for p in profiles] == ["prof_001", "prof_002", "prof_003"]
     assert [p.role for p in profiles] == ["admin", "fundraiser", "donee"]
+
+
+def test_view_user_profile_returns_profile_for_existing_id() -> None:
+    created = UserProfile.create_profile(role="admin", description="Full access")
+
+    fetched = UserProfile.view_user_profile(created.profile_id)
+
+    assert fetched is not None
+    assert fetched.profile_id == created.profile_id
+    assert fetched.role == "admin"
+    assert fetched.description == "Full access"
+    assert fetched.suspended is False
+
+
+def test_view_user_profile_returns_none_for_missing_id() -> None:
+    """Negative path: profile_id with the right prefix but no matching row."""
+    UserProfile.create_profile(role="admin", description="a")
+
+    assert UserProfile.view_user_profile("prof_999") is None
+
+
+def test_view_user_profile_returns_none_when_db_empty() -> None:
+    assert UserProfile.view_user_profile("prof_001") is None
