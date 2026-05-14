@@ -13,6 +13,15 @@ Code follows the corrected (consensus) version in each case. Logged 2026-05-14 w
 - **Login failure path not on diagrams.** Every login diagram (US-11/18/26/39) shows `login(email, password): UserAccount` with no `null` or failure return. Implementation returns `None` on no-match so the boundary can show an error. Document the failure branch explicitly on the four login class diagrams.
 - **Default-admin seed on first init.** `data/seed.py` idempotently creates a default admin profile + account (`admin@example.com` / `admin`) when no admin exists, so the app is reachable on a fresh DB. The diagrams imply "User admin" is the actor for US-1 / US-6 but show no mechanism for the first admin to exist. Either: (a) leave the seed in and note it as a bootstrap convention, or (b) replace it with an initial-setup use case on the diagrams.
 
+## Sprint 2 diagram typos (fix in the source diagrams before marking)
+
+Code follows the corrected version in each case. Logged 2026-05-14.
+
+- **[US-14.jpg](../diagrams/sprint-2_diagrams/US-14.jpg) boundary method:** `displayMyFundraisingActivity(fundraisingActivity: FundraiserActivity): void`. `FundraiserActivity` is not an entity. Should be `FundraisingActivity` to match the Sprint 1 US-13 entity.
+- **[US-15.jpg](../diagrams/sprint-2_diagrams/US-15.jpg) class diagram is missing `ownerAccountId` on the update method.** Class shows `updateFundraiserActivity(FRAId: String, updatedActivity: FundraiserActivity): Boolean` (2 params) but the sequence diagram shows `updateFundraiserActivity(ownerAccountId: String, FRAId: String, updatedActivity: FundraiserActivity)` (3 params). Implementation uses the 3-param sequence version so ownership is enforced. Plus the same `FundraiserActivity` → `FundraisingActivity` typo.
+- **[US-20.jpg](../diagrams/sprint-2_diagrams/US-20.jpg) boundary class name:** `ViewFundraisingActivities` (no `Page` suffix). Project rule mandates the `Page` suffix on every Boundary class — implementation uses `ViewFundraisingActivitiesPage`.
+- **[US-24.jpg](../diagrams/sprint-2_diagrams/US-24.jpg) return type:** `viewFavourite(accountId: String): Favourite` — returns a single Favourite, but the user story is "view all my favourites" which implies many. Should be `viewFavourites(accountId: String): List<Favourite>` (note plural method name too). Implementation uses the list version.
+
 ## Diagram updates needed before final marking (Exception A)
 
 Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry below is an off-diagram method added to an Entity (plus a matching pure-delegator controller) to power a list/dropdown the Boundary needs. Each must land on the relevant class diagram before final marking.
