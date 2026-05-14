@@ -127,3 +127,116 @@ def test_view_favourites_scopes_to_the_account() -> None:
 
     assert [f.fra_id for f in mine] == [activity_a.fra_id]
     assert [f.fra_id for f in theirs] == [activity_b.fra_id]
+
+
+def test_remove_favourite_returns_true_when_pair_exists() -> None:
+    donee = _seed_donee()
+    activity = _seed_activity()
+    Favourite.save_fundraising_activity(
+        account_id=donee.account_id, fra_id=activity.fra_id
+    )
+
+    ok = Favourite.remove_favourite(
+        fra_id=activity.fra_id, account_id=donee.account_id
+    )
+    assert ok is True
+    assert Favourite.view_favourites(donee.account_id) == []
+
+
+def test_remove_favourite_returns_false_when_pair_missing() -> None:
+    """Negative path: removing a (account, activity) pair that was never
+    favourited returns False."""
+    donee = _seed_donee()
+    activity = _seed_activity()
+
+    assert (
+        Favourite.remove_favourite(
+            fra_id=activity.fra_id, account_id=donee.account_id
+        )
+        is False
+    )
+
+
+def test_remove_favourite_is_scoped_to_the_account() -> None:
+    """Negative path: removing donee A's favourite via donee B's id leaves
+    A's row untouched."""
+    donee_a = _seed_donee()
+    donee_b = UserAccount.create_account(
+        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
+        phone_num="0", profile_id=donee_a.profile_id,
+    )
+    activity = _seed_activity()
+    Favourite.save_fundraising_activity(
+        account_id=donee_a.account_id, fra_id=activity.fra_id
+    )
+
+    ok = Favourite.remove_favourite(
+        fra_id=activity.fra_id, account_id=donee_b.account_id
+    )
+    assert ok is False
+    assert len(Favourite.view_favourites(donee_a.account_id)) == 1
+
+
+def test_search_favourite_matches_activity_fields_for_the_donee() -> None:
+    """Search returns the donee's favourites whose underlying activity
+    matches the criteria (title / description / category)."""
+    donee = _seed_donee()
+    # Seed three activities and favourite two of them.
+    fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
+    fr = UserAccount.create_account(
+        email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
+        phone_num="0", profile_id=fr_profile.profile_id,
+    )
+    a1 = FundraisingActivity.create_fundraising_activity(
+        title="Hospital fund", description="d",
+        target_amount=Decimal("1"), category="health",
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        owner_account_id=fr.account_id,
+    )
+    a2 = FundraisingActivity.create_fundraising_activity(
+        title="School fundraiser", description="d",
+        target_amount=Decimal("1"), category="education",
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        owner_account_id=fr.account_id,
+    )
+    a3 = FundraisingActivity.create_fundraising_activity(
+        title="Animal rescue", description="d",
+        target_amount=Decimal("1"), category="animals",
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        owner_account_id=fr.account_id,
+    )
+
+    Favourite.save_fundraising_activity(donee.account_id, a1.fra_id)
+    Favourite.save_fundraising_activity(donee.account_id, a2.fra_id)
+    # a3 is not favourited.
+
+    results = Favourite.search_favourite(
+        search_criteria="hospital", account_id=donee.account_id
+    )
+    assert [f.fra_id for f in results] == [a1.fra_id]
+
+
+def test_search_favourite_returns_empty_for_no_match() -> None:
+    donee = _seed_donee()
+    activity = _seed_activity()
+    Favourite.save_fundraising_activity(
+        donee.account_id, activity.fra_id
+    )
+
+    assert (
+        Favourite.search_favourite(
+            search_criteria="nothing", account_id=donee.account_id
+        )
+        == []
+    )
+
+
+def test_search_favourite_returns_empty_for_no_favourites() -> None:
+    """Negative path: donee with no favourites gets [] regardless of criteria."""
+    donee = _seed_donee()
+    assert (
+        Favourite.search_favourite(
+            search_criteria="anything", account_id=donee.account_id
+        )
+        == []
+    )

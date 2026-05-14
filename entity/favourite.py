@@ -46,6 +46,57 @@ class Favourite:
         return cursor.rowcount > 0
 
     @classmethod
+    def remove_favourite(cls, fra_id: str, account_id: str) -> bool:
+        """US-23 — donee removes one favourite. Returns True on rowcount > 0
+        (the pair existed), False otherwise. Scoped to the caller's
+        account_id, so a different donee can't remove someone else's row.
+
+        Parameter order matches the US-23 diagram (FRAId then accountId).
+        """
+        fra_rowid = parse_id(fra_id)
+        account_rowid = parse_id(account_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "DELETE FROM favourite "
+                "WHERE fra_id = ? AND account_id = ?",
+                (fra_rowid, account_rowid),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def search_favourite(
+        cls, search_criteria: str, account_id: str
+    ) -> list["Favourite"]:
+        """US-25 — donee searches their favourites. Joins to
+        fundraising_activity and matches title / description / category
+        against the criteria, scoped to the caller's account_id.
+
+        Sequence diagram signature has 2 params; class diagram adds a
+        viewMode that isn't used in the sequence. Logged in docs/todo.md;
+        implementation follows the 2-param sequence version.
+        """
+        account_rowid = parse_id(account_id)
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT f.account_id, f.fra_id "
+                "FROM favourite f "
+                "JOIN fundraising_activity a ON a.fra_id = f.fra_id "
+                "WHERE f.account_id = ? AND ("
+                "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
+                "  OR LOWER(a.category) LIKE ?"
+                ") ORDER BY f.fra_id",
+                (account_rowid, like, like, like),
+            ).fetchall()
+        return [
+            cls(
+                account_id=format_id("acc", row["account_id"]),
+                fra_id=format_id("fra", row["fra_id"]),
+            )
+            for row in rows
+        ]
+
+    @classmethod
     def view_favourites(cls, account_id: str) -> list["Favourite"]:
         account_rowid = parse_id(account_id)
         with get_connection() as conn:

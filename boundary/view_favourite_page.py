@@ -1,17 +1,18 @@
-"""ViewFavouritePage <<Boundary>> — Sprint 2 US-24.
+"""ViewFavouritePage <<Boundary>> — Sprint 2 US-24 + Sprint 3 US-23.
 
-Diagram contract (US-24.jpg):
-    + displayFavourite(favourite: Favourite): void
-    (the diagram displays a single Favourite; the user story is "view ALL my
-    favourites" so the implementation calls displayFavourites with the full
-    list. Sprint 2 typo logged in docs/todo.md.)
+Diagram contracts:
+    US-24.jpg: + displayFavourite(favourite: Favourite): void
+               (returns one in the diagram; implementation surfaces the
+               full list per the user story. Sprint 2 typo logged.)
+    US-23.jpg: + displaySuccess(): void  (remove favourite; same page.)
 
-Donee-only. Requires login.
+Donee-only. Lists current favourites; each row has a Remove button.
 """
 from __future__ import annotations
 
 import streamlit as st
 
+from controller.remove_favourite_controller import RemoveFavouriteController
 from controller.view_favourite_controller import ViewFavouriteController
 
 
@@ -23,20 +24,34 @@ class ViewFavouritePage:
             st.warning("Please log in first.")
             return
 
-        favourites = ViewFavouriteController().view_favourites(
-            st.session_state["user"].account_id
-        )
-        self.display_favourites(favourites)
+        account_id = st.session_state["user"].account_id
+        favourites = ViewFavouriteController().view_favourites(account_id)
+        self.display_favourites(favourites, account_id)
 
-    @staticmethod
-    def display_favourites(favourites) -> None:
+    def display_favourites(self, favourites, account_id: str) -> None:
         if not favourites:
             st.info("You haven't favourited any activities yet.")
             return
 
         st.caption(f"{len(favourites)} favourite activities")
-        rows = [
-            {"Account": f.account_id, "Activity": f.fra_id}
-            for f in favourites
-        ]
-        st.dataframe(rows, width="stretch", hide_index=True)
+        for fav in favourites:
+            cols = st.columns([3, 3, 1])
+            cols[0].write(f"**Activity:** {fav.fra_id}")
+            cols[1].write(f"**Account:** {fav.account_id}")
+            if cols[2].button("Remove", key=f"remove-{fav.fra_id}"):
+                ok = RemoveFavouriteController().remove_favourite(
+                    fra_id=fav.fra_id, account_id=account_id,
+                )
+                if ok:
+                    self.display_success()
+                    st.rerun()
+                else:
+                    self.display_error()
+
+    @staticmethod
+    def display_success() -> None:
+        st.success("Removed from favourites.")
+
+    @staticmethod
+    def display_error() -> None:
+        st.error("Could not remove favourite.")
