@@ -90,6 +90,80 @@ class FundraisingActivity:
         )
 
     @classmethod
+    def view_my_fundraising_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> Optional["FundraisingActivity"]:
+        """US-14 — fundraiser views one of their own activities.
+        Ownership scoped at the entity layer per the diagram signature."""
+        owner_rowid = parse_id(owner_account_id)
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (rowid, owner_rowid),
+            ).fetchone()
+        return None if row is None else cls._from_row(row)
+
+    @classmethod
+    def view_my_fundraising_activities(
+        cls, owner_account_id: str
+    ) -> list["FundraisingActivity"]:
+        """Exception A: list-by-owner scoping for US-14 / US-15. Without
+        this the fundraiser would have to know their own activity ids
+        verbatim before triggering viewMyFundraisingActivity. Logged in
+        docs/todo.md."""
+        owner_rowid = parse_id(owner_account_id)
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE owner_account_id = ? ORDER BY fra_id",
+                (owner_rowid,),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def update_fundraiser_activity(
+        cls,
+        owner_account_id: str,
+        fra_id: str,
+        updated_activity: "FundraisingActivity",
+    ) -> bool:
+        """US-15 — fundraiser updates one of their own activities.
+        Returns True iff a row matched both fra_id AND owner_account_id;
+        cross-owner writes are refused (rowcount stays 0).
+        The diagram's class-level method signature omits owner_account_id
+        but the sequence diagram includes it — logged as a Sprint 2 typo.
+        """
+        owner_rowid = parse_id(owner_account_id)
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET title = ?, description = ?, target_amount = ?, "
+                "category = ?, start_date = ?, end_date = ?, "
+                "completed = ?, suspended = ? "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (
+                    updated_activity.title,
+                    updated_activity.description,
+                    str(updated_activity.target_amount),
+                    updated_activity.category,
+                    updated_activity.start_date.isoformat(),
+                    updated_activity.end_date.isoformat(),
+                    1 if updated_activity.completed else 0,
+                    1 if updated_activity.suspended else 0,
+                    rowid,
+                    owner_rowid,
+                ),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def view_fundraising_activity(
         cls, activity_id: str
     ) -> Optional["FundraisingActivity"]:

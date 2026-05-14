@@ -149,3 +149,169 @@ def test_view_all_fundraising_activities_returns_all_in_insertion_order() -> Non
 
     assert [a.fra_id for a in activities] == ["fra_001", "fra_002", "fra_003"]
     assert [a.title for a in activities] == ["A", "B", "C"]
+
+
+def test_view_my_fundraising_activity_returns_activity_for_correct_owner() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    fetched = FundraisingActivity.view_my_fundraising_activity(
+        owner_account_id=owner.account_id, fra_id=created.fra_id,
+    )
+
+    assert fetched is not None
+    assert fetched.fra_id == created.fra_id
+    assert fetched.owner_account_id == owner.account_id
+
+
+def test_view_my_fundraising_activity_returns_none_for_wrong_owner() -> None:
+    """Negative path: ownership enforced — a fundraiser asking for someone
+    else's activity by FRAId gets None back."""
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    # Seed a second fundraiser who doesn't own the activity.
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+
+    fetched = FundraisingActivity.view_my_fundraising_activity(
+        owner_account_id=other.account_id, fra_id=created.fra_id,
+    )
+
+    assert fetched is None
+
+
+def test_view_my_fundraising_activity_returns_none_for_missing_fra_id() -> None:
+    """Negative path: no row matches the FRAId."""
+    owner = _seed_fundraiser_account()
+
+    assert (
+        FundraisingActivity.view_my_fundraising_activity(
+            owner_account_id=owner.account_id, fra_id="fra_999"
+        )
+        is None
+    )
+
+
+def test_view_my_fundraising_activities_returns_only_owners_rows() -> None:
+    """Exception A list-by-owner: scopes the list to the caller's
+    activities. Other fundraisers' rows are excluded."""
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="MineA")
+    _seed_activity(owner, title="MineB")
+
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+    _seed_activity(other, title="Theirs")
+
+    mine = FundraisingActivity.view_my_fundraising_activities(
+        owner_account_id=owner.account_id
+    )
+
+    assert [a.title for a in mine] == ["MineA", "MineB"]
+
+
+def test_view_my_fundraising_activities_returns_empty_list_for_no_owner_rows() -> None:
+    """Negative path: a fundraiser with no activities gets [] back."""
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+
+    assert (
+        FundraisingActivity.view_my_fundraising_activities(
+            owner_account_id=other.account_id
+        )
+        == []
+    )
+
+
+def test_update_fundraiser_activity_returns_true_for_correct_owner() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    updated = FundraisingActivity(
+        title="New title", description="New desc",
+        target_amount=Decimal("999.99"), category="renamed",
+        start_date=date(2027, 1, 1), end_date=date(2027, 12, 31),
+        owner_account_id=owner.account_id,
+        completed=True, suspended=False,
+    )
+    ok = FundraisingActivity.update_fundraiser_activity(
+        owner_account_id=owner.account_id,
+        fra_id=created.fra_id,
+        updated_activity=updated,
+    )
+
+    assert ok is True
+    fetched = FundraisingActivity.view_fundraising_activity(created.fra_id)
+    assert fetched is not None
+    assert fetched.title == "New title"
+    assert fetched.target_amount == Decimal("999.99")
+    assert fetched.completed is True
+
+
+def test_update_fundraiser_activity_returns_false_for_wrong_owner() -> None:
+    """Negative path: ownership enforced at the entity layer — another
+    fundraiser cannot update someone else's activity even if the FRAId
+    matches."""
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+
+    updated = FundraisingActivity(
+        title="Hijack", description="x", target_amount=Decimal("1"),
+        category="x", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
+        owner_account_id=other.account_id,
+    )
+    ok = FundraisingActivity.update_fundraiser_activity(
+        owner_account_id=other.account_id,
+        fra_id=created.fra_id,
+        updated_activity=updated,
+    )
+
+    assert ok is False
+    fetched = FundraisingActivity.view_fundraising_activity(created.fra_id)
+    assert fetched is not None
+    assert fetched.title == "A"  # original
+
+
+def test_update_fundraiser_activity_returns_false_for_missing_fra_id() -> None:
+    owner = _seed_fundraiser_account()
+    updated = FundraisingActivity(
+        title="x", description="x", target_amount=Decimal("1"),
+        category="x", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
+        owner_account_id=owner.account_id,
+    )
+    assert (
+        FundraisingActivity.update_fundraiser_activity(
+            owner_account_id=owner.account_id,
+            fra_id="fra_999",
+            updated_activity=updated,
+        )
+        is False
+    )

@@ -15,8 +15,14 @@ from boundary.logout_page import LogoutPage
 from boundary.view_fundraising_activity_page import (
     ViewFundraisingActivityPage,
 )
+from boundary.update_my_fundraising_activity_page import (
+    UpdateMyFundraisingActivityPage,
+)
 from boundary.update_user_account_page import UpdateUserAccountPage
 from boundary.update_user_profile_page import UpdateUserProfilePage
+from boundary.view_my_fundraising_activity_page import (
+    ViewMyFundraisingActivityPage,
+)
 from boundary.view_user_account_page import ViewUserAccountPage
 from boundary.view_user_profile_page import ViewUserProfilePage
 from data.seed import seed_default_admin
@@ -32,6 +38,8 @@ PAGES: dict = {
     "[Admin] View user account": ViewUserAccountPage,
     "[Admin] Update user account": UpdateUserAccountPage,
     "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
+    "[Fundraiser] View my fundraising activity": ViewMyFundraisingActivityPage,
+    "[Fundraiser] Update my fundraising activity": UpdateMyFundraisingActivityPage,
     "[Donee] View fundraising activity": ViewFundraisingActivityPage,
 }
 
