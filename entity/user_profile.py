@@ -38,3 +38,23 @@ class UserProfile:
             description=description,
             suspended=False,
         )
+
+    @classmethod
+    def view_all_profiles(cls) -> list["UserProfile"]:
+        """Exception A (CLAUDE.md): not on the US-1 diagram but needed to
+        power the profile dropdown on CreateAccountPage. Logged in
+        docs/todo.md as a diagram update owed before final marking."""
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT profile_id, role, description, suspended "
+                "FROM user_profile ORDER BY profile_id"
+            ).fetchall()
+        return [
+            cls(
+                profile_id=format_id("prof", row["profile_id"]),
+                role=row["role"],
+                description=row["description"] or "",
+                suspended=bool(row["suspended"]),
+            )
+            for row in rows
+        ]

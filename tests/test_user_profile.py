@@ -45,3 +45,19 @@ def test_create_profile_defaults_suspended_to_false() -> None:
     profile = UserProfile.create_profile(role="donee", description="")
 
     assert profile.suspended is False
+
+
+def test_view_all_profiles_returns_empty_list_when_no_profiles_exist() -> None:
+    """Negative path: caller must get [] back, not None."""
+    assert UserProfile.view_all_profiles() == []
+
+
+def test_view_all_profiles_returns_all_persisted_profiles_in_insertion_order() -> None:
+    UserProfile.create_profile(role="admin", description="a")
+    UserProfile.create_profile(role="fundraiser", description="b")
+    UserProfile.create_profile(role="donee", description="c")
+
+    profiles = UserProfile.view_all_profiles()
+
+    assert [p.profile_id for p in profiles] == ["prof_001", "prof_002", "prof_003"]
+    assert [p.role for p in profiles] == ["admin", "fundraiser", "donee"]

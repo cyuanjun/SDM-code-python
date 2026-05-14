@@ -5,11 +5,13 @@ from __future__ import annotations
 
 import streamlit as st
 
+from boundary.create_account_page import CreateAccountPage
 from boundary.create_profile_page import CreateProfilePage
 from persistence.db import init_db
 
 PAGES: dict = {
     "[Admin] Create user profile": CreateProfilePage,
+    "[Admin] Create user account": CreateAccountPage,
 }
 
 
