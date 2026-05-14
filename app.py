@@ -6,12 +6,18 @@ from __future__ import annotations
 import streamlit as st
 
 from boundary.create_account_page import CreateAccountPage
+from boundary.create_fundraising_activity_category_page import (
+    CreateFundraisingActivityCategoryPage,
+)
 from boundary.create_fundraising_activity_page import (
     CreateFundraisingActivityPage,
 )
 from boundary.create_profile_page import CreateProfilePage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
+from boundary.update_fundraising_activity_category_page import (
+    UpdateFundraisingActivityCategoryPage,
+)
 from boundary.update_my_fundraising_activity_page import (
     UpdateMyFundraisingActivityPage,
 )
@@ -34,6 +40,12 @@ from boundary.search_my_completed_activity_page import (
 from boundary.view_favourite_page import ViewFavouritePage
 from boundary.view_fundraising_activities_page import (
     ViewFundraisingActivitiesPage,
+)
+from boundary.view_fundraising_activity_categories_page import (
+    ViewFundraisingActivityCategoriesPage,
+)
+from boundary.view_fundraising_activity_category_page import (
+    ViewFundraisingActivityCategoryPage,
 )
 from boundary.view_fundraising_activity_page import (
     ViewFundraisingActivityPage,
@@ -73,6 +85,10 @@ PAGES: dict = {
     "[Donee] Search my favourites": SearchFavouritePage,
     "[Donee] Search my donation history": ViewMyDonationHistoriesPage,
     "[Donee] View my donation history": ViewMyDonationHistoryPage,
+    "[PM] Create FRA category": CreateFundraisingActivityCategoryPage,
+    "[PM] View FRA category": ViewFundraisingActivityCategoryPage,
+    "[PM] Update FRA category": UpdateFundraisingActivityCategoryPage,
+    "[PM] Search FRA categories": ViewFundraisingActivityCategoriesPage,
 }
 
 
