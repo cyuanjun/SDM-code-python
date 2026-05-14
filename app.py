@@ -16,6 +16,7 @@ from boundary.browse_fundraising_activity_page import (
     BrowseFundraisingActivityPage,
 )
 from boundary.generate_report_page import GenerateReportPage
+from boundary.info_page import InfoPage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
 from boundary.manage_fundraising_activity_category_page import (
@@ -48,6 +49,7 @@ PAGES: dict = {
     "[Donee] My donations": MyDonationsPage,
     "[PM] Manage FRA categories": ManageFundraisingActivityCategoryPage,
     "[PM] Generate report": GenerateReportPage,
+    ".info (debug)": InfoPage,
 }
 
 

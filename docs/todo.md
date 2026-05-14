@@ -4,6 +4,10 @@ Running list of **deferred work, temporary shortcuts, and architectural deviatio
 
 Pure **diagram typos** (signatures, attribute types, boundary class names) live in [docs/diagram_typos.md](diagram_typos.md). This file tracks things that require code or scope changes, not just diagram edits.
 
+## Debug-only artifacts (hide or remove before final demo)
+
+- **[boundary/info_page.py](../boundary/info_page.py)** — `.info (debug)` sidebar page. Reads every table directly via `persistence/db.get_connection()`, bypassing the B-C-E layers. Shows row counts at the top, raw table dumps in tabs, and the live schema. Not a use case; for dev inspection only. Remove or hide before any recorded demo.
+
 ## Bootstrap deviations (data/seed.py)
 
 These exist because the diagrams don't define an entry point for some required data. Each is idempotent on app startup. Either formalise the seed as a "first-time setup" use case on the diagrams, or accept it as a demo-only convention.
