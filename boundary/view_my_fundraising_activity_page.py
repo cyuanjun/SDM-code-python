@@ -1,14 +1,21 @@
-"""ViewMyFundraisingActivityPage <<Boundary>> — Sprint 2 US-14.
+"""ViewMyFundraisingActivityPage <<Boundary>> — Sprint 2 US-14 + Sprint 3 US-16.
 
-Diagram contract (US-14.jpg):
-    + displayMyFundraisingActivity(fundraisingActivity: FundraisingActivity): void
+Diagram contracts:
+    US-14.jpg: + displayMyFundraisingActivity(fundraisingActivity: FundraisingActivity): void
+    US-16.jpg: + displaySuccess(): void  (suspend; class diagram names the
+                                          donee's ViewFundraisingActivityPage
+                                          — typo logged; this fundraiser page
+                                          is the correct boundary.)
 
-Fundraiser-scoped. Requires login. List of own activities → click → detail.
+Fundraiser-scoped. Requires login. US-16 adds the Suspend button on detail.
 """
 from __future__ import annotations
 
 import streamlit as st
 
+from controller.suspend_my_fundraising_activity_controller import (
+    SuspendMyFundraisingActivityController,
+)
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
@@ -77,8 +84,7 @@ class ViewMyFundraisingActivityPage:
             st.session_state[SELECTED_KEY] = activities[selected[0]].fra_id
             st.rerun()
 
-    @staticmethod
-    def display_my_fundraising_activity(activity) -> None:
+    def display_my_fundraising_activity(self, activity) -> None:
         st.subheader(activity.title)
         st.write(f"**FRAId:** {activity.fra_id}")
         st.write(f"**Category:** {activity.category}")
@@ -90,3 +96,28 @@ class ViewMyFundraisingActivityPage:
         st.write(f"**Completed:** {'yes' if activity.completed else 'no'}")
         st.write(f"**Suspended:** {'yes' if activity.suspended else 'no'}")
         st.write(activity.description)
+
+        # US-16: suspend my activity (only when not already suspended).
+        if not activity.suspended:
+            user = st.session_state.get("user")
+            if user is not None and st.button("🚫 Suspend donations"):
+                ok = (
+                    SuspendMyFundraisingActivityController()
+                    .suspend_my_fundraising_activity(
+                        owner_account_id=user.account_id,
+                        fra_id=activity.fra_id,
+                    )
+                )
+                if ok:
+                    self.display_success()
+                    st.rerun()
+                else:
+                    self.display_error()
+
+    @staticmethod
+    def display_success() -> None:
+        st.success("Activity suspended.")
+
+    @staticmethod
+    def display_error() -> None:
+        st.error("Could not suspend activity.")

@@ -376,3 +376,93 @@ def test_search_fundraising_activity_returns_empty_list_for_no_match() -> None:
 def test_search_fundraising_activity_returns_empty_list_for_empty_db() -> None:
     """Negative path: empty DB → []."""
     assert FundraisingActivity.search_fundraising_activity("anything") == []
+
+
+def test_suspend_my_fundraising_activity_returns_true_for_correct_owner() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+    assert created.suspended is False
+
+    ok = FundraisingActivity.suspend_my_fundraising_activity(
+        owner_account_id=owner.account_id, fra_id=created.fra_id,
+    )
+
+    assert ok is True
+    fetched = FundraisingActivity.view_fundraising_activity(created.fra_id)
+    assert fetched is not None
+    assert fetched.suspended is True
+
+
+def test_suspend_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
+    """Negative path: another fundraiser cannot suspend someone else's activity."""
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+
+    ok = FundraisingActivity.suspend_my_fundraising_activity(
+        owner_account_id=other.account_id, fra_id=created.fra_id,
+    )
+
+    assert ok is False
+    fetched = FundraisingActivity.view_fundraising_activity(created.fra_id)
+    assert fetched is not None
+    assert fetched.suspended is False  # untouched
+
+
+def test_suspend_my_fundraising_activity_returns_false_for_missing_fra_id() -> None:
+    owner = _seed_fundraiser_account()
+    assert (
+        FundraisingActivity.suspend_my_fundraising_activity(
+            owner_account_id=owner.account_id, fra_id="fra_999"
+        )
+        is False
+    )
+
+
+def test_search_my_fundraising_activity_scopes_to_owner_and_matches_criteria() -> None:
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Hospital fund")
+    _seed_activity(owner, title="School fundraiser")
+
+    other_profile = UserProfile.create_profile(
+        role="fundraiser", description="Other"
+    )
+    other = UserAccount.create_account(
+        email="other@x.com", password="p", name="Other",
+        dob=date(1990, 1, 1), phone_num="0",
+        profile_id=other_profile.profile_id,
+    )
+    _seed_activity(other, title="Hospital research")
+
+    mine = FundraisingActivity.search_my_fundraising_activity(
+        owner_account_id=owner.account_id, search_criteria="hospital",
+    )
+
+    assert [a.title for a in mine] == ["Hospital fund"]
+
+
+def test_search_my_fundraising_activity_returns_empty_for_no_match() -> None:
+    """Negative path: owner has activities but none match the criteria."""
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Hospital fund")
+
+    results = FundraisingActivity.search_my_fundraising_activity(
+        owner_account_id=owner.account_id, search_criteria="nothing",
+    )
+    assert results == []
+
+
+def test_search_my_fundraising_activity_returns_empty_for_no_activities() -> None:
+    owner = _seed_fundraiser_account()
+    results = FundraisingActivity.search_my_fundraising_activity(
+        owner_account_id=owner.account_id, search_criteria="x",
+    )
+    assert results == []

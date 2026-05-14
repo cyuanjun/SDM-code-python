@@ -127,6 +127,44 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
+    def suspend_my_fundraising_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> bool:
+        """US-16 — fundraiser suspends one of their own activities.
+        Ownership scoped: UPDATE … WHERE fra_id AND owner_account_id."""
+        owner_rowid = parse_id(owner_account_id)
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity SET suspended = 1 "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (rowid, owner_rowid),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def search_my_fundraising_activity(
+        cls, owner_account_id: str, search_criteria: str
+    ) -> list["FundraisingActivity"]:
+        """US-17 — fundraiser searches their own activities. Case-insensitive
+        substring match against title / description / category, scoped to
+        owner_account_id."""
+        owner_rowid = parse_id(owner_account_id)
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE owner_account_id = ? AND ("
+                "  LOWER(title) LIKE ? OR LOWER(description) LIKE ? "
+                "  OR LOWER(category) LIKE ?"
+                ") ORDER BY fra_id",
+                (owner_rowid, like, like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
     def search_fundraising_activity(
         cls, search_criteria: str
     ) -> list["FundraisingActivity"]:
