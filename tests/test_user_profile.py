@@ -84,3 +84,42 @@ def test_view_user_profile_returns_none_for_missing_id() -> None:
 
 def test_view_user_profile_returns_none_when_db_empty() -> None:
     assert UserProfile.view_user_profile("prof_001") is None
+
+
+def test_update_user_profile_returns_true_on_success_and_persists_changes() -> None:
+    created = UserProfile.create_profile(role="admin", description="initial")
+
+    updated = UserProfile(
+        profile_id=created.profile_id,
+        role="superadmin",
+        description="all permissions",
+        suspended=True,
+    )
+    assert UserProfile.update_user_profile(created.profile_id, updated) is True
+
+    fetched = UserProfile.view_user_profile(created.profile_id)
+    assert fetched is not None
+    assert fetched.role == "superadmin"
+    assert fetched.description == "all permissions"
+    assert fetched.suspended is True
+
+
+def test_update_user_profile_returns_false_for_missing_id() -> None:
+    """Negative path: updating a profile that doesn't exist returns False
+    (UPDATE … WHERE no-match has rowcount 0)."""
+    updated = UserProfile(role="admin", description="x", suspended=False)
+    assert UserProfile.update_user_profile("prof_999", updated) is False
+
+
+def test_update_user_profile_does_not_mutate_other_rows() -> None:
+    """Negative path: updating one row must not touch siblings."""
+    first = UserProfile.create_profile(role="admin", description="a")
+    second = UserProfile.create_profile(role="donee", description="b")
+
+    updated = UserProfile(role="renamed", description="z", suspended=False)
+    UserProfile.update_user_profile(first.profile_id, updated)
+
+    untouched = UserProfile.view_user_profile(second.profile_id)
+    assert untouched is not None
+    assert untouched.role == "donee"
+    assert untouched.description == "b"

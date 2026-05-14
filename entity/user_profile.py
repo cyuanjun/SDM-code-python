@@ -60,6 +60,26 @@ class UserProfile:
         )
 
     @classmethod
+    def update_user_profile(
+        cls, profile_id: str, updated_profile: "UserProfile"
+    ) -> bool:
+        """US-3 — admin updates a profile. Returns True on success, False
+        when no row matches profile_id."""
+        rowid = parse_id(profile_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_profile SET role = ?, description = ?, suspended = ? "
+                "WHERE profile_id = ?",
+                (
+                    updated_profile.role,
+                    updated_profile.description,
+                    1 if updated_profile.suspended else 0,
+                    rowid,
+                ),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def view_all_profiles(cls) -> list["UserProfile"]:
         """Exception A (CLAUDE.md): not on the US-1 diagram but needed to
         power the profile dropdown on CreateAccountPage. Logged in
