@@ -27,6 +27,8 @@ from persistence.ids import format_id
 
 DEFAULT_ADMIN_EMAIL = "admin@example.com"
 DEFAULT_ADMIN_PASSWORD = "admin"
+DEFAULT_PM_EMAIL = "pm@example.com"
+DEFAULT_PM_PASSWORD = "pm"
 
 
 def seed_default_admin() -> None:
@@ -39,6 +41,22 @@ def seed_default_admin() -> None:
         name="Default Admin",
         dob=date(2000, 1, 1),
         phone_num="0000000000",
+        profile_id=profile_id,
+    )
+
+
+def seed_default_platform_manager() -> None:
+    """Sprint 4 bootstrap: PM-only stories need a logged-in PM. Adds a
+    default PM account if one doesn't already exist."""
+    if _platform_manager_account_exists():
+        return
+    profile_id = _ensure_profile_for_role("platform_manager", "Default PM")
+    UserAccount.create_account(
+        email=DEFAULT_PM_EMAIL,
+        password=DEFAULT_PM_PASSWORD,
+        name="Default PM",
+        dob=date(1985, 1, 1),
+        phone_num="0000000003",
         profile_id=profile_id,
     )
 
@@ -71,6 +89,16 @@ def _admin_account_exists() -> bool:
             "SELECT a.account_id FROM user_account a "
             "JOIN user_profile p ON p.profile_id = a.profile_id "
             "WHERE p.role = 'admin' LIMIT 1"
+        ).fetchone()
+    return row is not None
+
+
+def _platform_manager_account_exists() -> bool:
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT a.account_id FROM user_account a "
+            "JOIN user_profile p ON p.profile_id = a.profile_id "
+            "WHERE p.role = 'platform_manager' LIMIT 1"
         ).fetchone()
     return row is not None
 

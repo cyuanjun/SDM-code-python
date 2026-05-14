@@ -5,7 +5,10 @@ from __future__ import annotations
 from data.seed import (
     DEFAULT_ADMIN_EMAIL,
     DEFAULT_ADMIN_PASSWORD,
+    DEFAULT_PM_EMAIL,
+    DEFAULT_PM_PASSWORD,
     seed_default_admin,
+    seed_default_platform_manager,
     seed_demo_donations,
 )
 from entity.donation import Donation
@@ -113,3 +116,20 @@ def test_seed_demo_donations_visible_via_search_for_seeded_donee() -> None:
         search_criteria="hospital", account_id=donee.account_id
     )
     assert len(results) == 3
+
+
+def test_seed_default_pm_creates_pm_on_empty_db() -> None:
+    seed_default_platform_manager()
+    pm = UserAccount.login(DEFAULT_PM_EMAIL, DEFAULT_PM_PASSWORD)
+    assert pm is not None
+    assert pm.email == DEFAULT_PM_EMAIL
+
+
+def test_seed_default_pm_is_idempotent() -> None:
+    """Negative path: running the PM seed twice doesn't create duplicates."""
+    seed_default_platform_manager()
+    seed_default_platform_manager()
+    seed_default_platform_manager()
+
+    pms = [p for p in UserProfile.view_all_profiles() if p.role == "platform_manager"]
+    assert len(pms) == 1
