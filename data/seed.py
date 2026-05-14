@@ -8,11 +8,12 @@ three sample donations so US-32 / US-33 have data to display.
 
 Idempotent — every helper checks for the existing row before creating.
 
-Default credentials (all role@a.com / 123):
-    admin@a.com       / 123
-    fundraiser@a.com  / 123
-    donee@a.com       / 123
-    pm@a.com          / 123
+Default credentials (numbered for readability — admin001 is account #1
+for that role, room to grow with admin002 etc.):
+    admin001@a.com       / 123
+    fundraiser001@a.com  / 123
+    donee001@a.com       / 123
+    pm001@a.com          / 123
 """
 from __future__ import annotations
 
@@ -28,13 +29,13 @@ from persistence.ids import format_id
 
 DEFAULT_PASSWORD = "123"
 
-DEFAULT_ADMIN_EMAIL = "admin@a.com"
+DEFAULT_ADMIN_EMAIL = "admin001@a.com"
 DEFAULT_ADMIN_PASSWORD = DEFAULT_PASSWORD
-DEFAULT_FUNDRAISER_EMAIL = "fundraiser@a.com"
+DEFAULT_FUNDRAISER_EMAIL = "fundraiser001@a.com"
 DEFAULT_FUNDRAISER_PASSWORD = DEFAULT_PASSWORD
-DEFAULT_DONEE_EMAIL = "donee@a.com"
+DEFAULT_DONEE_EMAIL = "donee001@a.com"
 DEFAULT_DONEE_PASSWORD = DEFAULT_PASSWORD
-DEFAULT_PM_EMAIL = "pm@a.com"
+DEFAULT_PM_EMAIL = "pm001@a.com"
 DEFAULT_PM_PASSWORD = DEFAULT_PASSWORD
 
 _DEFAULT_DOB = date(2000, 1, 1)

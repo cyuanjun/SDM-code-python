@@ -22,10 +22,10 @@ App startup also runs [data/seed.py](data/seed.py) which idempotently creates on
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `admin@a.com` | `123` |
-| Fundraiser | `fundraiser@a.com` | `123` |
-| Donee | `donee@a.com` | `123` |
-| Platform Manager | `pm@a.com` | `123` |
+| Admin | `admin001@a.com` | `123` |
+| Fundraiser | `fundraiser001@a.com` | `123` |
+| Donee | `donee001@a.com` | `123` |
+| Platform Manager | `pm001@a.com` | `123` |
 
 Three sample donations are also seeded against a demo activity owned by the default fundraiser so US-32 / US-33 have data to display. Logged in [docs/todo.md](docs/todo.md) as a bootstrap convention to either keep or replace with an initial-setup use case before final marking.
 
