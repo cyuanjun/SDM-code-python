@@ -105,3 +105,47 @@ def test_create_fundraising_activity_preserves_decimal_precision() -> None:
 
     assert activity.target_amount == Decimal("12345.67")
     assert isinstance(activity.target_amount, Decimal)
+
+
+def _seed_activity(owner: UserAccount, title: str = "A") -> FundraisingActivity:
+    return FundraisingActivity.create_fundraising_activity(
+        title=title, description=f"{title} desc",
+        target_amount=Decimal("100.00"), category="x",
+        start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+        owner_account_id=owner.account_id,
+    )
+
+
+def test_view_fundraising_activity_returns_activity_for_existing_id() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    fetched = FundraisingActivity.view_fundraising_activity(created.fra_id)
+
+    assert fetched is not None
+    assert fetched.fra_id == created.fra_id
+    assert fetched.title == created.title
+    assert fetched.target_amount == created.target_amount
+    assert fetched.owner_account_id == owner.account_id
+
+
+def test_view_fundraising_activity_returns_none_for_missing_id() -> None:
+    """Negative path: id with the right prefix but no matching row."""
+    assert FundraisingActivity.view_fundraising_activity("fra_999") is None
+
+
+def test_view_all_fundraising_activities_returns_empty_list_when_none_exist() -> None:
+    """Negative path: caller gets [] back, not None."""
+    assert FundraisingActivity.view_all_fundraising_activities() == []
+
+
+def test_view_all_fundraising_activities_returns_all_in_insertion_order() -> None:
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="A")
+    _seed_activity(owner, title="B")
+    _seed_activity(owner, title="C")
+
+    activities = FundraisingActivity.view_all_fundraising_activities()
+
+    assert [a.fra_id for a in activities] == ["fra_001", "fra_002", "fra_003"]
+    assert [a.title for a in activities] == ["A", "B", "C"]

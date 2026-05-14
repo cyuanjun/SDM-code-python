@@ -17,6 +17,7 @@ Code follows the corrected (consensus) version in each case. Logged 2026-05-14 w
 Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry below is an off-diagram method added to an Entity (plus a matching pure-delegator controller) to power a list/dropdown the Boundary needs. Each must land on the relevant class diagram before final marking.
 
 - **`UserProfile.view_all_profiles()` + `ViewProfilesController`** — added in US-6 (2026-05-14) to populate the profile dropdown on `CreateAccountPage`. The `createAccount(..., profileId: String)` signature implies the admin picks an existing profile; without a list method the admin would have to type `prof_NNN` manually.
+- **`FundraisingActivity.view_all_fundraising_activities()`** — added in US-21 (2026-05-14) so `ViewFundraisingActivityPage` can show a list before the donee triggers `viewFundraisingActivity(activityId)`. Method lives on the existing `ViewFundraisingActivityController` (Exception A allows extending an existing controller). Add to the US-21 class diagram on both the entity and the controller.
 
 ## Open architectural items (carry over from main, re-log here as they apply)
 

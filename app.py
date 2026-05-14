@@ -12,6 +12,9 @@ from boundary.create_fundraising_activity_page import (
 from boundary.create_profile_page import CreateProfilePage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
+from boundary.view_fundraising_activity_page import (
+    ViewFundraisingActivityPage,
+)
 from persistence.db import init_db
 
 PAGES: dict = {
@@ -20,6 +23,7 @@ PAGES: dict = {
     "[Admin] Create user profile": CreateProfilePage,
     "[Admin] Create user account": CreateAccountPage,
     "[Fundraiser] Create fundraising activity": CreateFundraisingActivityPage,
+    "[Donee] View fundraising activity": ViewFundraisingActivityPage,
 }
 
 

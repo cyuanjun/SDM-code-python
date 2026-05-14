@@ -88,3 +88,51 @@ class FundraisingActivity:
             view_count=0,
             save_count=0,
         )
+
+    @classmethod
+    def view_fundraising_activity(
+        cls, activity_id: str
+    ) -> Optional["FundraisingActivity"]:
+        rowid = parse_id(activity_id)
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "WHERE fra_id = ?",
+                (rowid,),
+            ).fetchone()
+        if row is None:
+            return None
+        return cls._from_row(row)
+
+    @classmethod
+    def view_all_fundraising_activities(cls) -> list["FundraisingActivity"]:
+        """Exception A (CLAUDE.md): not on the US-21 diagram but needed so
+        ViewFundraisingActivityPage can list activities for the donee to
+        click. Logged in docs/todo.md."""
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT fra_id, title, description, target_amount, category, "
+                "start_date, end_date, completed, suspended, owner_account_id, "
+                "view_count, save_count FROM fundraising_activity "
+                "ORDER BY fra_id"
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def _from_row(cls, row) -> "FundraisingActivity":
+        return cls(
+            fra_id=format_id("fra", row["fra_id"]),
+            title=row["title"],
+            description=row["description"],
+            target_amount=Decimal(row["target_amount"]),
+            category=row["category"],
+            start_date=date.fromisoformat(row["start_date"]),
+            end_date=date.fromisoformat(row["end_date"]),
+            completed=bool(row["completed"]),
+            suspended=bool(row["suspended"]),
+            owner_account_id=format_id("acc", row["owner_account_id"]),
+            view_count=int(row["view_count"]),
+            save_count=int(row["save_count"]),
+        )
