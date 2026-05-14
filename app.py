@@ -7,9 +7,11 @@ import streamlit as st
 
 from boundary.create_account_page import CreateAccountPage
 from boundary.create_profile_page import CreateProfilePage
+from boundary.login_page import LoginPage
 from persistence.db import init_db
 
 PAGES: dict = {
+    "Log in": LoginPage,
     "[Admin] Create user profile": CreateProfilePage,
     "[Admin] Create user account": CreateAccountPage,
 }

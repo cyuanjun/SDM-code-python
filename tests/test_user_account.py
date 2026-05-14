@@ -102,3 +102,47 @@ def test_create_account_allows_duplicate_emails() -> None:
 
     assert first.account_id != second.account_id
     assert first.email == second.email
+
+
+def _seed_account(
+    email: str = "ada@x.com",
+    password: str = "hunter2",
+    profile: UserProfile | None = None,
+) -> UserAccount:
+    return UserAccount.create_account(
+        email=email,
+        password=password,
+        name="Ada",
+        dob=date(1990, 1, 15),
+        phone_num="0400000000",
+        profile_id=(profile or _seed_profile()).profile_id,
+    )
+
+
+def test_login_returns_user_account_on_matching_credentials() -> None:
+    _seed_account()
+
+    account = UserAccount.login("ada@x.com", "hunter2")
+
+    assert account is not None
+    assert account.email == "ada@x.com"
+    assert account.account_id == "acc_001"
+    assert account.profile_id == "prof_001"
+
+
+def test_login_returns_none_when_email_does_not_match() -> None:
+    _seed_account()
+
+    assert UserAccount.login("nobody@x.com", "hunter2") is None
+
+
+def test_login_returns_none_when_password_does_not_match() -> None:
+    _seed_account()
+
+    assert UserAccount.login("ada@x.com", "wrong-password") is None
+
+
+def test_login_returns_none_when_database_is_empty() -> None:
+    """Negative path: login against an empty user_account table returns
+    None, never crashes."""
+    assert UserAccount.login("anyone@x.com", "anything") is None
