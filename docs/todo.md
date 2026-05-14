@@ -28,6 +28,7 @@ Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry b
 
 - **`UserProfile.view_all_profiles()` + `ViewProfilesController`** — added in US-6 (2026-05-14) to populate the profile dropdown on `CreateAccountPage`. The `createAccount(..., profileId: String)` signature implies the admin picks an existing profile; without a list method the admin would have to type `prof_NNN` manually.
 - **`FundraisingActivity.view_all_fundraising_activities()`** — added in US-21 (2026-05-14) so `ViewFundraisingActivityPage` can show a list before the donee triggers `viewFundraisingActivity(activityId)`. Method lives on the existing `ViewFundraisingActivityController` (Exception A allows extending an existing controller). Add to the US-21 class diagram on both the entity and the controller.
+- **`UserAccount.view_all_user_accounts()`** — added in US-7 (2026-05-14) so `ViewUserAccountPage` / `UpdateUserAccountPage` can show a list before the admin picks an account by id. Method lives on the existing `ViewUserAccountController`. Add to the US-7 / US-8 class diagrams.
 
 ## Open architectural items (carry over from main, re-log here as they apply)
 

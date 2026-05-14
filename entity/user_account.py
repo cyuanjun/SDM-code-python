@@ -69,17 +69,57 @@ class UserAccount:
         )
 
     @classmethod
-    def login(cls, email: str, password: str) -> Optional["UserAccount"]:
+    def view_user_account(cls, account_id: str) -> Optional["UserAccount"]:
+        """US-7 — admin views one account by id. Returns None when missing."""
+        rowid = parse_id(account_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT account_id, email, password, name, dob, phone_num, "
-                "profile_id, suspended FROM user_account "
-                "WHERE email = ? AND password = ? "
-                "ORDER BY account_id LIMIT 1",
-                (email, password),
+                "profile_id, suspended FROM user_account WHERE account_id = ?",
+                (rowid,),
             ).fetchone()
-        if row is None:
-            return None
+        return None if row is None else cls._from_row(row)
+
+    @classmethod
+    def view_all_user_accounts(cls) -> list["UserAccount"]:
+        """Exception A: not on the US-7/8 diagrams but needed so the admin
+        can pick which account to view/update. Logged in docs/todo.md."""
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account ORDER BY account_id"
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def update_user_account(
+        cls, account_id: str, updated_account: "UserAccount"
+    ) -> bool:
+        """US-8 — admin updates an account. Returns True on success, False
+        when no row matches account_id. profile_id parses from the
+        prefixed string back to the underlying integer FK."""
+        rowid = parse_id(account_id)
+        profile_rowid = parse_id(updated_account.profile_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_account SET email = ?, password = ?, name = ?, "
+                "dob = ?, phone_num = ?, profile_id = ?, suspended = ? "
+                "WHERE account_id = ?",
+                (
+                    updated_account.email,
+                    updated_account.password,
+                    updated_account.name,
+                    updated_account.dob.isoformat(),
+                    updated_account.phone_num,
+                    profile_rowid,
+                    1 if updated_account.suspended else 0,
+                    rowid,
+                ),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def _from_row(cls, row) -> "UserAccount":
         return cls(
             account_id=format_id("acc", row["account_id"]),
             email=row["email"],
@@ -90,3 +130,15 @@ class UserAccount:
             profile_id=format_id("prof", row["profile_id"]),
             suspended=bool(row["suspended"]),
         )
+
+    @classmethod
+    def login(cls, email: str, password: str) -> Optional["UserAccount"]:
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account "
+                "WHERE email = ? AND password = ? "
+                "ORDER BY account_id LIMIT 1",
+                (email, password),
+            ).fetchone()
+        return None if row is None else cls._from_row(row)

@@ -146,3 +146,100 @@ def test_login_returns_none_when_database_is_empty() -> None:
     """Negative path: login against an empty user_account table returns
     None, never crashes."""
     assert UserAccount.login("anyone@x.com", "anything") is None
+
+
+def test_view_user_account_returns_account_for_existing_id() -> None:
+    created = _seed_account()
+
+    fetched = UserAccount.view_user_account(created.account_id)
+
+    assert fetched is not None
+    assert fetched.account_id == created.account_id
+    assert fetched.email == created.email
+    assert fetched.name == created.name
+    assert fetched.profile_id == created.profile_id
+
+
+def test_view_user_account_returns_none_for_missing_id() -> None:
+    """Negative path: id with the right prefix but no matching row."""
+    assert UserAccount.view_user_account("acc_999") is None
+
+
+def test_view_all_user_accounts_returns_empty_list_when_none_exist() -> None:
+    """Negative path: caller gets [] back, not None."""
+    assert UserAccount.view_all_user_accounts() == []
+
+
+def test_view_all_user_accounts_returns_all_in_insertion_order() -> None:
+    profile = _seed_profile()
+    UserAccount.create_account(
+        email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
+        phone_num="1", profile_id=profile.profile_id,
+    )
+    UserAccount.create_account(
+        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
+        phone_num="2", profile_id=profile.profile_id,
+    )
+    UserAccount.create_account(
+        email="c@x.com", password="p", name="C", dob=date(1990, 1, 1),
+        phone_num="3", profile_id=profile.profile_id,
+    )
+
+    accounts = UserAccount.view_all_user_accounts()
+
+    assert [a.account_id for a in accounts] == ["acc_001", "acc_002", "acc_003"]
+    assert [a.email for a in accounts] == ["a@x.com", "b@x.com", "c@x.com"]
+
+
+def test_update_user_account_returns_true_on_success_and_persists_changes() -> None:
+    profile = _seed_profile()
+    created = _seed_account(profile=profile)
+
+    updated = UserAccount(
+        email="ada-new@x.com",
+        password="new-secret",
+        name="Ada (renamed)",
+        dob=date(1985, 6, 6),
+        phone_num="0411111111",
+        profile_id=profile.profile_id,
+        suspended=True,
+    )
+    assert UserAccount.update_user_account(created.account_id, updated) is True
+
+    fetched = UserAccount.view_user_account(created.account_id)
+    assert fetched is not None
+    assert fetched.email == "ada-new@x.com"
+    assert fetched.name == "Ada (renamed)"
+    assert fetched.dob == date(1985, 6, 6)
+    assert fetched.phone_num == "0411111111"
+    assert fetched.suspended is True
+
+
+def test_update_user_account_returns_false_for_missing_id() -> None:
+    """Negative path: no row matches account_id."""
+    updated = UserAccount(
+        email="x@x.com", password="p", name="X", dob=date(2000, 1, 1),
+        phone_num="0", profile_id="prof_001",
+    )
+    assert UserAccount.update_user_account("acc_999", updated) is False
+
+
+def test_update_user_account_does_not_mutate_other_rows() -> None:
+    profile = _seed_profile()
+    first = _seed_account(email="a@x.com", profile=profile)
+    second = UserAccount.create_account(
+        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
+        phone_num="2", profile_id=profile.profile_id,
+    )
+
+    updated = UserAccount(
+        email="renamed@x.com", password="p", name="renamed",
+        dob=date(1990, 1, 1), phone_num="9",
+        profile_id=profile.profile_id,
+    )
+    UserAccount.update_user_account(first.account_id, updated)
+
+    untouched = UserAccount.view_user_account(second.account_id)
+    assert untouched is not None
+    assert untouched.email == "b@x.com"
+    assert untouched.name == "B"
