@@ -19,7 +19,12 @@ python -m persistence.db          # initialises app.db (currently no tables — 
 streamlit run app.py              # launches the placeholder UI on http://localhost:8501
 ```
 
-A seed script will land once at least one entity exists.
+App startup also runs [data/seed.py](data/seed.py) which (idempotently) creates a default admin account so you can log in immediately on a fresh DB:
+
+- **Email:** `admin@example.com`
+- **Password:** `admin`
+
+Logged in [docs/todo.md](docs/todo.md) as a bootstrap convention to either keep or replace with an initial-setup use case before final marking.
 
 ## Run tests
 

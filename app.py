@@ -15,6 +15,7 @@ from boundary.logout_page import LogoutPage
 from boundary.view_fundraising_activity_page import (
     ViewFundraisingActivityPage,
 )
+from data.seed import seed_default_admin
 from persistence.db import init_db
 
 PAGES: dict = {
@@ -30,6 +31,7 @@ PAGES: dict = {
 def main() -> None:
     st.set_page_config(page_title="SDM Fundraising", layout="wide")
     init_db()
+    seed_default_admin()
 
     st.sidebar.title("SDM Fundraising")
     st.sidebar.info("Revamp branch — no pages wired yet")
