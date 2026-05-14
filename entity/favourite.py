@@ -26,6 +26,8 @@ class Favourite:
 
     @classmethod
     def save_fundraising_activity(cls, account_id: str, fra_id: str) -> bool:
+        from entity.fundraising_activity import FundraisingActivity
+
         account_rowid = parse_id(account_id)
         fra_rowid = parse_id(fra_id)
         # Pre-check for duplicates so the FK violations on account_id /
@@ -43,7 +45,11 @@ class Favourite:
                 "INSERT INTO favourite (account_id, fra_id) VALUES (?, ?)",
                 (account_rowid, fra_rowid),
             )
-        return cursor.rowcount > 0
+        if cursor.rowcount > 0:
+            # Exception A: bump save_count so US-29 has something to show.
+            FundraisingActivity.increment_save_count(fra_id, +1)
+            return True
+        return False
 
     @classmethod
     def remove_favourite(cls, fra_id: str, account_id: str) -> bool:
@@ -53,6 +59,8 @@ class Favourite:
 
         Parameter order matches the US-23 diagram (FRAId then accountId).
         """
+        from entity.fundraising_activity import FundraisingActivity
+
         fra_rowid = parse_id(fra_id)
         account_rowid = parse_id(account_id)
         with get_connection() as conn:
@@ -61,7 +69,11 @@ class Favourite:
                 "WHERE fra_id = ? AND account_id = ?",
                 (fra_rowid, account_rowid),
             )
-        return cursor.rowcount > 0
+        if cursor.rowcount > 0:
+            # Exception A: bump save_count down.
+            FundraisingActivity.increment_save_count(fra_id, -1)
+            return True
+        return False
 
     @classmethod
     def search_favourite(

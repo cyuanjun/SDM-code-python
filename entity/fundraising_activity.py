@@ -293,6 +293,58 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
+    def view_fundraising_activity_view_count(cls, fra_id: str) -> int:
+        """US-28 — fundraiser reads the view count of an activity. Returns
+        0 when the row is missing (rather than raising) so callers can
+        always display a number."""
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT view_count FROM fundraising_activity WHERE fra_id = ?",
+                (rowid,),
+            ).fetchone()
+        return int(row["view_count"]) if row is not None else 0
+
+    @classmethod
+    def view_fundraising_activity_save_count(cls, fra_id: str) -> int:
+        """US-29 — fundraiser reads the save count of an activity. Returns
+        0 when the row is missing."""
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT save_count FROM fundraising_activity WHERE fra_id = ?",
+                (rowid,),
+            ).fetchone()
+        return int(row["save_count"]) if row is not None else 0
+
+    @classmethod
+    def increment_view_count(cls, fra_id: str) -> bool:
+        """Exception A: bump view_count by 1. Fired when a donee opens the
+        activity detail in US-21. Returns True iff a row was updated."""
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET view_count = view_count + 1 WHERE fra_id = ?",
+                (rowid,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def increment_save_count(cls, fra_id: str, delta: int = 1) -> bool:
+        """Exception A: bump save_count by delta (+1 on favourite,
+        -1 on remove favourite). Floors at 0 so a missing favourite-record
+        can't drive the count negative."""
+        rowid = parse_id(fra_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET save_count = MAX(save_count + ?, 0) WHERE fra_id = ?",
+                (delta, rowid),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
     def _from_row(cls, row) -> "FundraisingActivity":
         return cls(
             fra_id=format_id("fra", row["fra_id"]),

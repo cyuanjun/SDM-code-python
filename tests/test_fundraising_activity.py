@@ -586,3 +586,75 @@ def test_view_my_completed_activity_returns_none_for_wrong_owner() -> None:
         )
         is None
     )
+
+
+def test_view_fundraising_activity_view_count_returns_zero_initially() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    assert FundraisingActivity.view_fundraising_activity_view_count(
+        created.fra_id
+    ) == 0
+
+
+def test_view_fundraising_activity_view_count_returns_zero_for_missing_id() -> None:
+    """Negative path: missing FRAId returns 0, not None / raises."""
+    assert (
+        FundraisingActivity.view_fundraising_activity_view_count("fra_999")
+        == 0
+    )
+
+
+def test_view_fundraising_activity_save_count_returns_zero_initially() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    assert FundraisingActivity.view_fundraising_activity_save_count(
+        created.fra_id
+    ) == 0
+
+
+def test_increment_view_count_bumps_by_one() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    assert FundraisingActivity.increment_view_count(created.fra_id) is True
+    assert FundraisingActivity.increment_view_count(created.fra_id) is True
+
+    assert (
+        FundraisingActivity.view_fundraising_activity_view_count(created.fra_id)
+        == 2
+    )
+
+
+def test_increment_view_count_returns_false_for_missing_id() -> None:
+    """Negative path: no row matches."""
+    assert FundraisingActivity.increment_view_count("fra_999") is False
+
+
+def test_increment_save_count_supports_positive_and_negative_delta() -> None:
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    FundraisingActivity.increment_save_count(created.fra_id, +3)
+    assert (
+        FundraisingActivity.view_fundraising_activity_save_count(created.fra_id)
+        == 3
+    )
+    FundraisingActivity.increment_save_count(created.fra_id, -2)
+    assert (
+        FundraisingActivity.view_fundraising_activity_save_count(created.fra_id)
+        == 1
+    )
+
+
+def test_increment_save_count_floors_at_zero() -> None:
+    """Negative path: decrementing past 0 floors at 0, doesn't go negative."""
+    owner = _seed_fundraiser_account()
+    created = _seed_activity(owner)
+
+    FundraisingActivity.increment_save_count(created.fra_id, -5)
+    assert (
+        FundraisingActivity.view_fundraising_activity_save_count(created.fra_id)
+        == 0
+    )
