@@ -1,16 +1,19 @@
-"""ViewUserProfilePage <<Boundary>> — Sprint 2 US-2.
+"""ViewUserProfilePage <<Boundary>> — Sprint 2 US-2 + Sprint 3 US-4.
 
-Diagram contract (US-02.jpg):
-    + displayUserProfile(profile: UserProfile): void
+Diagram contracts:
+    US-02.jpg: + displayUserProfile(profile: UserProfile): void
+    US-04.jpg: + displaySuccess(): void  (suspend; same boundary class)
 
-The page shows a list of profiles on first paint, click a row for
-details — same pattern as ViewFundraisingActivityPage (US-21). The
-list method uses the existing Exception A `view_all_profiles`.
+US-4 places the "Suspend" button on this same page — the diagram lists
+ViewUserProfilePage as the boundary for both view and suspend.
 """
 from __future__ import annotations
 
 import streamlit as st
 
+from controller.suspend_user_profile_controller import (
+    SuspendUserProfileController,
+)
 from controller.view_profiles_controller import ViewProfilesController
 from controller.view_user_profile_controller import ViewUserProfileController
 
@@ -63,9 +66,28 @@ class ViewUserProfilePage:
             st.session_state[SELECTED_KEY] = profiles[selected[0]].profile_id
             st.rerun()
 
-    @staticmethod
-    def display_user_profile(profile) -> None:
+    def display_user_profile(self, profile) -> None:
         st.subheader(f"{profile.role}")
         st.write(f"**Profile ID:** {profile.profile_id}")
         st.write(f"**Description:** {profile.description or '(none)'}")
         st.write(f"**Suspended:** {'yes' if profile.suspended else 'no'}")
+
+        # US-4: admin suspends this profile.
+        if not profile.suspended:
+            if st.button("🚫 Suspend this profile"):
+                ok = SuspendUserProfileController().suspend_user_profile(
+                    profile.profile_id
+                )
+                if ok:
+                    self.display_success()
+                    st.rerun()
+                else:
+                    self.display_error()
+
+    @staticmethod
+    def display_success() -> None:
+        st.success("Profile suspended.")
+
+    @staticmethod
+    def display_error() -> None:
+        st.error("Could not suspend profile.")

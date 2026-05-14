@@ -123,3 +123,60 @@ def test_update_user_profile_does_not_mutate_other_rows() -> None:
     assert untouched is not None
     assert untouched.role == "donee"
     assert untouched.description == "b"
+
+
+def test_suspend_user_profile_returns_true_and_sets_suspended_flag() -> None:
+    created = UserProfile.create_profile(role="admin", description="a")
+    assert created.suspended is False
+
+    assert UserProfile.suspend_user_profile(created.profile_id) is True
+
+    fetched = UserProfile.view_user_profile(created.profile_id)
+    assert fetched is not None
+    assert fetched.suspended is True
+
+
+def test_suspend_user_profile_returns_false_for_missing_id() -> None:
+    """Negative path: no row matches profile_id."""
+    assert UserProfile.suspend_user_profile("prof_999") is False
+
+
+def test_suspend_user_profile_is_idempotent_on_already_suspended() -> None:
+    """Suspending an already-suspended profile still returns True (rowcount
+    > 0); the row stays suspended."""
+    created = UserProfile.create_profile(role="admin", description="a")
+    UserProfile.suspend_user_profile(created.profile_id)
+
+    again = UserProfile.suspend_user_profile(created.profile_id)
+    assert again is True
+
+    fetched = UserProfile.view_user_profile(created.profile_id)
+    assert fetched is not None
+    assert fetched.suspended is True
+
+
+def test_search_user_profile_matches_role_substring_case_insensitive() -> None:
+    UserProfile.create_profile(role="admin", description="full access")
+    UserProfile.create_profile(role="donee", description="browse")
+    UserProfile.create_profile(role="fundraiser", description="runs campaigns")
+
+    results = UserProfile.search_user_profile("ADMIN")
+    assert [p.role for p in results] == ["admin"]
+
+
+def test_search_user_profile_matches_description_substring() -> None:
+    UserProfile.create_profile(role="a", description="needs full access")
+    UserProfile.create_profile(role="b", description="limited access")
+    UserProfile.create_profile(role="c", description="no access")
+
+    results = UserProfile.search_user_profile("limited")
+    assert [p.role for p in results] == ["b"]
+
+
+def test_search_user_profile_returns_empty_for_no_match() -> None:
+    UserProfile.create_profile(role="admin", description="a")
+    assert UserProfile.search_user_profile("nothing") == []
+
+
+def test_search_user_profile_returns_empty_on_empty_db() -> None:
+    assert UserProfile.search_user_profile("anything") == []

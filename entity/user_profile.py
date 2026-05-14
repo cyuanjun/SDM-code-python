@@ -80,6 +80,41 @@ class UserProfile:
         return cursor.rowcount > 0
 
     @classmethod
+    def suspend_user_profile(cls, profile_id: str) -> bool:
+        """US-4 — admin suspends a profile. Returns True on rowcount > 0,
+        False when no row matches."""
+        rowid = parse_id(profile_id)
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_profile SET suspended = 1 WHERE profile_id = ?",
+                (rowid,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def search_user_profile(cls, search_criteria: str) -> list["UserProfile"]:
+        """US-5 — admin searches profiles by criteria. Case-insensitive
+        substring match against role and description."""
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT profile_id, role, description, suspended "
+                "FROM user_profile "
+                "WHERE LOWER(role) LIKE ? OR LOWER(COALESCE(description, '')) LIKE ? "
+                "ORDER BY profile_id",
+                (like, like),
+            ).fetchall()
+        return [
+            cls(
+                profile_id=format_id("prof", row["profile_id"]),
+                role=row["role"],
+                description=row["description"] or "",
+                suspended=bool(row["suspended"]),
+            )
+            for row in rows
+        ]
+
+    @classmethod
     def view_all_profiles(cls) -> list["UserProfile"]:
         """Exception A (CLAUDE.md): not on the US-1 diagram but needed to
         power the profile dropdown on CreateAccountPage. Logged in
