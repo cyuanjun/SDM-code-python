@@ -23,7 +23,7 @@ SELECTED_KEY = "view_my_completed_selected_id"
 
 class ViewMyCompletedActivityPage:
     def render(self) -> None:
-        st.header("View my completed activity")
+        st.header("View My Completed Activity")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

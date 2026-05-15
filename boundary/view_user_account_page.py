@@ -24,7 +24,7 @@ SELECTED_KEY = "selected_account_id"
 
 class ViewUserAccountPage:
     def render(self) -> None:
-        st.header("View user account")
+        st.header("View User Account")
         controller = ViewUserAccountController()
 
         if SELECTED_KEY in st.session_state:

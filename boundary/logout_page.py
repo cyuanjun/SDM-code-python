@@ -14,7 +14,7 @@ import streamlit as st
 
 class LogoutPage:
     def render(self) -> None:
-        st.header("Log out")
+        st.header("Log Out")
 
         if "user" not in st.session_state:
             st.info("You are not signed in.")

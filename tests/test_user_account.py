@@ -72,23 +72,22 @@ def test_create_account_links_to_profile_via_foreign_key() -> None:
     assert account.profile_id == profile.profile_id
 
 
-def test_create_account_raises_on_nonexistent_profile_id() -> None:
+def test_create_account_returns_none_for_nonexistent_profile_id() -> None:
     """Negative path: profile_id is a FK to user_profile.profile_id. Passing
-    a profileId that doesn't reference an existing row must fail loudly.
-    SQLite raises sqlite3.IntegrityError under PRAGMA foreign_keys = ON."""
-    import sqlite3
+    a profileId that doesn't reference an existing row trips PRAGMA
+    foreign_keys = ON, and create_account catches the IntegrityError and
+    returns None (same contract as the duplicate-email path)."""
+    result = UserAccount.create_account(
+        email="ghost@x.com", password="p", name="Ghost",
+        dob=date(2000, 1, 1), phone_num="0", profile_id="prof_999",
+    )
 
-    with pytest.raises(sqlite3.IntegrityError):
-        UserAccount.create_account(
-            email="ghost@x.com", password="p", name="Ghost",
-            dob=date(2000, 1, 1), phone_num="0", profile_id="prof_999",
-        )
+    assert result is None
 
 
-def test_create_account_allows_duplicate_emails() -> None:
-    """Negative path: the diagram does not declare email as unique. Two
-    accounts with the same email both persist with distinct account_ids.
-    Logged as an architectural concern — login will need to handle this."""
+def test_create_account_returns_none_for_duplicate_email() -> None:
+    """Negative path: email is UNIQUE (lecturer instruction 2026-05-15).
+    create_account returns None on conflict and the second row is rejected."""
     profile = _seed_profile()
 
     first = UserAccount.create_account(
@@ -100,8 +99,9 @@ def test_create_account_allows_duplicate_emails() -> None:
         phone_num="2", profile_id=profile.profile_id,
     )
 
-    assert first.account_id != second.account_id
-    assert first.email == second.email
+    assert first is not None
+    assert second is None
+    assert UserAccount.view_user_account(first.account_id) is not None
 
 
 def _seed_account(
@@ -222,6 +222,29 @@ def test_update_user_account_returns_false_for_missing_id() -> None:
         phone_num="0", profile_id="prof_001",
     )
     assert UserAccount.update_user_account("acc_999", updated) is False
+
+
+def test_update_user_account_returns_false_for_duplicate_email() -> None:
+    """Negative path: changing email to one already used by a different
+    account hits the UNIQUE constraint; update_user_account returns False
+    and the row is unchanged."""
+    profile = _seed_profile()
+    first = _seed_account(email="a@x.com", profile=profile)
+    second = UserAccount.create_account(
+        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
+        phone_num="2", profile_id=profile.profile_id,
+    )
+    assert second is not None
+
+    clashing = UserAccount(
+        email="a@x.com", password="p", name="B-renamed",
+        dob=date(1990, 1, 1), phone_num="2",
+        profile_id=profile.profile_id,
+    )
+    assert UserAccount.update_user_account(second.account_id, clashing) is False
+    reloaded = UserAccount.view_user_account(second.account_id)
+    assert reloaded is not None
+    assert reloaded.email == "b@x.com"
 
 
 def test_update_user_account_does_not_mutate_other_rows() -> None:

@@ -10,7 +10,7 @@ from controller.search_fundraising_activity_category_controller import (
 
 class ViewFundraisingActivityCategoriesPage:
     def render(self) -> None:
-        st.header("Search fundraising activity categories")
+        st.header("Search Fundraising Activity Categories")
 
         with st.form("search_fra_cat_form"):
             criteria = st.text_input(

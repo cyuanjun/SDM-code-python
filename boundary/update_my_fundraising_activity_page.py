@@ -27,7 +27,7 @@ SELECTED_KEY = "update_my_fra_selected_id"
 
 class UpdateMyFundraisingActivityPage:
     def render(self) -> None:
-        st.header("Update my fundraising activity")
+        st.header("Update My Fundraising Activity")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

@@ -27,10 +27,15 @@ def _seed_donee() -> UserAccount:
     )
 
 
+_activity_counter = [0]
+
+
 def _seed_activity() -> FundraisingActivity:
+    _activity_counter[0] += 1
+    n = _activity_counter[0]
     profile = UserProfile.create_profile(role="fundraiser", description="r")
     fr = UserAccount.create_account(
-        email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
+        email=f"f{n}@x.com", password="p", name="F", dob=date(1990, 1, 1),
         phone_num="0", profile_id=profile.profile_id,
     )
     return FundraisingActivity.create_fundraising_activity(

@@ -27,7 +27,7 @@ from controller.generate_weekly_report_controller import (
 
 class GenerateReportPage:
     def render(self) -> None:
-        st.header("Generate report")
+        st.header("Generate Report")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

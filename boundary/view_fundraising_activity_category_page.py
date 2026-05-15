@@ -19,7 +19,7 @@ SELECTED_KEY = "selected_fra_cat_id"
 
 class ViewFundraisingActivityCategoryPage:
     def render(self) -> None:
-        st.header("View fundraising activity category")
+        st.header("View Fundraising Activity Category")
         controller = ViewFundraisingActivityCategoryController()
 
         if SELECTED_KEY in st.session_state:

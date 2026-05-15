@@ -18,7 +18,7 @@ from controller.search_my_completed_fundraising_activity_controller import (
 
 class SearchMyCompletedActivityPage:
     def render(self) -> None:
-        st.header("Search my completed activities")
+        st.header("Search My Completed Activities")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

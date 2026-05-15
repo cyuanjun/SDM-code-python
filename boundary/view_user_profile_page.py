@@ -22,7 +22,7 @@ SELECTED_KEY = "selected_profile_id"
 
 class ViewUserProfilePage:
     def render(self) -> None:
-        st.header("View user profile")
+        st.header("View User Profile")
         controller = ViewUserProfileController()
 
         if SELECTED_KEY in st.session_state:

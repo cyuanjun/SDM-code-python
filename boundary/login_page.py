@@ -19,7 +19,7 @@ from controller.login_controller import LoginController
 
 class LoginPage:
     def render(self) -> None:
-        st.header("Log in")
+        st.header("Log In")
 
         if "user" in st.session_state:
             user = st.session_state["user"]

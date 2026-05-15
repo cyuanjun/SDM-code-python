@@ -22,7 +22,7 @@ from controller.create_fundraising_activity_controller import (
 
 class CreateFundraisingActivityPage:
     def render(self) -> None:
-        st.header("Create fundraising activity")
+        st.header("Create Fundraising Activity")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

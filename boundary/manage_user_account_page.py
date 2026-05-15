@@ -43,13 +43,15 @@ class ManageUserAccountPage:
             return
 
         if SELECTED_KEY in st.session_state:
-            st.header("Manage user accounts")
+            in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
+            title = "Update User Account" if in_edit else "View User Account"
+            self._render_detail_header(title)
             self._render_detail()
             return
 
         col_title, col_create = st.columns([4, 1])
         with col_title:
-            st.header("Manage user accounts")
+            st.header("Manage User Accounts")
         with col_create:
             st.write("")
             if st.button(
@@ -64,7 +66,7 @@ class ManageUserAccountPage:
     # -------- Create view ----------------------------------------------------
 
     def _render_create(self) -> None:
-        st.header("Create user account")
+        st.header("Create User Account")
 
         # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
@@ -114,11 +116,15 @@ class ManageUserAccountPage:
             profile_label = st.selectbox(
                 "Profile", list(profile_options.keys())
             )
-            col_submit, col_cancel = st.columns(2)
+            col_submit, col_cancel, _ = st.columns([1, 1, 4])
             with col_submit:
-                submitted = st.form_submit_button("Create")
+                submitted = st.form_submit_button(
+                    "Create", use_container_width=True
+                )
             with col_cancel:
-                cancel = st.form_submit_button("Cancel")
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
 
         if cancel:
             st.session_state.pop(CREATE_MODE_KEY, None)
@@ -138,6 +144,9 @@ class ManageUserAccountPage:
             dob=dob, phone_num=phone_num.strip(),
             profile_id=profile_options[profile_label],
         )
+        if new_account is None:
+            st.error(f"An account with email '{email.strip()}' already exists.")
+            return
         st.session_state[JUST_CREATED_KEY] = new_account
         st.rerun()
 
@@ -198,22 +207,43 @@ class ManageUserAccountPage:
 
         self._render_bottom_bar()
 
+    def _render_detail_header(self, title: str) -> None:
+        """Page title with the post-action success badge sized to its text,
+        rendered immediately to the right of the title."""
+        msg = st.session_state.get(ACTION_MSG_KEY)
+        if not msg:
+            st.header(title)
+            return
+        st.markdown(
+            f'<div style="display:flex; align-items:center; gap:1rem; '
+            f'flex-wrap:wrap; margin:0 0 1rem 0;">'
+            f'<h2 style="margin:0; padding:0;">{title}</h2>'
+            f'<div style="background-color:rgba(45,195,99,0.18); '
+            f'color:rgb(73,197,100); padding:0.5rem 1rem; '
+            f'border-radius:0.5rem; font-size:1rem; '
+            f'text-align:center; white-space:nowrap;">{msg}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
     def _render_bottom_bar(self) -> None:
-        """One back button + inline action message. In edit mode the button
-        returns to the read-only view; in view mode it returns to the list."""
+        """Single back button. In edit mode → back to read-only view;
+        in view mode → back to list."""
         in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
-        cols = st.columns([1, 4])
+        st.divider()
+        cols = st.columns([1, 1, 4])
         with cols[0]:
-            label = "← Back to view" if in_edit else "← Back to list"
-            if st.button(label, key=f"manage_account_back_{in_edit}"):
+            label = "← Back to account" if in_edit else "← Back to list"
+            if st.button(
+                label,
+                key=f"manage_account_back_{in_edit}",
+                use_container_width=True,
+            ):
                 st.session_state.pop(EDIT_MODE_KEY, None)
                 st.session_state.pop(ACTION_MSG_KEY, None)
                 if not in_edit:
                     st.session_state.pop(SELECTED_KEY, None)
                 st.rerun()
-        if ACTION_MSG_KEY in st.session_state:
-            with cols[1]:
-                st.success(st.session_state[ACTION_MSG_KEY])
 
     def _render_view(self, account) -> None:
         st.subheader(account.name)
@@ -238,7 +268,7 @@ class ManageUserAccountPage:
                         .unsuspend_user_account(account.account_id)
                     )
                     if ok:
-                        st.session_state[ACTION_MSG_KEY] = "Account unsuspended."
+                        st.session_state[ACTION_MSG_KEY] = "Account unsuspended"
                         st.rerun()
                     else:
                         st.error("Could not unsuspend account.")
@@ -248,7 +278,7 @@ class ManageUserAccountPage:
                         account.account_id
                     )
                     if ok:
-                        st.session_state[ACTION_MSG_KEY] = "Account suspended."
+                        st.session_state[ACTION_MSG_KEY] = "Account suspended"
                         st.rerun()
                     else:
                         st.error("Could not suspend account.")
@@ -334,10 +364,13 @@ class ManageUserAccountPage:
             ),
         )
         if ok:
-            st.session_state[ACTION_MSG_KEY] = "Account updated."
+            st.session_state[ACTION_MSG_KEY] = "Account updated"
             st.rerun()
         else:
-            st.error("Update failed.")
+            st.error(
+                f"Update failed — email '{email.strip()}' may already "
+                "be in use by another account."
+            )
 
     # -------- Validators -----------------------------------------------------
 

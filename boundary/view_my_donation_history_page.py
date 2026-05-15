@@ -19,7 +19,7 @@ SELECTED_KEY = "view_my_donation_selected_id"
 
 class ViewMyDonationHistoryPage:
     def render(self) -> None:
-        st.header("View my donation history")
+        st.header("View My Donation History")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

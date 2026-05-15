@@ -16,7 +16,7 @@ SELECTED_KEY = "update_fra_cat_selected_id"
 
 class UpdateFundraisingActivityCategoryPage:
     def render(self) -> None:
-        st.header("Update fundraising activity category")
+        st.header("Update Fundraising Activity Category")
 
         if SELECTED_KEY not in st.session_state:
             self._render_picker()

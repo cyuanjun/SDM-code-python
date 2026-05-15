@@ -170,7 +170,7 @@ When handed new sprint diagrams:
 
 ## Coverage and what's deferred
 
-All **43 user stories** are implemented on this branch (`revamp`). **371 tests pass.**
+All **43 user stories** are implemented on this branch (`revamp`). **373 tests pass.**
 
 | Sprint | Stories | Status |
 |---|---|---|
@@ -182,11 +182,11 @@ All **43 user stories** are implemented on this branch (`revamp`). **371 tests p
 ### Still open (in [docs/todo.md](docs/todo.md) "Open architectural items")
 
 - **Plain-text passwords.** Sprint 1's `UserAccount` stores the password as plain text per the diagram. Hashing (bcrypt/argon2) belongs in a hardening sprint.
-- **Email is not unique on `UserAccount`.** The US-6 diagram doesn't declare email as unique; login matches the first row.
 
 ### Resolved in this revamp
 
 - **RBAC / menu gating** — closed by `PAGES_BY_ROLE` in `app.py`.
 - **Ownership enforcement at the entity layer** — closed because the reworked US-14/15/16/17/30/31 diagrams pass `owner_account_id` as a parameter; entity-side `WHERE owner_account_id = ?` clauses refuse cross-owner writes.
-- **Donation history (US-32 / US-33)** — closed by the new `Donation` entity in Sprint 3 + a `seed_demo_donations` bootstrap because no diagram defines a "donate" use case.
+- **Donation history (US-32 / US-33)** — closed by the new `Donation` entity in Sprint 3 + a `seed_demo_donations` bootstrap (lecturer-approved 2026-05-15 as a bootstrap convention).
 - **Default-admin / PM / fundraiser / donee accounts** — closed by per-role idempotent seed functions in `data/seed.py`.
+- **Email uniqueness on `UserAccount`** — closed 2026-05-15 (lecturer instruction). `user_account.email` has `UNIQUE` at the schema level; `create_account` returns `None` on conflict, `update_user_account` returns `False`. Boundary surfaces an "email already in use" message.

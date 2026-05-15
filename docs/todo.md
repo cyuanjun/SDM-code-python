@@ -13,7 +13,7 @@ Pure **diagram typos** (signatures, attribute types, boundary class names) live 
 These exist because the diagrams don't define an entry point for some required data. Each is idempotent on app startup. Either formalise the seed as a "first-time setup" use case on the diagrams, or accept it as a demo-only convention.
 
 - **One default account per role** — `a001@a.com` (admin), `fr001@a.com` (fundraiser), `d001@a.com` (donee), `pm001@a.com` (platform manager), all with password `123`. Solves the chicken-and-egg admin-creates-the-first-admin problem implied by US-1 / US-6's "User admin" actor, and gives every role a logged-in-able starting point for the demo.
-- **Demo donations (Sprint 3)** — three sample donations tied to the seeded donee + a "Demo hospital fund" activity owned by the seeded fundraiser. US-32 / US-33 introduce a `Donation` entity but no Sprint 1–3 diagram defines a "donate" use case, so the table would otherwise be empty.
+- **Demo donations (Sprint 3)** — three sample donations tied to the seeded donee + a "Demo hospital fund" activity owned by the seeded fundraiser. US-32 / US-33 introduce a `Donation` entity but no Sprint 1–3 diagram defines a "donate" use case, so the table would otherwise be empty. **Approved by lecturer (2026-05-15)** as an acceptable bootstrap convention — no further diagram work required.
 
 ## Exception A — off-diagram entity methods to power UX
 
@@ -32,8 +32,8 @@ Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry i
 Stack / policy concerns, not diagram-bound. Will re-surface as the rebuild touches each area.
 
 - **Plain-text passwords.** Sprint 1's `UserAccount` stores the password as a plain string per the diagram. Hashing (bcrypt / argon2) belongs in a hardening sprint.
-- **Email is not unique on `UserAccount`.** The US-6 diagram doesn't declare email as a unique attribute, so `createAccount` allows duplicates. Login matches the first row with matching email + password — a real concern if duplicates ever exist. Either add a uniqueness check in the diagram or document the first-match login semantics.
 
 ## Resolved
 
-- ~~**No RBAC / menu gating in `app.py`.**~~ **Resolved 2026-05-15.** Sidebar now filters pages by the logged-in user's role (looked up via `ViewUserProfileController.view_user_profile`). Not signed in → only `Log in` + `.info (debug)`. Each role only sees its own actor's pages. `.info (debug)` stays visible for development; remove or hide along with the debug page before final demo.
+- ~~**No RBAC / menu gating in `app.py`.**~~ **Resolved 2026-05-15.** Sidebar now filters pages by the logged-in user's role (looked up via `ViewUserProfileController.view_user_profile`). Not signed in → only `Log In` + `.info (debug)`. Each role only sees its own actor's pages. `.info (debug)` stays visible for development; remove or hide along with the debug page before final demo.
+- ~~**Email is not unique on `UserAccount`.**~~ **Resolved 2026-05-15** (lecturer instruction). `user_account.email` now has a `UNIQUE` constraint at the schema level. `UserAccount.create_account` returns `Optional[UserAccount]` — `None` on conflict; `UserAccount.update_user_account` returns `False` on conflict. Boundary surfaces "email already in use" errors. US-6 diagram still types the signature as `createAccount(...) -> UserAccount` with no failure branch — that diagram fix is now part of the existing "create / login failure branch" entry in [diagram_typos.md](diagram_typos.md).

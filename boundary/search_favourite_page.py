@@ -16,7 +16,7 @@ from controller.search_favourite_controller import SearchFavouriteController
 
 class SearchFavouritePage:
     def render(self) -> None:
-        st.header("Search my favourites")
+        st.header("Search My Favourites")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

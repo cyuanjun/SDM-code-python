@@ -16,7 +16,7 @@ from controller.search_donation_history_controller import (
 
 class ViewMyDonationHistoriesPage:
     def render(self) -> None:
-        st.header("Search my donation history")
+        st.header("Search My Donation History")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

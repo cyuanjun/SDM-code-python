@@ -17,7 +17,7 @@ from controller.view_favourite_controller import ViewFavouriteController
 
 class MyFavouritesPage:
     def render(self) -> None:
-        st.header("My favourites")
+        st.header("My Favourites")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

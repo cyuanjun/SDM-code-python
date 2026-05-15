@@ -19,7 +19,7 @@ from controller.view_profiles_controller import ViewProfilesController
 
 class CreateAccountPage:
     def render(self) -> None:
-        st.header("Create user account")
+        st.header("Create User Account")
 
         profiles = ViewProfilesController().view_all_profiles()
         if not profiles:
@@ -61,6 +61,9 @@ class CreateAccountPage:
             phone_num=phone_num.strip(),
             profile_id=profile_label_to_id[profile_label],
         )
+        if account is None:
+            st.error(f"An account with email '{email.strip()}' already exists.")
+            return
         self.display_success(account)
 
     @staticmethod

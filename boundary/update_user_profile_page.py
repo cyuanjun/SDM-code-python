@@ -23,7 +23,7 @@ SELECTED_KEY = "update_profile_selected_id"
 
 class UpdateUserProfilePage:
     def render(self) -> None:
-        st.header("Update user profile")
+        st.header("Update User Profile")
 
         if SELECTED_KEY not in st.session_state:
             self._render_picker()

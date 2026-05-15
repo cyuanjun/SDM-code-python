@@ -25,7 +25,7 @@ SELECTED_KEY = "view_my_fra_selected_id"
 
 class ViewMyFundraisingActivityPage:
     def render(self) -> None:
-        st.header("View my fundraising activity")
+        st.header("View My Fundraising Activity")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

@@ -44,3 +44,24 @@ def test_controller_forwards_entity_return_value_unchanged(
     )
 
     assert result is sentinel
+
+
+def test_controller_forwards_none_when_entity_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Negative-path mirror: when the entity rejects a duplicate email
+    by returning None, the controller forwards None unchanged."""
+    monkeypatch.setattr(
+        UserAccount,
+        "create_account",
+        classmethod(
+            lambda cls, email, password, name, dob, phone_num, profile_id: None
+        ),
+    )
+
+    result = CreateAccountController().create_account(
+        email="dup@x.com", password="x", name="x", dob=date(2000, 1, 1),
+        phone_num="x", profile_id="x",
+    )
+
+    assert result is None

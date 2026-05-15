@@ -14,7 +14,7 @@ from controller.search_user_account_controller import (
 
 class ViewUserAccountsPage:
     def render(self) -> None:
-        st.header("Search user accounts")
+        st.header("Search User Accounts")
 
         with st.form("search_user_account_form"):
             criteria = st.text_input(

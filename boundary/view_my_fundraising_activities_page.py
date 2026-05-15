@@ -19,7 +19,7 @@ from controller.search_my_fundraising_activity_controller import (
 
 class ViewMyFundraisingActivitiesPage:
     def render(self) -> None:
-        st.header("Search my fundraising activities")
+        st.header("Search My Fundraising Activities")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")

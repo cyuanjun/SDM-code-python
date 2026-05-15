@@ -32,7 +32,7 @@ SELECTED_KEY = "browse_fra_selected_id"
 
 class BrowseFundraisingActivityPage:
     def render(self) -> None:
-        st.header("Browse fundraising activities")
+        st.header("Browse Fundraising Activities")
 
         if SELECTED_KEY in st.session_state:
             self._render_detail()

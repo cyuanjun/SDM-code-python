@@ -16,7 +16,7 @@ from controller.search_user_profile_controller import (
 
 class ViewUserProfilesPage:
     def render(self) -> None:
-        st.header("Search user profiles")
+        st.header("Search User Profiles")
 
         with st.form("search_user_profile_form"):
             criteria = st.text_input(

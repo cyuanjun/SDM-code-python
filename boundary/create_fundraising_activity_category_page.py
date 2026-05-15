@@ -10,7 +10,7 @@ from controller.create_fundraising_activity_category_controller import (
 
 class CreateFundraisingActivityCategoryPage:
     def render(self) -> None:
-        st.header("Create fundraising activity category")
+        st.header("Create Fundraising Activity Category")
         with st.form("create_fra_category_form"):
             name = st.text_input("Category name")
             description = st.text_area("Description")

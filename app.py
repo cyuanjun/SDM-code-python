@@ -42,47 +42,47 @@ from data.seed import (
 from persistence.db import init_db
 
 PAGES: dict = {
-    "Log in": LoginPage,
-    "Log out": LogoutPage,
-    "[Admin] Manage user profiles": ManageUserProfilePage,
-    "[Admin] Manage user accounts": ManageUserAccountPage,
-    "[Fundraiser] Manage my fundraising activities": ManageMyFundraisingActivityPage,
-    "[Donee] Browse fundraising activities": BrowseFundraisingActivityPage,
-    "[Donee] My favourites": MyFavouritesPage,
-    "[Donee] My donations": MyDonationsPage,
-    "[PM] Manage FRA categories": ManageFundraisingActivityCategoryPage,
-    "[PM] Generate report": GenerateReportPage,
+    "Log In": LoginPage,
+    "Log Out": LogoutPage,
+    "[Admin] Manage User Profiles": ManageUserProfilePage,
+    "[Admin] Manage User Accounts": ManageUserAccountPage,
+    "[Fundraiser] Manage My Fundraising Activities": ManageMyFundraisingActivityPage,
+    "[Donee] Browse Fundraising Activities": BrowseFundraisingActivityPage,
+    "[Donee] My Favourites": MyFavouritesPage,
+    "[Donee] My Donations": MyDonationsPage,
+    "[PM] Manage FRA Categories": ManageFundraisingActivityCategoryPage,
+    "[PM] Generate Report": GenerateReportPage,
     ".info (debug)": InfoPage,
 }
 
 # Pages visible per role. None = not signed in.
 PAGES_BY_ROLE: dict[str | None, list[str]] = {
     None: [
-        "Log in",
+        "Log In",
         ".info (debug)",
     ],
     "admin": [
-        "Log out",
-        "[Admin] Manage user profiles",
-        "[Admin] Manage user accounts",
+        "Log Out",
+        "[Admin] Manage User Profiles",
+        "[Admin] Manage User Accounts",
         ".info (debug)",
     ],
     "fundraiser": [
-        "Log out",
-        "[Fundraiser] Manage my fundraising activities",
+        "Log Out",
+        "[Fundraiser] Manage My Fundraising Activities",
         ".info (debug)",
     ],
     "donee": [
-        "Log out",
-        "[Donee] Browse fundraising activities",
-        "[Donee] My favourites",
-        "[Donee] My donations",
+        "Log Out",
+        "[Donee] Browse Fundraising Activities",
+        "[Donee] My Favourites",
+        "[Donee] My Donations",
         ".info (debug)",
     ],
     "platform_manager": [
-        "Log out",
-        "[PM] Manage FRA categories",
-        "[PM] Generate report",
+        "Log Out",
+        "[PM] Manage FRA Categories",
+        "[PM] Generate Report",
         ".info (debug)",
     ],
 }

@@ -7,20 +7,20 @@ Diagram contracts:
       ): UserAccount
     US-11/18/26/39.jpg: + login(email: String, password: String): UserAccount
 
-The diagrams do not show a failure branch for login. Implementation
-returns None on no match so the Boundary can call displayError. Logged
-in docs/todo.md as a missing diagram branch.
+The diagrams do not show a failure branch for login or create. Implementation
+returns None on no-match / duplicate-email so the Boundary can call
+displayError. Logged in docs/diagram_typos.md as a missing diagram branch.
 
-The diagram does not declare email as unique; duplicates are permitted at
-the entity layer. When duplicates exist with the same password, login
-returns the first row (lowest account_id). Logged in docs/todo.md.
+Email is enforced UNIQUE at the schema level (per lecturer instruction
+2026-05-15). create_account returns None on conflict; update_user_account
+returns False.
 """
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from datetime import date
 from typing import Optional
-
 
 
 from persistence.db import get_connection
@@ -47,16 +47,19 @@ class UserAccount:
         dob: date,
         phone_num: str,
         profile_id: str,
-    ) -> "UserAccount":
+    ) -> Optional["UserAccount"]:
         profile_rowid = parse_id(profile_id)
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "INSERT INTO user_account "
-                "(email, password, name, dob, phone_num, profile_id, suspended) "
-                "VALUES (?, ?, ?, ?, ?, ?, 0)",
-                (email, password, name, dob.isoformat(), phone_num, profile_rowid),
-            )
-            rowid = cursor.lastrowid
+        try:
+            with get_connection() as conn:
+                cursor = conn.execute(
+                    "INSERT INTO user_account "
+                    "(email, password, name, dob, phone_num, profile_id, suspended) "
+                    "VALUES (?, ?, ?, ?, ?, ?, 0)",
+                    (email, password, name, dob.isoformat(), phone_num, profile_rowid),
+                )
+                rowid = cursor.lastrowid
+        except sqlite3.IntegrityError:
+            return None
         return cls(
             account_id=format_id("acc", rowid),
             email=email,
@@ -100,23 +103,27 @@ class UserAccount:
         prefixed string back to the underlying integer FK."""
         rowid = parse_id(account_id)
         profile_rowid = parse_id(updated_account.profile_id)
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE user_account SET email = ?, password = ?, name = ?, "
-                "dob = ?, phone_num = ?, profile_id = ?, suspended = ? "
-                "WHERE account_id = ?",
-                (
-                    updated_account.email,
-                    updated_account.password,
-                    updated_account.name,
-                    updated_account.dob.isoformat(),
-                    updated_account.phone_num,
-                    profile_rowid,
-                    1 if updated_account.suspended else 0,
-                    rowid,
-                ),
-            )
-        return cursor.rowcount > 0
+        try:
+            with get_connection() as conn:
+                cursor = conn.execute(
+                    "UPDATE user_account SET email = ?, password = ?, name = ?, "
+                    "dob = ?, phone_num = ?, profile_id = ?, suspended = ? "
+                    "WHERE account_id = ?",
+                    (
+                        updated_account.email,
+                        updated_account.password,
+                        updated_account.name,
+                        updated_account.dob.isoformat(),
+                        updated_account.phone_num,
+                        profile_rowid,
+                        1 if updated_account.suspended else 0,
+                        rowid,
+                    ),
+                )
+                affected = cursor.rowcount
+        except sqlite3.IntegrityError:
+            return False
+        return affected > 0
 
     @classmethod
     def _from_row(cls, row) -> "UserAccount":
