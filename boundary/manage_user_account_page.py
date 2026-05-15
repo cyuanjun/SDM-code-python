@@ -33,6 +33,7 @@ SELECTED_KEY = "manage_account_selected_id"
 EDIT_MODE_KEY = "manage_account_edit_mode"
 CREATE_MODE_KEY = "manage_account_create_mode"
 JUST_CREATED_KEY = "manage_account_just_created"
+ACTION_MSG_KEY = "manage_account_action_msg"
 
 
 class ManageUserAccountPage:
@@ -43,6 +44,9 @@ class ManageUserAccountPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage user accounts")
+            if ACTION_MSG_KEY in st.session_state:
+                self._render_action_confirmation()
+                return
             self._render_detail()
             return
 
@@ -200,6 +204,12 @@ class ManageUserAccountPage:
             st.session_state.pop(EDIT_MODE_KEY, None)
             st.rerun()
 
+    def _render_action_confirmation(self) -> None:
+        st.success(st.session_state[ACTION_MSG_KEY])
+        if st.button("← Back"):
+            st.session_state.pop(ACTION_MSG_KEY, None)
+            st.rerun()
+
     def _render_view(self, account) -> None:
         st.subheader(account.name)
         st.write(f"**Account ID:** {account.account_id}")
@@ -222,7 +232,7 @@ class ManageUserAccountPage:
                         .unsuspend_user_account(account.account_id)
                     )
                     if ok:
-                        st.success("Account unsuspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Account unsuspended."
                         st.rerun()
                     else:
                         st.error("Could not unsuspend account.")
@@ -232,7 +242,7 @@ class ManageUserAccountPage:
                         account.account_id
                     )
                     if ok:
-                        st.success("Account suspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Account suspended."
                         st.rerun()
                     else:
                         st.error("Could not suspend account.")
@@ -293,8 +303,8 @@ class ManageUserAccountPage:
             ),
         )
         if ok:
-            st.success("Account updated.")
             st.session_state.pop(EDIT_MODE_KEY, None)
+            st.session_state[ACTION_MSG_KEY] = "Account updated."
             st.rerun()
         else:
             st.error("Update failed.")

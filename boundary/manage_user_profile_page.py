@@ -34,6 +34,7 @@ SELECTED_KEY = "manage_profile_selected_id"
 EDIT_MODE_KEY = "manage_profile_edit_mode"
 CREATE_MODE_KEY = "manage_profile_create_mode"
 JUST_CREATED_KEY = "manage_profile_just_created"
+ACTION_MSG_KEY = "manage_profile_action_msg"
 
 
 class ManageUserProfilePage:
@@ -44,6 +45,9 @@ class ManageUserProfilePage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage user profiles")
+            if ACTION_MSG_KEY in st.session_state:
+                self._render_action_confirmation()
+                return
             self._render_detail()
             return
 
@@ -168,6 +172,12 @@ class ManageUserProfilePage:
             st.session_state.pop(EDIT_MODE_KEY, None)
             st.rerun()
 
+    def _render_action_confirmation(self) -> None:
+        st.success(st.session_state[ACTION_MSG_KEY])
+        if st.button("← Back"):
+            st.session_state.pop(ACTION_MSG_KEY, None)
+            st.rerun()
+
     def _render_view(self, profile) -> None:
         st.subheader(profile.role)
         st.write(f"**Profile ID:** {profile.profile_id}")
@@ -187,7 +197,7 @@ class ManageUserProfilePage:
                         .unsuspend_user_profile(profile.profile_id)
                     )
                     if ok:
-                        st.success("Profile unsuspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Profile unsuspended."
                         st.rerun()
                     else:
                         st.error("Could not unsuspend profile.")
@@ -197,7 +207,7 @@ class ManageUserProfilePage:
                         profile.profile_id
                     )
                     if ok:
-                        st.success("Profile suspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Profile suspended."
                         st.rerun()
                     else:
                         st.error("Could not suspend profile.")
@@ -233,8 +243,8 @@ class ManageUserProfilePage:
             ),
         )
         if ok:
-            st.success("Profile updated.")
             st.session_state.pop(EDIT_MODE_KEY, None)
+            st.session_state[ACTION_MSG_KEY] = "Profile updated."
             st.rerun()
         else:
             st.error("Update failed.")

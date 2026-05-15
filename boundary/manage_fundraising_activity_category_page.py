@@ -34,6 +34,7 @@ SELECTED_KEY = "manage_fra_cat_selected_id"
 EDIT_MODE_KEY = "manage_fra_cat_edit_mode"
 CREATE_MODE_KEY = "manage_fra_cat_create_mode"
 JUST_CREATED_KEY = "manage_fra_cat_just_created"
+ACTION_MSG_KEY = "manage_fra_cat_action_msg"
 
 
 class ManageFundraisingActivityCategoryPage:
@@ -44,6 +45,9 @@ class ManageFundraisingActivityCategoryPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage fundraising activity categories")
+            if ACTION_MSG_KEY in st.session_state:
+                self._render_action_confirmation()
+                return
             self._render_detail()
             return
 
@@ -172,6 +176,12 @@ class ManageFundraisingActivityCategoryPage:
             st.session_state.pop(EDIT_MODE_KEY, None)
             st.rerun()
 
+    def _render_action_confirmation(self) -> None:
+        st.success(st.session_state[ACTION_MSG_KEY])
+        if st.button("← Back"):
+            st.session_state.pop(ACTION_MSG_KEY, None)
+            st.rerun()
+
     def _render_view(self, category) -> None:
         st.subheader(category.category_name)
         st.write(f"**ID:** {category.fra_cat_id}")
@@ -193,7 +203,7 @@ class ManageFundraisingActivityCategoryPage:
                         )
                     )
                     if ok:
-                        st.success("Category unsuspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Category unsuspended."
                         st.rerun()
                     else:
                         st.error("Could not unsuspend.")
@@ -206,7 +216,7 @@ class ManageFundraisingActivityCategoryPage:
                         )
                     )
                     if ok:
-                        st.success("Category suspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Category suspended."
                         st.rerun()
                     else:
                         st.error("Could not suspend.")
@@ -245,8 +255,8 @@ class ManageFundraisingActivityCategoryPage:
             )
         )
         if ok:
-            st.success("Category updated.")
             st.session_state.pop(EDIT_MODE_KEY, None)
+            st.session_state[ACTION_MSG_KEY] = "Category updated."
             st.rerun()
         else:
             st.error("Update failed.")

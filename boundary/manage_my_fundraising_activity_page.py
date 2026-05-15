@@ -44,6 +44,7 @@ EDIT_MODE_KEY = "manage_my_fra_edit_mode"
 SELECTED_TAB_KEY = "manage_my_fra_selected_tab"  # "all" or "completed"
 CREATE_MODE_KEY = "manage_my_fra_create_mode"
 JUST_CREATED_KEY = "manage_my_fra_just_created"
+ACTION_MSG_KEY = "manage_my_fra_action_msg"
 
 
 class ManageMyFundraisingActivityPage:
@@ -61,6 +62,9 @@ class ManageMyFundraisingActivityPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage my fundraising activities")
+            if ACTION_MSG_KEY in st.session_state:
+                self._render_action_confirmation()
+                return
             self._render_detail(owner_account_id)
             return
 
@@ -273,6 +277,12 @@ class ManageMyFundraisingActivityPage:
             st.session_state.pop(SELECTED_TAB_KEY, None)
             st.rerun()
 
+    def _render_action_confirmation(self) -> None:
+        st.success(st.session_state[ACTION_MSG_KEY])
+        if st.button("← Back"):
+            st.session_state.pop(ACTION_MSG_KEY, None)
+            st.rerun()
+
     def _render_view(self, activity, owner_account_id: str) -> None:
         st.subheader(activity.title)
         st.write(f"**FRAId:** {activity.fra_id}")
@@ -308,7 +318,7 @@ class ManageMyFundraisingActivityPage:
                         )
                     )
                     if ok:
-                        st.success("Activity unsuspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Activity unsuspended."
                         st.rerun()
                     else:
                         st.error("Could not unsuspend.")
@@ -322,7 +332,7 @@ class ManageMyFundraisingActivityPage:
                         )
                     )
                     if ok:
-                        st.success("Activity suspended.")
+                        st.session_state[ACTION_MSG_KEY] = "Activity suspended."
                         st.rerun()
                     else:
                         st.error("Could not suspend.")
@@ -374,8 +384,8 @@ class ManageMyFundraisingActivityPage:
             ),
         )
         if ok:
-            st.success("Activity updated.")
             st.session_state.pop(EDIT_MODE_KEY, None)
+            st.session_state[ACTION_MSG_KEY] = "Activity updated."
             st.rerun()
         else:
             st.error("Update failed.")
