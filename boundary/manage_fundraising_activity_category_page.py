@@ -33,6 +33,7 @@ from entity.fundraising_activity_category import FundraisingActivityCategory
 SELECTED_KEY = "manage_fra_cat_selected_id"
 EDIT_MODE_KEY = "manage_fra_cat_edit_mode"
 CREATE_MODE_KEY = "manage_fra_cat_create_mode"
+JUST_CREATED_ID_KEY = "manage_fra_cat_just_created_id"
 
 
 class ManageFundraisingActivityCategoryPage:
@@ -51,13 +52,23 @@ class ManageFundraisingActivityCategoryPage:
             st.header("Manage fundraising activity categories")
         with col_create:
             st.write("")
-            if st.button("➕ Create new", key="manage_fra_cat_create_btn"):
+            if st.button("➕ Create new category", key="manage_fra_cat_create_btn"):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list()
 
     def _render_create(self) -> None:
         st.header("Create fundraising activity category")
+
+        # Post-create confirmation.
+        if JUST_CREATED_ID_KEY in st.session_state:
+            new_id = st.session_state[JUST_CREATED_ID_KEY]
+            st.success(f"Category created: {new_id}")
+            if st.button("← Back to categories"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.rerun()
+            return
 
         with st.form("manage_fra_cat_create_form"):
             name = st.text_input("Category name")
@@ -78,12 +89,13 @@ class ManageFundraisingActivityCategoryPage:
             st.error("Both category name and description are required.")
             return
 
-        CreateFundraisingActivityCategoryController().create_category(
-            category_name=name.strip(),
-            description=description.strip(),
+        new_category = (
+            CreateFundraisingActivityCategoryController().create_category(
+                category_name=name.strip(),
+                description=description.strip(),
+            )
         )
-        st.success("Category created.")
-        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.session_state[JUST_CREATED_ID_KEY] = new_category.fra_cat_id
         st.rerun()
 
     def _render_list(self) -> None:

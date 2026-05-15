@@ -33,6 +33,7 @@ from entity.user_profile import UserProfile
 SELECTED_KEY = "manage_profile_selected_id"
 EDIT_MODE_KEY = "manage_profile_edit_mode"
 CREATE_MODE_KEY = "manage_profile_create_mode"
+JUST_CREATED_ID_KEY = "manage_profile_just_created_id"
 
 
 class ManageUserProfilePage:
@@ -52,7 +53,7 @@ class ManageUserProfilePage:
             st.header("Manage user profiles")
         with col_create:
             st.write("")  # vertical spacer to align with the header
-            if st.button("➕ Create new", key="manage_profile_create_btn"):
+            if st.button("➕ Create new profile", key="manage_profile_create_btn"):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list()
@@ -61,6 +62,16 @@ class ManageUserProfilePage:
 
     def _render_create(self) -> None:
         st.header("Create user profile")
+
+        # Post-create confirmation: shown after a successful create.
+        if JUST_CREATED_ID_KEY in st.session_state:
+            new_id = st.session_state[JUST_CREATED_ID_KEY]
+            st.success(f"Profile created: {new_id}")
+            if st.button("← Back to profiles"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.rerun()
+            return
 
         with st.form("manage_profile_create_form"):
             role = st.text_input("Role")
@@ -81,11 +92,10 @@ class ManageUserProfilePage:
             st.error("Role and description are both required.")
             return
 
-        CreateProfileController().create_profile(
+        new_profile = CreateProfileController().create_profile(
             role=role.strip(), description=description.strip()
         )
-        st.success("Profile created.")
-        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.session_state[JUST_CREATED_ID_KEY] = new_profile.profile_id
         st.rerun()
 
     # -------- List view ------------------------------------------------------

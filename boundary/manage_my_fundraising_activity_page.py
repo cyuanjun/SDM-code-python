@@ -43,6 +43,7 @@ SELECTED_KEY = "manage_my_fra_selected_id"
 EDIT_MODE_KEY = "manage_my_fra_edit_mode"
 SELECTED_TAB_KEY = "manage_my_fra_selected_tab"  # "all" or "completed"
 CREATE_MODE_KEY = "manage_my_fra_create_mode"
+JUST_CREATED_ID_KEY = "manage_my_fra_just_created_id"
 
 
 class ManageMyFundraisingActivityPage:
@@ -68,7 +69,7 @@ class ManageMyFundraisingActivityPage:
             st.header("Manage my fundraising activities")
         with col_create:
             st.write("")
-            if st.button("➕ Create new", key="manage_my_fra_create_btn"):
+            if st.button("➕ Create new activity", key="manage_my_fra_create_btn"):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list(owner_account_id)
@@ -77,6 +78,16 @@ class ManageMyFundraisingActivityPage:
 
     def _render_create(self, owner_account_id: str) -> None:
         st.header("Create fundraising activity")
+
+        # Post-create confirmation.
+        if JUST_CREATED_ID_KEY in st.session_state:
+            new_id = st.session_state[JUST_CREATED_ID_KEY]
+            st.success(f"Activity created: {new_id}")
+            if st.button("← Back to my activities"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.rerun()
+            return
 
         with st.form("manage_my_fra_create_form"):
             title = st.text_input("Title")
@@ -107,17 +118,18 @@ class ManageMyFundraisingActivityPage:
             )
             return
 
-        CreateFundraisingActivityController().create_fundraising_activity(
-            title=title.strip(),
-            description=description.strip(),
-            target_amount=Decimal(target_amount_str),
-            category=category.strip(),
-            start_date=start_date,
-            end_date=end_date,
-            owner_account_id=owner_account_id,
+        new_activity = (
+            CreateFundraisingActivityController().create_fundraising_activity(
+                title=title.strip(),
+                description=description.strip(),
+                target_amount=Decimal(target_amount_str),
+                category=category.strip(),
+                start_date=start_date,
+                end_date=end_date,
+                owner_account_id=owner_account_id,
+            )
         )
-        st.success("Activity created.")
-        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.session_state[JUST_CREATED_ID_KEY] = new_activity.fra_id
         st.rerun()
 
     # -------- List view ------------------------------------------------------

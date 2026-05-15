@@ -32,6 +32,7 @@ from entity.user_account import UserAccount
 SELECTED_KEY = "manage_account_selected_id"
 EDIT_MODE_KEY = "manage_account_edit_mode"
 CREATE_MODE_KEY = "manage_account_create_mode"
+JUST_CREATED_ID_KEY = "manage_account_just_created_id"
 
 
 class ManageUserAccountPage:
@@ -50,7 +51,7 @@ class ManageUserAccountPage:
             st.header("Manage user accounts")
         with col_create:
             st.write("")
-            if st.button("➕ Create new", key="manage_account_create_btn"):
+            if st.button("➕ Create new account", key="manage_account_create_btn"):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list()
@@ -59,6 +60,17 @@ class ManageUserAccountPage:
 
     def _render_create(self) -> None:
         st.header("Create user account")
+
+        # Post-create confirmation.
+        if JUST_CREATED_ID_KEY in st.session_state:
+            new_id = st.session_state[JUST_CREATED_ID_KEY]
+            st.success(f"Account created: {new_id}")
+            if st.button("← Back to accounts"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.rerun()
+            return
+
         profiles = ViewProfilesController().view_all_profiles()
 
         if not profiles:
@@ -106,13 +118,12 @@ class ManageUserAccountPage:
             )
             return
 
-        CreateAccountController().create_account(
+        new_account = CreateAccountController().create_account(
             email=email.strip(), password=password, name=name.strip(),
             dob=dob, phone_num=phone_num.strip(),
             profile_id=profile_options[profile_label],
         )
-        st.success("Account created.")
-        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.session_state[JUST_CREATED_ID_KEY] = new_account.account_id
         st.rerun()
 
     # -------- List view ------------------------------------------------------
