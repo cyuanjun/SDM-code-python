@@ -35,45 +35,6 @@ EDIT_MODE_KEY = "manage_profile_edit_mode"
 CREATE_MODE_KEY = "manage_profile_create_mode"
 JUST_CREATED_KEY = "manage_profile_just_created"
 ACTION_MSG_KEY = "manage_profile_action_msg"
-PENDING_ACTION_KEY = "manage_profile_pending_action"  # "suspend" or "unsuspend"
-
-
-@st.dialog("Confirm")
-def _confirm_suspend_dialog(action: str, profile_id: str) -> None:
-    """Popup confirmation for suspend / unsuspend on a user profile."""
-    verb = action
-    st.write(f"Are you sure you want to **{verb}** profile `{profile_id}`?")
-    col_cancel, col_confirm = st.columns(2)
-    with col_cancel:
-        if st.button(
-            "Cancel",
-            use_container_width=True,
-            key=f"_profile_dlg_cancel_{action}",
-        ):
-            st.session_state.pop(PENDING_ACTION_KEY, None)
-            st.rerun()
-    with col_confirm:
-        if st.button(
-            "Confirm",
-            type="primary",
-            use_container_width=True,
-            key=f"_profile_dlg_confirm_{action}",
-        ):
-            if action == "suspend":
-                ok = SuspendUserProfileController().suspend_user_profile(
-                    profile_id
-                )
-                msg = "Profile suspended."
-            else:
-                ok = (
-                    UnsuspendUserProfileController()
-                    .unsuspend_user_profile(profile_id)
-                )
-                msg = "Profile unsuspended."
-            st.session_state.pop(PENDING_ACTION_KEY, None)
-            if ok:
-                st.session_state[ACTION_MSG_KEY] = msg
-            st.rerun()
 
 
 class ManageUserProfilePage:
@@ -84,22 +45,7 @@ class ManageUserProfilePage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage user profiles")
-            # Standalone confirmation (suspend/unsuspend etc.) fires only
-            # when we're NOT in edit mode. Update keeps EDIT_MODE_KEY set
-            # so its confirmation is rendered inside the greyed-out form.
-            if (
-                ACTION_MSG_KEY in st.session_state
-                and not st.session_state.get(EDIT_MODE_KEY)
-            ):
-                self._render_action_confirmation()
-                return
             self._render_detail()
-            # Open the suspend/unsuspend confirmation dialog if pending.
-            pending = st.session_state.get(PENDING_ACTION_KEY)
-            if pending:
-                _confirm_suspend_dialog(
-                    pending, st.session_state[SELECTED_KEY]
-                )
             return
 
         # List view — title on left, Create button on right.
@@ -218,16 +164,24 @@ class ManageUserProfilePage:
         else:
             self._render_view(current)
 
-        if st.button("← Back to list"):
-            st.session_state.pop(SELECTED_KEY, None)
-            st.session_state.pop(EDIT_MODE_KEY, None)
-            st.rerun()
+        self._render_bottom_bar()
 
-    def _render_action_confirmation(self) -> None:
-        st.success(st.session_state[ACTION_MSG_KEY])
-        if st.button("← Back"):
-            st.session_state.pop(ACTION_MSG_KEY, None)
-            st.rerun()
+    def _render_bottom_bar(self) -> None:
+        """One back button + inline action message. In edit mode the button
+        returns to the read-only view; in view mode it returns to the list."""
+        in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
+        cols = st.columns([1, 4])
+        with cols[0]:
+            label = "← Back to view" if in_edit else "← Back to list"
+            if st.button(label, key=f"manage_profile_back_{in_edit}"):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                if not in_edit:
+                    st.session_state.pop(SELECTED_KEY, None)
+                st.rerun()
+        if ACTION_MSG_KEY in st.session_state:
+            with cols[1]:
+                st.success(st.session_state[ACTION_MSG_KEY])
 
     def _render_view(self, profile) -> None:
         st.write(f"**Profile ID:** {profile.profile_id}")
@@ -239,16 +193,30 @@ class ManageUserProfilePage:
         with col_update:
             if st.button("✏️ Update", use_container_width=True):
                 st.session_state[EDIT_MODE_KEY] = True
+                st.session_state.pop(ACTION_MSG_KEY, None)
                 st.rerun()
         with col_suspend:
             if profile.suspended:
                 if st.button("✅ Unsuspend", use_container_width=True):
-                    st.session_state[PENDING_ACTION_KEY] = "unsuspend"
-                    st.rerun()
+                    ok = (
+                        UnsuspendUserProfileController()
+                        .unsuspend_user_profile(profile.profile_id)
+                    )
+                    if ok:
+                        st.session_state[ACTION_MSG_KEY] = "Profile unsuspended."
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend profile.")
             else:
                 if st.button("🚫 Suspend", use_container_width=True):
-                    st.session_state[PENDING_ACTION_KEY] = "suspend"
-                    st.rerun()
+                    ok = SuspendUserProfileController().suspend_user_profile(
+                        profile.profile_id
+                    )
+                    if ok:
+                        st.session_state[ACTION_MSG_KEY] = "Profile suspended."
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend profile.")
 
     def _render_edit_form(self, profile) -> None:
         st.write(f"**Editing:** {profile.profile_id}")
@@ -276,11 +244,8 @@ class ManageUserProfilePage:
                 )
 
         if is_completed:
-            st.success(st.session_state[ACTION_MSG_KEY])
-            if st.button("← Back", key="manage_profile_edit_back"):
-                st.session_state.pop(EDIT_MODE_KEY, None)
-                st.session_state.pop(ACTION_MSG_KEY, None)
-                st.rerun()
+            # The inline confirmation + Back-to-view button live in the
+            # bottom bar (_render_bottom_bar). Just keep the form greyed.
             return
 
         if cancel:

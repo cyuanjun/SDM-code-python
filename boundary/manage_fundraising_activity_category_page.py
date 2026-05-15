@@ -35,46 +35,6 @@ EDIT_MODE_KEY = "manage_fra_cat_edit_mode"
 CREATE_MODE_KEY = "manage_fra_cat_create_mode"
 JUST_CREATED_KEY = "manage_fra_cat_just_created"
 ACTION_MSG_KEY = "manage_fra_cat_action_msg"
-PENDING_ACTION_KEY = "manage_fra_cat_pending_action"
-
-
-@st.dialog("Confirm")
-def _confirm_suspend_dialog(action: str, fra_cat_id: str) -> None:
-    """Popup confirmation for suspend / unsuspend on an FRA category."""
-    verb = action
-    st.write(f"Are you sure you want to **{verb}** category `{fra_cat_id}`?")
-    col_cancel, col_confirm = st.columns(2)
-    with col_cancel:
-        if st.button(
-            "Cancel",
-            use_container_width=True,
-            key=f"_cat_dlg_cancel_{action}",
-        ):
-            st.session_state.pop(PENDING_ACTION_KEY, None)
-            st.rerun()
-    with col_confirm:
-        if st.button(
-            "Confirm",
-            type="primary",
-            use_container_width=True,
-            key=f"_cat_dlg_confirm_{action}",
-        ):
-            if action == "suspend":
-                ok = (
-                    SuspendFundraisingActivityCategoryController()
-                    .suspend_fundraising_activity_category(fra_cat_id)
-                )
-                msg = "Category suspended."
-            else:
-                ok = (
-                    UnsuspendFundraisingActivityCategoryController()
-                    .unsuspend_fundraising_activity_category(fra_cat_id)
-                )
-                msg = "Category unsuspended."
-            st.session_state.pop(PENDING_ACTION_KEY, None)
-            if ok:
-                st.session_state[ACTION_MSG_KEY] = msg
-            st.rerun()
 
 
 class ManageFundraisingActivityCategoryPage:
@@ -85,18 +45,7 @@ class ManageFundraisingActivityCategoryPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage fundraising activity categories")
-            if (
-                ACTION_MSG_KEY in st.session_state
-                and not st.session_state.get(EDIT_MODE_KEY)
-            ):
-                self._render_action_confirmation()
-                return
             self._render_detail()
-            pending = st.session_state.get(PENDING_ACTION_KEY)
-            if pending:
-                _confirm_suspend_dialog(
-                    pending, st.session_state[SELECTED_KEY]
-                )
             return
 
         col_title, col_create = st.columns([4, 1])
@@ -219,16 +168,24 @@ class ManageFundraisingActivityCategoryPage:
         else:
             self._render_view(current)
 
-        if st.button("← Back to list"):
-            st.session_state.pop(SELECTED_KEY, None)
-            st.session_state.pop(EDIT_MODE_KEY, None)
-            st.rerun()
+        self._render_bottom_bar()
 
-    def _render_action_confirmation(self) -> None:
-        st.success(st.session_state[ACTION_MSG_KEY])
-        if st.button("← Back"):
-            st.session_state.pop(ACTION_MSG_KEY, None)
-            st.rerun()
+    def _render_bottom_bar(self) -> None:
+        """One back button + inline action message. Edit mode → back to view;
+        view mode → back to list."""
+        in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
+        cols = st.columns([1, 4])
+        with cols[0]:
+            label = "← Back to view" if in_edit else "← Back to list"
+            if st.button(label, key=f"manage_fra_cat_back_{in_edit}"):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                if not in_edit:
+                    st.session_state.pop(SELECTED_KEY, None)
+                st.rerun()
+        if ACTION_MSG_KEY in st.session_state:
+            with cols[1]:
+                st.success(st.session_state[ACTION_MSG_KEY])
 
     def _render_view(self, category) -> None:
         st.subheader(category.category_name)
@@ -240,16 +197,35 @@ class ManageFundraisingActivityCategoryPage:
         with col_update:
             if st.button("✏️ Update", use_container_width=True):
                 st.session_state[EDIT_MODE_KEY] = True
+                st.session_state.pop(ACTION_MSG_KEY, None)
                 st.rerun()
         with col_suspend:
             if category.suspended:
                 if st.button("✅ Unsuspend", use_container_width=True):
-                    st.session_state[PENDING_ACTION_KEY] = "unsuspend"
-                    st.rerun()
+                    ok = (
+                        UnsuspendFundraisingActivityCategoryController()
+                        .unsuspend_fundraising_activity_category(
+                            category.fra_cat_id
+                        )
+                    )
+                    if ok:
+                        st.session_state[ACTION_MSG_KEY] = "Category unsuspended."
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend.")
             else:
                 if st.button("🚫 Suspend", use_container_width=True):
-                    st.session_state[PENDING_ACTION_KEY] = "suspend"
-                    st.rerun()
+                    ok = (
+                        SuspendFundraisingActivityCategoryController()
+                        .suspend_fundraising_activity_category(
+                            category.fra_cat_id
+                        )
+                    )
+                    if ok:
+                        st.session_state[ACTION_MSG_KEY] = "Category suspended."
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend.")
 
     def _render_edit_form(self, category) -> None:
         st.subheader(category.category_name)
