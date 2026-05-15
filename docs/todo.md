@@ -36,6 +36,16 @@ Things the lecturer has explicitly accepted as-is. The diagram does not need to 
 - **No `displayError` on Sprint 1 boundary classes (2026-05-16).** Boundary diagrams only show `displaySuccess(...)`. Error display is treated as an implicit convention; diagrams will not be updated. Code keeps the inline `st.error(...)` calls.
 - **Login failure return type on US-11 / US-18 / US-26 / US-39 (2026-05-16).** The four login diagrams keep typing `login(email, password): UserAccount` with no explicit failure branch. The implementation's `None`-on-no-match is accepted as an implicit convention; diagrams will not be updated.
 
+## Deferred typos (accepted code-vs-diagram divergences)
+
+Sprint 3 items where the diagram and code disagree but the team has chosen to accept the divergence rather than fix either side. Each entry has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md); this section is the consolidated index.
+
+- **[US-23.jpg](../diagrams/sprint-3_diagrams/US-23.jpg) boundary class name.** Diagram: `ViewFavouritePage` (singular). Code: `ViewFavouriteListPage` (shared with US-24). Same screen, different names.
+- **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) `viewMode` param.** Class diagram has 3-param `searchFavourite(viewMode, searchCriteria, accountId)`; sequence diagram has 2 params. Code uses the 2-param sequence version.
+- **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) boundary class name.** Diagram: `ViewFavouritesPage`. Code: `SearchFavouritePage` (matches the user story "search my favourites list").
+- **[US-30.jpg](../diagrams/sprint-3_diagrams/US-30.jpg) / [US-31.jpg](../diagrams/sprint-3_diagrams/US-31.jpg) shared boundary class.** Both diagrams name the boundary `ViewMyCompletedActivityPage`. Code keeps two separate per-US boundary classes (`SearchMyCompletedActivityPage` for US-30, `ViewMyCompletedActivityPage` for US-31) so each US has its own testable artifact.
+- **[US-32.jpg](../diagrams/sprint-3_diagrams/US-32.jpg) "My" naming.** Diagram uses `SearchMyDonationHistoryController` and `searchMyDonationHistory` everywhere. Code drops "My" — `SearchDonationHistoryController` and `Donation.search_donation_history`. Function is identical; just a name preference.
+
 ## Open architectural items
 
 Stack / policy concerns, not diagram-bound. Will re-surface as the rebuild touches each area.
