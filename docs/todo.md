@@ -45,6 +45,7 @@ Sprint 3 items where the diagram and code disagree but the team has chosen to ac
 - **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) boundary class name.** Diagram: `ViewFavouritesPage`. Code: `SearchFavouritePage` (matches the user story "search my favourites list").
 - **[US-30.jpg](../diagrams/sprint-3_diagrams/US-30.jpg) / [US-31.jpg](../diagrams/sprint-3_diagrams/US-31.jpg) shared boundary class.** Both diagrams name the boundary `ViewMyCompletedActivityPage`. Code keeps two separate per-US boundary classes (`SearchMyCompletedActivityPage` for US-30, `ViewMyCompletedActivityPage` for US-31) so each US has its own testable artifact.
 - **[US-32.jpg](../diagrams/sprint-3_diagrams/US-32.jpg) "My" naming.** Diagram uses `SearchMyDonationHistoryController` and `searchMyDonationHistory` everywhere. Code drops "My" — `SearchDonationHistoryController` and `Donation.search_donation_history`. Function is identical; just a name preference.
+- **[US-41.jpg](../diagrams/sprint-4_diagrams/US-41.jpg) / [US-42.jpg](../diagrams/sprint-4_diagrams/US-42.jpg) / [US-43.jpg](../diagrams/sprint-4_diagrams/US-43.jpg) shared `GenerateReportPage`.** All three Sprint 4 report diagrams share the same boundary class name (unusual — every other US has its own). Code consolidates into ONE [boundary/generate_report_page.py](../boundary/generate_report_page.py) with an internal radio selector that routes daily/weekly/monthly to the three diagram-defined controllers. Accepted as a deliberate consolidation.
 
 ## Open architectural items
 
