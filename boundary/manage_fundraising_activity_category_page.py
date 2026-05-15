@@ -33,7 +33,7 @@ from entity.fundraising_activity_category import FundraisingActivityCategory
 SELECTED_KEY = "manage_fra_cat_selected_id"
 EDIT_MODE_KEY = "manage_fra_cat_edit_mode"
 CREATE_MODE_KEY = "manage_fra_cat_create_mode"
-JUST_CREATED_ID_KEY = "manage_fra_cat_just_created_id"
+JUST_CREATED_KEY = "manage_fra_cat_just_created"
 
 
 class ManageFundraisingActivityCategoryPage:
@@ -61,12 +61,16 @@ class ManageFundraisingActivityCategoryPage:
         st.header("Create fundraising activity category")
 
         # Post-create confirmation.
-        if JUST_CREATED_ID_KEY in st.session_state:
-            new_id = st.session_state[JUST_CREATED_ID_KEY]
-            st.success(f"Category created: {new_id}")
+        if JUST_CREATED_KEY in st.session_state:
+            created = st.session_state[JUST_CREATED_KEY]
+            st.success(f"Category created: {created.fra_cat_id}")
+            st.write(f"**FRA Cat ID:** {created.fra_cat_id}")
+            st.write(f"**Name:** {created.category_name}")
+            st.write(f"**Description:** {created.description or '(none)'}")
+            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
             if st.button("← Back to categories"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
-                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.session_state.pop(JUST_CREATED_KEY, None)
                 st.rerun()
             return
 
@@ -95,7 +99,7 @@ class ManageFundraisingActivityCategoryPage:
                 description=description.strip(),
             )
         )
-        st.session_state[JUST_CREATED_ID_KEY] = new_category.fra_cat_id
+        st.session_state[JUST_CREATED_KEY] = new_category
         st.rerun()
 
     def _render_list(self) -> None:

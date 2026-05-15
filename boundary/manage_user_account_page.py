@@ -32,7 +32,7 @@ from entity.user_account import UserAccount
 SELECTED_KEY = "manage_account_selected_id"
 EDIT_MODE_KEY = "manage_account_edit_mode"
 CREATE_MODE_KEY = "manage_account_create_mode"
-JUST_CREATED_ID_KEY = "manage_account_just_created_id"
+JUST_CREATED_KEY = "manage_account_just_created"
 
 
 class ManageUserAccountPage:
@@ -62,12 +62,19 @@ class ManageUserAccountPage:
         st.header("Create user account")
 
         # Post-create confirmation.
-        if JUST_CREATED_ID_KEY in st.session_state:
-            new_id = st.session_state[JUST_CREATED_ID_KEY]
-            st.success(f"Account created: {new_id}")
+        if JUST_CREATED_KEY in st.session_state:
+            created = st.session_state[JUST_CREATED_KEY]
+            st.success(f"Account created: {created.account_id}")
+            st.write(f"**Account ID:** {created.account_id}")
+            st.write(f"**Email:** {created.email}")
+            st.write(f"**Name:** {created.name}")
+            st.write(f"**Date of birth:** {created.dob.isoformat()}")
+            st.write(f"**Phone:** {created.phone_num}")
+            st.write(f"**Profile:** {created.profile_id}")
+            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
             if st.button("← Back to accounts"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
-                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.session_state.pop(JUST_CREATED_KEY, None)
                 st.rerun()
             return
 
@@ -123,7 +130,7 @@ class ManageUserAccountPage:
             dob=dob, phone_num=phone_num.strip(),
             profile_id=profile_options[profile_label],
         )
-        st.session_state[JUST_CREATED_ID_KEY] = new_account.account_id
+        st.session_state[JUST_CREATED_KEY] = new_account
         st.rerun()
 
     # -------- List view ------------------------------------------------------

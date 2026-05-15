@@ -33,7 +33,7 @@ from entity.user_profile import UserProfile
 SELECTED_KEY = "manage_profile_selected_id"
 EDIT_MODE_KEY = "manage_profile_edit_mode"
 CREATE_MODE_KEY = "manage_profile_create_mode"
-JUST_CREATED_ID_KEY = "manage_profile_just_created_id"
+JUST_CREATED_KEY = "manage_profile_just_created"
 
 
 class ManageUserProfilePage:
@@ -64,12 +64,16 @@ class ManageUserProfilePage:
         st.header("Create user profile")
 
         # Post-create confirmation: shown after a successful create.
-        if JUST_CREATED_ID_KEY in st.session_state:
-            new_id = st.session_state[JUST_CREATED_ID_KEY]
-            st.success(f"Profile created: {new_id}")
+        if JUST_CREATED_KEY in st.session_state:
+            created = st.session_state[JUST_CREATED_KEY]
+            st.success(f"Profile created: {created.profile_id}")
+            st.write(f"**Profile ID:** {created.profile_id}")
+            st.write(f"**Role:** {created.role}")
+            st.write(f"**Description:** {created.description or '(none)'}")
+            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
             if st.button("← Back to profiles"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
-                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.session_state.pop(JUST_CREATED_KEY, None)
                 st.rerun()
             return
 
@@ -95,7 +99,7 @@ class ManageUserProfilePage:
         new_profile = CreateProfileController().create_profile(
             role=role.strip(), description=description.strip()
         )
-        st.session_state[JUST_CREATED_ID_KEY] = new_profile.profile_id
+        st.session_state[JUST_CREATED_KEY] = new_profile
         st.rerun()
 
     # -------- List view ------------------------------------------------------

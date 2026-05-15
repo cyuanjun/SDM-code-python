@@ -43,7 +43,7 @@ SELECTED_KEY = "manage_my_fra_selected_id"
 EDIT_MODE_KEY = "manage_my_fra_edit_mode"
 SELECTED_TAB_KEY = "manage_my_fra_selected_tab"  # "all" or "completed"
 CREATE_MODE_KEY = "manage_my_fra_create_mode"
-JUST_CREATED_ID_KEY = "manage_my_fra_just_created_id"
+JUST_CREATED_KEY = "manage_my_fra_just_created"
 
 
 class ManageMyFundraisingActivityPage:
@@ -80,12 +80,24 @@ class ManageMyFundraisingActivityPage:
         st.header("Create fundraising activity")
 
         # Post-create confirmation.
-        if JUST_CREATED_ID_KEY in st.session_state:
-            new_id = st.session_state[JUST_CREATED_ID_KEY]
-            st.success(f"Activity created: {new_id}")
+        if JUST_CREATED_KEY in st.session_state:
+            created = st.session_state[JUST_CREATED_KEY]
+            st.success(f"Activity created: {created.fra_id}")
+            st.write(f"**FRAId:** {created.fra_id}")
+            st.write(f"**Title:** {created.title}")
+            st.write(f"**Description:** {created.description}")
+            st.write(f"**Target:** ${created.target_amount}")
+            st.write(f"**Category:** {created.category}")
+            st.write(
+                f"**Runs:** {created.start_date.isoformat()} → "
+                f"{created.end_date.isoformat()}"
+            )
+            st.write(f"**Owner:** {created.owner_account_id}")
+            st.write(f"**Completed:** {'yes' if created.completed else 'no'}")
+            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
             if st.button("← Back to my activities"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
-                st.session_state.pop(JUST_CREATED_ID_KEY, None)
+                st.session_state.pop(JUST_CREATED_KEY, None)
                 st.rerun()
             return
 
@@ -129,7 +141,7 @@ class ManageMyFundraisingActivityPage:
                 owner_account_id=owner_account_id,
             )
         )
-        st.session_state[JUST_CREATED_ID_KEY] = new_activity.fra_id
+        st.session_state[JUST_CREATED_KEY] = new_activity
         st.rerun()
 
     # -------- List view ------------------------------------------------------
