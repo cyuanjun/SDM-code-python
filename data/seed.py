@@ -198,3 +198,22 @@ def _ensure_demo_activity() -> FundraisingActivity:
         end_date=date(2026, 12, 31),
         owner_account_id=fundraiser.account_id,
     )
+
+
+if __name__ == "__main__":
+    # `python -m data.seed` — initialise the schema then run every seed
+    # function. Safe to run repeatedly (idempotent). Pair with `rm app.db`
+    # if you want a fully fresh DB.
+    from persistence.db import init_db
+
+    init_db()
+    seed_default_admin()
+    seed_default_fundraiser()
+    seed_default_donee()
+    seed_default_platform_manager()
+    seed_demo_donations()
+    print("Seed complete.")
+    print(f"  admin   : {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}")
+    print(f"  funder  : {DEFAULT_FUNDRAISER_EMAIL} / {DEFAULT_FUNDRAISER_PASSWORD}")
+    print(f"  donee   : {DEFAULT_DONEE_EMAIL} / {DEFAULT_DONEE_PASSWORD}")
+    print(f"  PM      : {DEFAULT_PM_EMAIL} / {DEFAULT_PM_PASSWORD}")

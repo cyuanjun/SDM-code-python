@@ -14,11 +14,21 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m persistence.db          # initialises app.db with all current tables
 streamlit run app.py              # launches the UI on http://localhost:8501
+                                  # init_db + seeds run automatically on startup
 ```
 
-App startup also runs [data/seed.py](data/seed.py) which idempotently creates one default account per role + demo data:
+### Database commands
+
+```bash
+python -m persistence.db          # create app.db with empty tables (no seed)
+python -m data.seed               # idempotent — init_db + seed all 4 role accounts + demo donations
+rm app.db && python -m data.seed  # nuke and reseed from scratch
+```
+
+App startup also runs [data/seed.py](data/seed.py) — anything the seed produces is also produced by `streamlit run app.py`. The standalone `python -m data.seed` is useful when you want to refresh the DB without launching the UI.
+
+### Default accounts seeded
 
 | Role | Email | Password |
 |---|---|---|

@@ -14,9 +14,10 @@ pip install -r requirements.txt
 # Run the app (init_db + idempotent seeds run automatically on startup)
 streamlit run app.py              # serves on http://localhost:8501
 
-# Database — only needed if you want an empty app.db without launching the app
-python -m persistence.db          # creates app.db with empty tables (idempotent)
-rm app.db                         # wipe; next `streamlit run` re-seeds from scratch
+# Database
+python -m persistence.db          # creates app.db with empty tables (no seed)
+python -m data.seed               # idempotent — init_db + seed all 4 role accounts + demo donations
+rm app.db && python -m data.seed  # nuke and reseed from scratch
 
 # Tests
 pytest                            # full suite
