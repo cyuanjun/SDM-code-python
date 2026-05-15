@@ -84,7 +84,7 @@ Numbers below are summaries — the detail tables further down hold the full tex
 - **Lecturer decisions (4)** — donation seed (2026-05-15), `UNIQUE(email)` on UserAccount (2026-05-15), no `displayError` on Sprint 1 boundaries (2026-05-16), login failure return type implicit on US-11/18/26/39 (2026-05-16).
 - **Deferred typos (6)** — US-23 boundary name; US-25 `viewMode` param; US-25 boundary name; US-30/31 shared boundary; US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
 - **Open architectural items (1)** — plain-text passwords on `UserAccount` (deferred to a hardening sprint).
-- **Resolved diagram typos** — 18 resolved across Sprints 1–4 over 2026-05-14 to 2026-05-16 (see [docs/diagram_typos.md](diagram_typos.md) for the struck-through list).
+- **Resolved diagram typos** — 14 resolved across Sprints 1–4 over 2026-05-14 to 2026-05-16; 6 deferred (see above) and 2 lecturer-deferred (displayError, login failure return type). See [docs/diagram_typos.md](diagram_typos.md) for the full struck-through list.
 
 ---
 

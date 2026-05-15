@@ -38,7 +38,7 @@ Things the lecturer has explicitly accepted as-is. The diagram does not need to 
 
 ## Deferred typos (accepted code-vs-diagram divergences)
 
-Sprint 3 items where the diagram and code disagree but the team has chosen to accept the divergence rather than fix either side. Each entry has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md); this section is the consolidated index.
+Sprint 3 + Sprint 4 items where the diagram and code disagree but the team has chosen to accept the divergence rather than fix either side. Each entry has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md); this section is the consolidated index.
 
 - **[US-23.jpg](../diagrams/sprint-3_diagrams/US-23.jpg) boundary class name.** Diagram: `ViewFavouritePage` (singular). Code: `ViewFavouriteListPage` (shared with US-24). Same screen, different names.
 - **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) `viewMode` param.** Class diagram has 3-param `searchFavourite(viewMode, searchCriteria, accountId)`; sequence diagram has 2 params. Code uses the 2-param sequence version.

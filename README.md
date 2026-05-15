@@ -38,7 +38,7 @@ App startup also runs [data/seed.py](data/seed.py) — anything the seed produce
 | Donee | `d001@a.com` | `123` |
 | Platform Manager | `pm001@a.com` | `123` |
 
-Three sample donations are also seeded against a demo activity owned by the default fundraiser so US-32 / US-33 have data to display. Logged in [docs/todo.md](docs/todo.md) as a bootstrap convention to either keep or replace with an initial-setup use case before final marking.
+Three sample donations are also seeded against a demo activity owned by the default fundraiser so US-32 / US-33 have data to display. Lecturer-approved (2026-05-15) as an acceptable bootstrap convention — logged in [docs/todo.md](docs/todo.md) under "Lecturer decisions".
 
 ## Run tests
 
@@ -72,6 +72,6 @@ pytest
 | Sprint 3 | US-4, 5, 9, 10, 16, 17, 23, 25, 30, 31, 32, 33 | ✓ Complete |
 | Sprint 4 | US-28, 29, 34, 35, 36, 37, 38, 41, 42, 43 | ✓ Complete |
 
-All 43 user stories implemented. 371 tests passing.
+All 43 user stories implemented. 373 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
 
 The sidebar is consolidated into 10 entries via per-actor `Manage*` / `Browse*` / `My*` pages (Exception C in [CLAUDE.md](CLAUDE.md)). Role-based gating filters pages by the logged-in user's role.

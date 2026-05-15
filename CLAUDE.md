@@ -54,7 +54,7 @@ For detail on a specific user story (diagram surface, code paths, tests, assumpt
 Every divergence between a diagram and the code is split across two more docs:
 
 - [docs/diagram_typos.md](docs/diagram_typos.md) — pure typos / signature issues in the source diagrams where the code follows the *corrected* version. Grouped by sprint.
-- [docs/todo.md](docs/todo.md) — Exception A entries (off-diagram methods added for UX), bootstrap deviations (data/seed.py), lecturer decisions, deferred typos index, open architectural items.
+- [docs/todo.md](docs/todo.md) — Exception A entries (off-diagram methods added for UX), bootstrap deviations (data/seed.py), Lecturer decisions (4), Deferred typos index (6), Open architectural items (1), and a Resolved section.
 
 Read both before assuming a method name or signature is wrong in the code — it may already be tracked as a known diagram fix.
 
@@ -68,7 +68,7 @@ These rules apply to every sprint and override defaults:
 4. **Controllers are pure delegators.** They take Boundary input, call one Entity method, return the result. No branching, no transformation, no logging. If a controller needs logic, raise it with the user before adding.
 5. **Class-name suffixes are fixed:** Boundary classes end in `Page` (or `LogoutPage`), Controller classes end in `Controller`, Entity classes have no suffix.
 6. **Method signatures match the diagrams character-for-character** (modulo snake_case). Same arity, same return type. If you need new parameters, the diagram must change first.
-7. **Boundary never imports Entity directly.** All Entity access goes through a Controller.
+7. **Boundary never imports Entity for behaviour.** All Entity *access* (read / write / search) goes through a Controller. The one carve-out: a Boundary may import an Entity dataclass purely to *construct* an instance to pass into a controller (e.g. `UpdateUserProfileController().update_user_profile(profile_id, UserProfile(role=..., description=..., suspended=...))`) because the diagram-defined update signatures take an entity object as a parameter. This is a constructor import, not a behaviour call.
 
 ## Documented exceptions
 
@@ -120,8 +120,9 @@ SDM-code/
 ├── data/seed.py           # Idempotent bootstrap: one account per role + 3 demo donations
 ├── tests/                 # pytest tests + conftest.py (autouse tmp_path DB fixture)
 ├── docs/
-│   ├── diagram_typos.md   # Per-sprint catalogue of every diagram divergence
-│   └── todo.md            # Bootstrap deviations, Exception A entries, architectural items, debug artifacts, Resolved
+│   ├── implementation.md  # Per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items) — primary per-story doc
+│   ├── diagram_typos.md   # Per-sprint catalogue of every diagram divergence (resolved + outstanding + deferred)
+│   └── todo.md            # Bootstrap deviations, Exception A entries, Lecturer decisions, Deferred typos index, Open architectural items, Resolved
 ├── diagrams/              # Source UML diagrams, sprint-1_diagrams/ … sprint-4_diagrams/
 └── .github/workflows/     # CI (Python 3.11)
 ```
