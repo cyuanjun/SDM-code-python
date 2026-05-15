@@ -12,7 +12,7 @@ Pure **diagram typos** (signatures, attribute types, boundary class names) live 
 
 These exist because the diagrams don't define an entry point for some required data. Each is idempotent on app startup. Either formalise the seed as a "first-time setup" use case on the diagrams, or accept it as a demo-only convention.
 
-- **One default account per role** — `admin001@a.com`, `fundraiser001@a.com`, `donee001@a.com`, `pm001@a.com`, all with password `123`. Solves the chicken-and-egg admin-creates-the-first-admin problem implied by US-1 / US-6's "User admin" actor, and gives every role a logged-in-able starting point for the demo.
+- **One default account per role** — `a001@a.com` (admin), `fr001@a.com` (fundraiser), `d001@a.com` (donee), `pm001@a.com` (platform manager), all with password `123`. Solves the chicken-and-egg admin-creates-the-first-admin problem implied by US-1 / US-6's "User admin" actor, and gives every role a logged-in-able starting point for the demo.
 - **Demo donations (Sprint 3)** — three sample donations tied to the seeded donee + a "Demo hospital fund" activity owned by the seeded fundraiser. US-32 / US-33 introduce a `Donation` entity but no Sprint 1–3 diagram defines a "donate" use case, so the table would otherwise be empty.
 
 ## Exception A — off-diagram entity methods to power UX
