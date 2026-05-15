@@ -302,14 +302,19 @@ class ManageMyFundraisingActivityPage:
 
         col_update, col_suspend, _ = st.columns([1, 1, 4])
         with col_update:
-            if not activity.completed and st.button("✏️ Update"):
+            if (
+                not activity.completed
+                and st.button("✏️ Update", use_container_width=True)
+            ):
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
             if activity.completed:
                 pass  # completed activities aren't suspendable
             elif activity.suspended:
-                if st.button("✅ Unsuspend donations"):
+                if st.button(
+                    "✅ Unsuspend donations", use_container_width=True
+                ):
                     ok = (
                         UnsuspendMyFundraisingActivityController()
                         .unsuspend_my_fundraising_activity(
@@ -323,7 +328,9 @@ class ManageMyFundraisingActivityPage:
                     else:
                         st.error("Could not unsuspend.")
             else:
-                if st.button("🚫 Suspend donations"):
+                if st.button(
+                    "🚫 Suspend donations", use_container_width=True
+                ):
                     ok = (
                         SuspendMyFundraisingActivityController()
                         .suspend_my_fundraising_activity(

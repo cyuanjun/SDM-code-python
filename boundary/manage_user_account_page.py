@@ -221,12 +221,12 @@ class ManageUserAccountPage:
 
         col_update, col_suspend, _ = st.columns([1, 1, 4])
         with col_update:
-            if st.button("✏️ Update"):
+            if st.button("✏️ Update", use_container_width=True):
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
             if account.suspended:
-                if st.button("✅ Unsuspend"):
+                if st.button("✅ Unsuspend", use_container_width=True):
                     ok = (
                         UnsuspendUserAccountController()
                         .unsuspend_user_account(account.account_id)
@@ -237,7 +237,7 @@ class ManageUserAccountPage:
                     else:
                         st.error("Could not unsuspend account.")
             else:
-                if st.button("🚫 Suspend"):
+                if st.button("🚫 Suspend", use_container_width=True):
                     ok = SuspendUserAccountController().suspend_user_account(
                         account.account_id
                     )

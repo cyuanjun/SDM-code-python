@@ -186,12 +186,12 @@ class ManageUserProfilePage:
 
         col_update, col_suspend, _ = st.columns([1, 1, 4])
         with col_update:
-            if st.button("✏️ Update"):
+            if st.button("✏️ Update", use_container_width=True):
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
             if profile.suspended:
-                if st.button("✅ Unsuspend"):
+                if st.button("✅ Unsuspend", use_container_width=True):
                     ok = (
                         UnsuspendUserProfileController()
                         .unsuspend_user_profile(profile.profile_id)
@@ -202,7 +202,7 @@ class ManageUserProfilePage:
                     else:
                         st.error("Could not unsuspend profile.")
             else:
-                if st.button("🚫 Suspend"):
+                if st.button("🚫 Suspend", use_container_width=True):
                     ok = SuspendUserProfileController().suspend_user_profile(
                         profile.profile_id
                     )

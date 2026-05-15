@@ -190,12 +190,12 @@ class ManageFundraisingActivityCategoryPage:
 
         col_update, col_suspend, _ = st.columns([1, 1, 4])
         with col_update:
-            if st.button("✏️ Update"):
+            if st.button("✏️ Update", use_container_width=True):
                 st.session_state[EDIT_MODE_KEY] = True
                 st.rerun()
         with col_suspend:
             if category.suspended:
-                if st.button("✅ Unsuspend"):
+                if st.button("✅ Unsuspend", use_container_width=True):
                     ok = (
                         UnsuspendFundraisingActivityCategoryController()
                         .unsuspend_fundraising_activity_category(
@@ -208,7 +208,7 @@ class ManageFundraisingActivityCategoryPage:
                     else:
                         st.error("Could not unsuspend.")
             else:
-                if st.button("🚫 Suspend"):
+                if st.button("🚫 Suspend", use_container_width=True):
                     ok = (
                         SuspendFundraisingActivityCategoryController()
                         .suspend_fundraising_activity_category(
