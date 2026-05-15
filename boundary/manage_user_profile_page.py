@@ -213,16 +213,20 @@ class ManageUserProfilePage:
                         st.error("Could not suspend profile.")
 
     def _render_edit_form(self, profile) -> None:
+        st.subheader(profile.role)
+        st.caption(f"Editing {profile.profile_id}")
         with st.form("manage_profile_edit_form"):
-            st.write(f"**Editing:** {profile.profile_id}")
             role = st.text_input("Role", value=profile.role)
             description = st.text_area("Description", value=profile.description)
-            suspended = st.checkbox("Suspended", value=profile.suspended)
-            col_save, col_cancel = st.columns(2)
+            col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
-                submitted = st.form_submit_button("Save changes")
+                submitted = st.form_submit_button(
+                    "Save changes", use_container_width=True
+                )
             with col_cancel:
-                cancel = st.form_submit_button("Cancel")
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -239,7 +243,7 @@ class ManageUserProfilePage:
             UserProfile(
                 role=role.strip(),
                 description=description.strip(),
-                suspended=suspended,
+                suspended=profile.suspended,
             ),
         )
         if ok:

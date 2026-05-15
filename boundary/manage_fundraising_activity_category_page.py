@@ -222,16 +222,20 @@ class ManageFundraisingActivityCategoryPage:
                         st.error("Could not suspend.")
 
     def _render_edit_form(self, category) -> None:
+        st.subheader(category.category_name)
+        st.caption(f"Editing {category.fra_cat_id}")
         with st.form("manage_fra_cat_edit_form"):
-            st.write(f"**Editing:** {category.fra_cat_id}")
             name = st.text_input("Category name", value=category.category_name)
             description = st.text_area("Description", value=category.description)
-            suspended = st.checkbox("Suspended", value=category.suspended)
-            col_save, col_cancel = st.columns(2)
+            col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
-                submitted = st.form_submit_button("Save changes")
+                submitted = st.form_submit_button(
+                    "Save changes", use_container_width=True
+                )
             with col_cancel:
-                cancel = st.form_submit_button("Cancel")
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -250,7 +254,7 @@ class ManageFundraisingActivityCategoryPage:
                 updated_category=FundraisingActivityCategory(
                     category_name=name.strip(),
                     description=description.strip(),
-                    suspended=suspended,
+                    suspended=category.suspended,
                 ),
             )
         )

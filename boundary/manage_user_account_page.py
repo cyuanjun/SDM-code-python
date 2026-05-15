@@ -258,8 +258,9 @@ class ManageUserAccountPage:
             list(profile_options.keys())[0] if profile_options else None,
         )
 
+        st.subheader(account.name)
+        st.caption(f"Editing {account.account_id}")
         with st.form("manage_account_edit_form"):
-            st.write(f"**Editing:** {account.account_id}")
             email = st.text_input("Email", value=account.email)
             password = st.text_input(
                 "Password", value=account.password, type="password"
@@ -276,12 +277,15 @@ class ManageUserAccountPage:
                 index=list(profile_options.keys()).index(current_label)
                 if current_label in profile_options else 0,
             )
-            suspended = st.checkbox("Suspended", value=account.suspended)
-            col_save, col_cancel = st.columns(2)
+            col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
-                submitted = st.form_submit_button("Save changes")
+                submitted = st.form_submit_button(
+                    "Save changes", use_container_width=True
+                )
             with col_cancel:
-                cancel = st.form_submit_button("Cancel")
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -299,7 +303,7 @@ class ManageUserAccountPage:
                 email=email.strip(), password=password, name=name.strip(),
                 dob=dob, phone_num=phone_num.strip(),
                 profile_id=profile_options[profile_label],
-                suspended=suspended,
+                suspended=account.suspended,
             ),
         )
         if ok:

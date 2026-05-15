@@ -345,8 +345,9 @@ class ManageMyFundraisingActivityPage:
                         st.error("Could not suspend.")
 
     def _render_edit_form(self, activity, owner_account_id: str) -> None:
+        st.subheader(activity.title)
+        st.caption(f"Editing {activity.fra_id}")
         with st.form("manage_my_fra_edit_form"):
-            st.write(f"**Editing:** {activity.fra_id}")
             title = st.text_input("Title", value=activity.title)
             description = st.text_area("Description", value=activity.description)
             target_amount_str = st.text_input(
@@ -356,12 +357,15 @@ class ManageMyFundraisingActivityPage:
             start_date = st.date_input("Start date", value=activity.start_date)
             end_date = st.date_input("End date", value=activity.end_date)
             completed = st.checkbox("Completed", value=activity.completed)
-            suspended = st.checkbox("Suspended", value=activity.suspended)
-            col_save, col_cancel = st.columns(2)
+            col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
-                submitted = st.form_submit_button("Save changes")
+                submitted = st.form_submit_button(
+                    "Save changes", use_container_width=True
+                )
             with col_cancel:
-                cancel = st.form_submit_button("Cancel")
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -387,7 +391,7 @@ class ManageMyFundraisingActivityPage:
                 end_date=end_date,
                 owner_account_id=owner_account_id,
                 completed=completed,
-                suspended=suspended,
+                suspended=activity.suspended,
             ),
         )
         if ok:
