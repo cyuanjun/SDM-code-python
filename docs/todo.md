@@ -27,6 +27,15 @@ Per CLAUDE.md "Exception A — Pragmatic Entity extensions for UX": each entry i
 - **`FundraisingActivity.increment_view_count(fra_id)` + `increment_save_count(fra_id, delta)`** — needed in Sprint 4 (US-28 / US-29). The diagrams only define **read** methods for the count columns, never write. Implementation fires `+1` view from US-21 (donee opens an activity), `+1` save from US-22 (favourite), `−1` save from US-23 (remove favourite). Add the increment methods + their semantics to the US-28 / US-29 sequence diagrams (or define a new use case that owns them).
 - **Four `unsuspend_*` methods** (and four pure-delegator `Unsuspend*Controller` classes) — added 2026-05-15 so the consolidated `Manage*` pages can offer a single suspend/unsuspend toggle. Mirrors `suspend_user_profile` (US-4), `suspend_user_account` (US-9), `suspend_my_fundraising_activity` (US-16), `suspend_fundraising_activity_category` (US-38). Add each unsuspend method to its parent's class diagram, or define an unsuspend use case per actor.
 
+## Lecturer decisions (no further diagram or code work required)
+
+Things the lecturer has explicitly accepted as-is. The diagram does not need to change and the code stays as it is.
+
+- **Demo donations seed (2026-05-15).** Three sample donations seeded against the default donee + fundraiser so US-32 / US-33 have data to display at demo time. Approved as an acceptable bootstrap convention. Lives in [data/seed.py](../data/seed.py); also listed under "Bootstrap deviations" above for completeness.
+- **Email uniqueness on `UserAccount` (2026-05-15).** Lecturer instructed adding a `UNIQUE` constraint at the schema level. Implemented — see "Resolved" below.
+- **No `displayError` on Sprint 1 boundary classes (2026-05-16).** Boundary diagrams only show `displaySuccess(...)`. Error display is treated as an implicit convention; diagrams will not be updated. Code keeps the inline `st.error(...)` calls.
+- **Login failure return type on US-11 / US-18 / US-26 / US-39 (2026-05-16).** The four login diagrams keep typing `login(email, password): UserAccount` with no explicit failure branch. The implementation's `None`-on-no-match is accepted as an implicit convention; diagrams will not be updated.
+
 ## Open architectural items
 
 Stack / policy concerns, not diagram-bound. Will re-surface as the rebuild touches each area.
