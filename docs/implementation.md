@@ -4,6 +4,90 @@ End-to-end snapshot of the implementation for every user story in the project, p
 
 If a fact about wiring or naming isn't in here, the truth is in the source files this doc links to.
 
+## Overview
+
+CSIT314 group project — online fundraising platform (Python + Streamlit + SQLite, B-C-E architecture). All **43 user stories** across **4 sprints** implemented; **373 tests passing**; **10 sidebar entries** routed by role. Per-US detail starts at [Sprint 1](#sprint-1) below — this Overview is the bird's-eye view.
+
+### Coverage matrix (all 43 stories)
+
+| US | Sprint | Actor | Story | Combined page |
+|---|---|---|---|---|
+| US-1 | 1 | Admin | Create user profile | Manage User Profiles |
+| US-2 | 2 | Admin | View user profile | Manage User Profiles |
+| US-3 | 2 | Admin | Update user profile | Manage User Profiles |
+| US-4 | 3 | Admin | Suspend user profile | Manage User Profiles |
+| US-5 | 3 | Admin | Search user profile | Manage User Profiles |
+| US-6 | 1 | Admin | Create user account | Manage User Accounts |
+| US-7 | 2 | Admin | View user account | Manage User Accounts |
+| US-8 | 2 | Admin | Update user account | Manage User Accounts |
+| US-9 | 3 | Admin | Suspend user account | Manage User Accounts |
+| US-10 | 3 | Admin | Search user account | Manage User Accounts |
+| US-11 | 1 | Admin | Log in | Log In |
+| US-12 | 1 | Admin | Log out | Log Out |
+| US-13 | 1 | Fundraiser | Create fundraising activity | Manage My Fundraising Activities |
+| US-14 | 2 | Fundraiser | View my fundraising activity | Manage My Fundraising Activities |
+| US-15 | 2 | Fundraiser | Update my fundraising activity | Manage My Fundraising Activities |
+| US-16 | 3 | Fundraiser | Suspend my fundraising activity | Manage My Fundraising Activities |
+| US-17 | 3 | Fundraiser | Search my fundraising activities | Manage My Fundraising Activities |
+| US-18 | 1 | Fundraiser | Log in | Log In |
+| US-19 | 1 | Fundraiser | Log out | Log Out |
+| US-20 | 2 | Donee | Search fundraising activities | Browse Fundraising Activities |
+| US-21 | 1 | Donee | View fundraising activity | Browse Fundraising Activities |
+| US-22 | 2 | Donee | Save fundraising activity to favourites | Browse Fundraising Activities |
+| US-23 | 3 | Donee | Remove from favourite list | My Favourites |
+| US-24 | 2 | Donee | View favourite list | My Favourites |
+| US-25 | 3 | Donee | Search my favourites list | My Favourites |
+| US-26 | 1 | Donee | Log in | Log In |
+| US-27 | 1 | Donee | Log out | Log Out |
+| US-28 | 4 | Fundraiser | View fundraising activity view count | Manage My Fundraising Activities |
+| US-29 | 4 | Fundraiser | View fundraising activity save count | Manage My Fundraising Activities |
+| US-30 | 3 | Fundraiser | Search my completed fundraising activities | Manage My Fundraising Activities |
+| US-31 | 3 | Fundraiser | View my completed fundraising activity | Manage My Fundraising Activities |
+| US-32 | 3 | Donee | Search my donation history | My Donations |
+| US-33 | 3 | Donee | View my donation history | My Donations |
+| US-34 | 4 | Platform Manager | Create fundraising activity category | Manage FRA Categories |
+| US-35 | 4 | Platform Manager | View fundraising activity category | Manage FRA Categories |
+| US-36 | 4 | Platform Manager | Update fundraising activity category | Manage FRA Categories |
+| US-37 | 4 | Platform Manager | Search fundraising activity categories | Manage FRA Categories |
+| US-38 | 4 | Platform Manager | Suspend fundraising activity category | Manage FRA Categories |
+| US-39 | 1 | Platform Manager | Log in | Log In |
+| US-40 | 1 | Platform Manager | Log out | Log Out |
+| US-41 | 4 | Platform Manager | Generate daily report | Generate Report |
+| US-42 | 4 | Platform Manager | Generate weekly report | Generate Report |
+| US-43 | 4 | Platform Manager | Generate monthly report | Generate Report |
+
+### Sidebar / role matrix
+
+10 sidebar entries; each role sees its own actor's allow-list (driven by `PAGES_BY_ROLE` in [app.py](../app.py)). `.info (debug)` is visible to every role for development inspection (Exception B; to be hidden before final demo).
+
+| Sidebar entry | Combined page | Visible to | Stories covered |
+|---|---|---|---|
+| Log In | `LoginPage` | logged-out users | US-11, 18, 26, 39 (one shared `LoginPage` / `LoginController` / `UserAccount.login`) |
+| Log Out | `LogoutPage` | every signed-in role | US-12, 19, 27, 40 (one shared `LogoutPage.logout()`) |
+| [Admin] Manage User Profiles | `ManageUserProfilePage` | `admin` | US-1, 2, 3, 4, 5 |
+| [Admin] Manage User Accounts | `ManageUserAccountPage` | `admin` | US-6, 7, 8, 9, 10 |
+| [Fundraiser] Manage My Fundraising Activities | `ManageMyFundraisingActivityPage` | `fundraiser` | US-13, 14, 15, 16, 17, 28, 29, 30, 31 |
+| [Donee] Browse Fundraising Activities | `BrowseFundraisingActivityPage` | `donee` | US-20, 21, 22 |
+| [Donee] My Favourites | `MyFavouritesPage` | `donee` | US-23, 24, 25 |
+| [Donee] My Donations | `MyDonationsPage` | `donee` | US-32, 33 |
+| [PM] Manage FRA Categories | `ManageFundraisingActivityCategoryPage` | `platform_manager` | US-34, 35, 36, 37, 38 |
+| [PM] Generate Report | `GenerateReportPage` | `platform_manager` | US-41, 42, 43 (shared boundary, deferred-by-design) |
+| .info (debug) | `InfoPage` | every role + logged-out | — (Exception B; hide before demo) |
+
+### Key implementation decisions (count + index)
+
+Numbers below are summaries — the detail tables further down hold the full text and links.
+
+- **Exception A** — 12 off-diagram entity methods added to power UX (list dropdowns + count writes + unsuspend toggles): `UserProfile.view_all_profiles`, `UserAccount.view_all_user_accounts`, `FundraisingActivity.view_all_fundraising_activities` + `view_my_fundraising_activities` + `increment_view_count` + `increment_save_count`, `FundraisingActivityCategory.view_all_categories`, `Donation.view_my_donations`, plus four `unsuspend_*` methods.
+- **Exception B** — 1 debug-only page (`.info`, [boundary/info_page.py](../boundary/info_page.py)).
+- **Exception C** — 7 combined sidebar pages compose 27 per-US Boundary classes (every per-US class still exists as a tested artifact).
+- **Lecturer decisions (4)** — donation seed (2026-05-15), `UNIQUE(email)` on UserAccount (2026-05-15), no `displayError` on Sprint 1 boundaries (2026-05-16), login failure return type implicit on US-11/18/26/39 (2026-05-16).
+- **Deferred typos (6)** — US-23 boundary name; US-25 `viewMode` param; US-25 boundary name; US-30/31 shared boundary; US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
+- **Open architectural items (1)** — plain-text passwords on `UserAccount` (deferred to a hardening sprint).
+- **Resolved diagram typos** — 18 resolved across Sprints 1–4 over 2026-05-14 to 2026-05-16 (see [docs/diagram_typos.md](diagram_typos.md) for the struck-through list).
+
+---
+
 ## How to read this doc
 
 - The **per-US sections** (Sprints 1 – 4) each follow the same template: actor + story sentence → diagram surface (Boundary / Controller / Entity classes + methods + attributes) → code locations with line numbers → which combined sidebar page exposes the US → tests → notes / assumptions / deferred items.
