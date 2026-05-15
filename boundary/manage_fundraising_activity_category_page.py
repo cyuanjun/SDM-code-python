@@ -52,7 +52,11 @@ class ManageFundraisingActivityCategoryPage:
             st.header("Manage fundraising activity categories")
         with col_create:
             st.write("")
-            if st.button("➕ Create new category", key="manage_fra_cat_create_btn"):
+            if st.button(
+                "+ Create new category",
+                key="manage_fra_cat_create_btn",
+                use_container_width=True,
+            ):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list()
@@ -63,11 +67,14 @@ class ManageFundraisingActivityCategoryPage:
         # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
-            st.success(f"Category created: {created.fra_cat_id}")
-            st.write(f"**FRA Cat ID:** {created.fra_cat_id}")
-            st.write(f"**Name:** {created.category_name}")
-            st.write(f"**Description:** {created.description or '(none)'}")
-            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
+            st.success(
+                "\n\n".join([
+                    f"**Category created: {created.fra_cat_id}**",
+                    f"**Name:** {created.category_name}",
+                    f"**Description:** {created.description or '(none)'}",
+                    f"**Suspended:** {'yes' if created.suspended else 'no'}",
+                ])
+            )
             if st.button("← Back to categories"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
                 st.session_state.pop(JUST_CREATED_KEY, None)

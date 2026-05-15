@@ -51,7 +51,11 @@ class ManageUserAccountPage:
             st.header("Manage user accounts")
         with col_create:
             st.write("")
-            if st.button("➕ Create new account", key="manage_account_create_btn"):
+            if st.button(
+                "+ Create new account",
+                key="manage_account_create_btn",
+                use_container_width=True,
+            ):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list()
@@ -64,14 +68,17 @@ class ManageUserAccountPage:
         # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
-            st.success(f"Account created: {created.account_id}")
-            st.write(f"**Account ID:** {created.account_id}")
-            st.write(f"**Email:** {created.email}")
-            st.write(f"**Name:** {created.name}")
-            st.write(f"**Date of birth:** {created.dob.isoformat()}")
-            st.write(f"**Phone:** {created.phone_num}")
-            st.write(f"**Profile:** {created.profile_id}")
-            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
+            st.success(
+                "\n\n".join([
+                    f"**Account created: {created.account_id}**",
+                    f"**Email:** {created.email}",
+                    f"**Name:** {created.name}",
+                    f"**Date of birth:** {created.dob.isoformat()}",
+                    f"**Phone:** {created.phone_num}",
+                    f"**Profile:** {created.profile_id}",
+                    f"**Suspended:** {'yes' if created.suspended else 'no'}",
+                ])
+            )
             if st.button("← Back to accounts"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
                 st.session_state.pop(JUST_CREATED_KEY, None)

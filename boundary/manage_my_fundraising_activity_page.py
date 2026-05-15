@@ -69,7 +69,11 @@ class ManageMyFundraisingActivityPage:
             st.header("Manage my fundraising activities")
         with col_create:
             st.write("")
-            if st.button("➕ Create new activity", key="manage_my_fra_create_btn"):
+            if st.button(
+                "+ Create new activity",
+                key="manage_my_fra_create_btn",
+                use_container_width=True,
+            ):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list(owner_account_id)
@@ -82,19 +86,20 @@ class ManageMyFundraisingActivityPage:
         # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
-            st.success(f"Activity created: {created.fra_id}")
-            st.write(f"**FRAId:** {created.fra_id}")
-            st.write(f"**Title:** {created.title}")
-            st.write(f"**Description:** {created.description}")
-            st.write(f"**Target:** ${created.target_amount}")
-            st.write(f"**Category:** {created.category}")
-            st.write(
-                f"**Runs:** {created.start_date.isoformat()} → "
-                f"{created.end_date.isoformat()}"
+            st.success(
+                "\n\n".join([
+                    f"**Activity created: {created.fra_id}**",
+                    f"**Title:** {created.title}",
+                    f"**Description:** {created.description}",
+                    f"**Target:** ${created.target_amount}",
+                    f"**Category:** {created.category}",
+                    f"**Runs:** {created.start_date.isoformat()} → "
+                    f"{created.end_date.isoformat()}",
+                    f"**Owner:** {created.owner_account_id}",
+                    f"**Completed:** {'yes' if created.completed else 'no'}",
+                    f"**Suspended:** {'yes' if created.suspended else 'no'}",
+                ])
             )
-            st.write(f"**Owner:** {created.owner_account_id}")
-            st.write(f"**Completed:** {'yes' if created.completed else 'no'}")
-            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
             if st.button("← Back to my activities"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
                 st.session_state.pop(JUST_CREATED_KEY, None)

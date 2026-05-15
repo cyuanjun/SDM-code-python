@@ -53,7 +53,11 @@ class ManageUserProfilePage:
             st.header("Manage user profiles")
         with col_create:
             st.write("")  # vertical spacer to align with the header
-            if st.button("➕ Create new profile", key="manage_profile_create_btn"):
+            if st.button(
+                "+ Create new profile",
+                key="manage_profile_create_btn",
+                use_container_width=True,
+            ):
                 st.session_state[CREATE_MODE_KEY] = True
                 st.rerun()
         self._render_list()
@@ -66,11 +70,14 @@ class ManageUserProfilePage:
         # Post-create confirmation: shown after a successful create.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
-            st.success(f"Profile created: {created.profile_id}")
-            st.write(f"**Profile ID:** {created.profile_id}")
-            st.write(f"**Role:** {created.role}")
-            st.write(f"**Description:** {created.description or '(none)'}")
-            st.write(f"**Suspended:** {'yes' if created.suspended else 'no'}")
+            st.success(
+                "\n\n".join([
+                    f"**Profile created: {created.profile_id}**",
+                    f"**Role:** {created.role}",
+                    f"**Description:** {created.description or '(none)'}",
+                    f"**Suspended:** {'yes' if created.suspended else 'no'}",
+                ])
+            )
             if st.button("← Back to profiles"):
                 st.session_state.pop(CREATE_MODE_KEY, None)
                 st.session_state.pop(JUST_CREATED_KEY, None)
