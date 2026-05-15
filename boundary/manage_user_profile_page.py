@@ -84,7 +84,13 @@ class ManageUserProfilePage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage user profiles")
-            if ACTION_MSG_KEY in st.session_state:
+            # Standalone confirmation (suspend/unsuspend etc.) fires only
+            # when we're NOT in edit mode. Update keeps EDIT_MODE_KEY set
+            # so its confirmation is rendered inside the greyed-out form.
+            if (
+                ACTION_MSG_KEY in st.session_state
+                and not st.session_state.get(EDIT_MODE_KEY)
+            ):
                 self._render_action_confirmation()
                 return
             self._render_detail()
@@ -246,18 +252,36 @@ class ManageUserProfilePage:
 
     def _render_edit_form(self, profile) -> None:
         st.write(f"**Editing:** {profile.profile_id}")
+        is_completed = ACTION_MSG_KEY in st.session_state
+
         with st.form("manage_profile_edit_form"):
-            role = st.text_input("Role", value=profile.role)
-            description = st.text_area("Description", value=profile.description)
+            role = st.text_input(
+                "Role", value=profile.role, disabled=is_completed
+            )
+            description = st.text_area(
+                "Description", value=profile.description, disabled=is_completed
+            )
             col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
                 submitted = st.form_submit_button(
-                    "Save changes", use_container_width=True
+                    "Save changes",
+                    use_container_width=True,
+                    disabled=is_completed,
                 )
             with col_cancel:
                 cancel = st.form_submit_button(
-                    "Cancel", use_container_width=True
+                    "Cancel",
+                    use_container_width=True,
+                    disabled=is_completed,
                 )
+
+        if is_completed:
+            st.success(st.session_state[ACTION_MSG_KEY])
+            if st.button("← Back", key="manage_profile_edit_back"):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                st.rerun()
+            return
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -278,7 +302,6 @@ class ManageUserProfilePage:
             ),
         )
         if ok:
-            st.session_state.pop(EDIT_MODE_KEY, None)
             st.session_state[ACTION_MSG_KEY] = "Profile updated."
             st.rerun()
         else:

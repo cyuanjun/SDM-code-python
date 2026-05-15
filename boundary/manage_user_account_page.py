@@ -83,7 +83,10 @@ class ManageUserAccountPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage user accounts")
-            if ACTION_MSG_KEY in st.session_state:
+            if (
+                ACTION_MSG_KEY in st.session_state
+                and not st.session_state.get(EDIT_MODE_KEY)
+            ):
                 self._render_action_confirmation()
                 return
             self._render_detail()
@@ -291,32 +294,57 @@ class ManageUserAccountPage:
 
         st.subheader(account.name)
         st.caption(f"Editing {account.account_id}")
+        is_completed = ACTION_MSG_KEY in st.session_state
+
         with st.form("manage_account_edit_form"):
-            email = st.text_input("Email", value=account.email)
-            password = st.text_input(
-                "Password", value=account.password, type="password"
+            email = st.text_input(
+                "Email", value=account.email, disabled=is_completed
             )
-            name = st.text_input("Name", value=account.name)
+            password = st.text_input(
+                "Password",
+                value=account.password,
+                type="password",
+                disabled=is_completed,
+            )
+            name = st.text_input(
+                "Name", value=account.name, disabled=is_completed
+            )
             dob = st.date_input(
                 "Date of birth", value=account.dob,
                 min_value=date(1900, 1, 1), max_value=date.today(),
+                disabled=is_completed,
             )
-            phone_num = st.text_input("Phone number", value=account.phone_num)
+            phone_num = st.text_input(
+                "Phone number", value=account.phone_num, disabled=is_completed
+            )
             profile_label = st.selectbox(
                 "Profile",
                 list(profile_options.keys()),
                 index=list(profile_options.keys()).index(current_label)
                 if current_label in profile_options else 0,
+                disabled=is_completed,
             )
             col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
                 submitted = st.form_submit_button(
-                    "Save changes", use_container_width=True
+                    "Save changes",
+                    use_container_width=True,
+                    disabled=is_completed,
                 )
             with col_cancel:
                 cancel = st.form_submit_button(
-                    "Cancel", use_container_width=True
+                    "Cancel",
+                    use_container_width=True,
+                    disabled=is_completed,
                 )
+
+        if is_completed:
+            st.success(st.session_state[ACTION_MSG_KEY])
+            if st.button("← Back", key="manage_account_edit_back"):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                st.rerun()
+            return
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -338,7 +366,6 @@ class ManageUserAccountPage:
             ),
         )
         if ok:
-            st.session_state.pop(EDIT_MODE_KEY, None)
             st.session_state[ACTION_MSG_KEY] = "Account updated."
             st.rerun()
         else:

@@ -108,7 +108,10 @@ class ManageMyFundraisingActivityPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage my fundraising activities")
-            if ACTION_MSG_KEY in st.session_state:
+            if (
+                ACTION_MSG_KEY in st.session_state
+                and not st.session_state.get(EDIT_MODE_KEY)
+            ):
                 self._render_action_confirmation()
                 return
             self._render_detail(owner_account_id)
@@ -378,25 +381,59 @@ class ManageMyFundraisingActivityPage:
     def _render_edit_form(self, activity, owner_account_id: str) -> None:
         st.subheader(activity.title)
         st.caption(f"Editing {activity.fra_id}")
+        is_completed_view = ACTION_MSG_KEY in st.session_state
+
         with st.form("manage_my_fra_edit_form"):
-            title = st.text_input("Title", value=activity.title)
-            description = st.text_area("Description", value=activity.description)
-            target_amount_str = st.text_input(
-                "Target amount", value=str(activity.target_amount)
+            title = st.text_input(
+                "Title", value=activity.title, disabled=is_completed_view
             )
-            category = st.text_input("Category", value=activity.category)
-            start_date = st.date_input("Start date", value=activity.start_date)
-            end_date = st.date_input("End date", value=activity.end_date)
-            completed = st.checkbox("Completed", value=activity.completed)
+            description = st.text_area(
+                "Description",
+                value=activity.description,
+                disabled=is_completed_view,
+            )
+            target_amount_str = st.text_input(
+                "Target amount",
+                value=str(activity.target_amount),
+                disabled=is_completed_view,
+            )
+            category = st.text_input(
+                "Category", value=activity.category, disabled=is_completed_view
+            )
+            start_date = st.date_input(
+                "Start date",
+                value=activity.start_date,
+                disabled=is_completed_view,
+            )
+            end_date = st.date_input(
+                "End date", value=activity.end_date, disabled=is_completed_view
+            )
+            completed = st.checkbox(
+                "Completed",
+                value=activity.completed,
+                disabled=is_completed_view,
+            )
             col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
                 submitted = st.form_submit_button(
-                    "Save changes", use_container_width=True
+                    "Save changes",
+                    use_container_width=True,
+                    disabled=is_completed_view,
                 )
             with col_cancel:
                 cancel = st.form_submit_button(
-                    "Cancel", use_container_width=True
+                    "Cancel",
+                    use_container_width=True,
+                    disabled=is_completed_view,
                 )
+
+        if is_completed_view:
+            st.success(st.session_state[ACTION_MSG_KEY])
+            if st.button("← Back", key="manage_my_fra_edit_back"):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                st.rerun()
+            return
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -426,7 +463,6 @@ class ManageMyFundraisingActivityPage:
             ),
         )
         if ok:
-            st.session_state.pop(EDIT_MODE_KEY, None)
             st.session_state[ACTION_MSG_KEY] = "Activity updated."
             st.rerun()
         else:

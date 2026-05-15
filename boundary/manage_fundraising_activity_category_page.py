@@ -85,7 +85,10 @@ class ManageFundraisingActivityCategoryPage:
 
         if SELECTED_KEY in st.session_state:
             st.header("Manage fundraising activity categories")
-            if ACTION_MSG_KEY in st.session_state:
+            if (
+                ACTION_MSG_KEY in st.session_state
+                and not st.session_state.get(EDIT_MODE_KEY)
+            ):
                 self._render_action_confirmation()
                 return
             self._render_detail()
@@ -251,18 +254,40 @@ class ManageFundraisingActivityCategoryPage:
     def _render_edit_form(self, category) -> None:
         st.subheader(category.category_name)
         st.caption(f"Editing {category.fra_cat_id}")
+        is_completed = ACTION_MSG_KEY in st.session_state
+
         with st.form("manage_fra_cat_edit_form"):
-            name = st.text_input("Category name", value=category.category_name)
-            description = st.text_area("Description", value=category.description)
+            name = st.text_input(
+                "Category name",
+                value=category.category_name,
+                disabled=is_completed,
+            )
+            description = st.text_area(
+                "Description",
+                value=category.description,
+                disabled=is_completed,
+            )
             col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
                 submitted = st.form_submit_button(
-                    "Save changes", use_container_width=True
+                    "Save changes",
+                    use_container_width=True,
+                    disabled=is_completed,
                 )
             with col_cancel:
                 cancel = st.form_submit_button(
-                    "Cancel", use_container_width=True
+                    "Cancel",
+                    use_container_width=True,
+                    disabled=is_completed,
                 )
+
+        if is_completed:
+            st.success(st.session_state[ACTION_MSG_KEY])
+            if st.button("← Back", key="manage_fra_cat_edit_back"):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                st.rerun()
+            return
 
         if cancel:
             st.session_state.pop(EDIT_MODE_KEY, None)
@@ -286,7 +311,6 @@ class ManageFundraisingActivityCategoryPage:
             )
         )
         if ok:
-            st.session_state.pop(EDIT_MODE_KEY, None)
             st.session_state[ACTION_MSG_KEY] = "Category updated."
             st.rerun()
         else:
