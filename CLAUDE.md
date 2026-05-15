@@ -49,10 +49,12 @@ When the user shares Sprint N sequence/class diagrams, **treat the class names, 
 
 The source-of-truth diagrams live under [diagrams/](diagrams/), organised by sprint (`sprint-1_diagrams/` … `sprint-4_diagrams/`), one `US-NN.jpg` per story.
 
-Every divergence between a diagram and the code is split across two docs:
+For detail on a specific user story (diagram surface, code paths, tests, assumptions, deferred items), read **[docs/implementation.md](docs/implementation.md)** — one section per US.
+
+Every divergence between a diagram and the code is split across two more docs:
 
 - [docs/diagram_typos.md](docs/diagram_typos.md) — pure typos / signature issues in the source diagrams where the code follows the *corrected* version. Grouped by sprint.
-- [docs/todo.md](docs/todo.md) — Exception A entries (off-diagram methods added for UX), bootstrap deviations (data/seed.py), architectural carry-overs (passwords, email uniqueness), debug-only artifacts, and a Resolved section.
+- [docs/todo.md](docs/todo.md) — Exception A entries (off-diagram methods added for UX), bootstrap deviations (data/seed.py), lecturer decisions, deferred typos index, open architectural items.
 
 Read both before assuming a method name or signature is wrong in the code — it may already be tracked as a known diagram fix.
 
