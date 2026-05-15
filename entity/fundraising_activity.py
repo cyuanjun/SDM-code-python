@@ -241,7 +241,7 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    def update_fundraiser_activity(
+    def update_fundraising_activity(
         cls,
         owner_account_id: str,
         fra_id: str,

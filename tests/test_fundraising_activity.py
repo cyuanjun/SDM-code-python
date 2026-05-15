@@ -242,7 +242,7 @@ def test_view_my_fundraising_activities_returns_empty_list_for_no_owner_rows() -
     )
 
 
-def test_update_fundraiser_activity_returns_true_for_correct_owner() -> None:
+def test_update_fundraising_activity_returns_true_for_correct_owner() -> None:
     owner = _seed_fundraiser_account()
     created = _seed_activity(owner)
 
@@ -253,7 +253,7 @@ def test_update_fundraiser_activity_returns_true_for_correct_owner() -> None:
         owner_account_id=owner.account_id,
         completed=True, suspended=False,
     )
-    ok = FundraisingActivity.update_fundraiser_activity(
+    ok = FundraisingActivity.update_fundraising_activity(
         owner_account_id=owner.account_id,
         fra_id=created.fra_id,
         updated_activity=updated,
@@ -267,7 +267,7 @@ def test_update_fundraiser_activity_returns_true_for_correct_owner() -> None:
     assert fetched.completed is True
 
 
-def test_update_fundraiser_activity_returns_false_for_wrong_owner() -> None:
+def test_update_fundraising_activity_returns_false_for_wrong_owner() -> None:
     """Negative path: ownership enforced at the entity layer — another
     fundraiser cannot update someone else's activity even if the FRAId
     matches."""
@@ -288,7 +288,7 @@ def test_update_fundraiser_activity_returns_false_for_wrong_owner() -> None:
         category="x", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
         owner_account_id=other.account_id,
     )
-    ok = FundraisingActivity.update_fundraiser_activity(
+    ok = FundraisingActivity.update_fundraising_activity(
         owner_account_id=other.account_id,
         fra_id=created.fra_id,
         updated_activity=updated,
@@ -300,7 +300,7 @@ def test_update_fundraiser_activity_returns_false_for_wrong_owner() -> None:
     assert fetched.title == "A"  # original
 
 
-def test_update_fundraiser_activity_returns_false_for_missing_fra_id() -> None:
+def test_update_fundraising_activity_returns_false_for_missing_fra_id() -> None:
     owner = _seed_fundraiser_account()
     updated = FundraisingActivity(
         title="x", description="x", target_amount=Decimal("1"),
@@ -308,7 +308,7 @@ def test_update_fundraiser_activity_returns_false_for_missing_fra_id() -> None:
         owner_account_id=owner.account_id,
     )
     assert (
-        FundraisingActivity.update_fundraiser_activity(
+        FundraisingActivity.update_fundraising_activity(
             owner_account_id=owner.account_id,
             fra_id="fra_999",
             updated_activity=updated,
@@ -485,7 +485,7 @@ def _seed_completed_activity(
         owner_account_id=owner.account_id,
         completed=True, suspended=False,
     )
-    FundraisingActivity.update_fundraiser_activity(
+    FundraisingActivity.update_fundraising_activity(
         owner_account_id=owner.account_id,
         fra_id=activity.fra_id,
         updated_activity=updated,

@@ -445,7 +445,7 @@ class ManageMyFundraisingActivityPage:
             st.error("Invalid input.")
             return
 
-        ok = UpdateMyFundraisingActivityController().update_fundraiser_activity(
+        ok = UpdateMyFundraisingActivityController().update_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=activity.fra_id,
             updated_activity=FundraisingActivity(

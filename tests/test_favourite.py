@@ -2,9 +2,7 @@
 
 Diagram contracts:
     US-22.jpg: + saveFundraisingActivity(accountId: String, FRAId: String): Boolean
-    US-24.jpg: + viewFavourites(accountId: String): List<Favourite>
-               (diagram shows `viewFavourite(...): Favourite` — typo logged
-               in docs/todo.md; the user story is "view ALL my favourites".)
+    US-24.jpg: + viewFavouriteList(accountId: String): List<Favourite>
 """
 from __future__ import annotations
 
@@ -55,7 +53,7 @@ def test_save_fundraising_activity_returns_true_on_first_save() -> None:
 
     assert ok is True
 
-    favourites = Favourite.view_favourites(donee.account_id)
+    favourites = Favourite.view_favourite_list(donee.account_id)
     assert len(favourites) == 1
     assert favourites[0].account_id == donee.account_id
     assert favourites[0].fra_id == activity.fra_id
@@ -100,14 +98,14 @@ def test_save_fundraising_activity_raises_on_nonexistent_activity() -> None:
         )
 
 
-def test_view_favourites_returns_empty_list_when_donee_has_none() -> None:
+def test_view_favourite_list_returns_empty_list_when_donee_has_none() -> None:
     """Negative path: donee with no favourites gets [] back, not None."""
     donee = _seed_donee()
 
-    assert Favourite.view_favourites(donee.account_id) == []
+    assert Favourite.view_favourite_list(donee.account_id) == []
 
 
-def test_view_favourites_scopes_to_the_account() -> None:
+def test_view_favourite_list_scopes_to_the_account() -> None:
     """A second donee's favourites must not appear in the first donee's list."""
     first = _seed_donee()
     profile = UserProfile.view_user_profile(first.profile_id)
@@ -127,8 +125,8 @@ def test_view_favourites_scopes_to_the_account() -> None:
         account_id=second.account_id, fra_id=activity_b.fra_id
     )
 
-    mine = Favourite.view_favourites(first.account_id)
-    theirs = Favourite.view_favourites(second.account_id)
+    mine = Favourite.view_favourite_list(first.account_id)
+    theirs = Favourite.view_favourite_list(second.account_id)
 
     assert [f.fra_id for f in mine] == [activity_a.fra_id]
     assert [f.fra_id for f in theirs] == [activity_b.fra_id]
@@ -145,7 +143,7 @@ def test_remove_favourite_returns_true_when_pair_exists() -> None:
         fra_id=activity.fra_id, account_id=donee.account_id
     )
     assert ok is True
-    assert Favourite.view_favourites(donee.account_id) == []
+    assert Favourite.view_favourite_list(donee.account_id) == []
 
 
 def test_remove_favourite_returns_false_when_pair_missing() -> None:
@@ -179,7 +177,7 @@ def test_remove_favourite_is_scoped_to_the_account() -> None:
         fra_id=activity.fra_id, account_id=donee_b.account_id
     )
     assert ok is False
-    assert len(Favourite.view_favourites(donee_a.account_id)) == 1
+    assert len(Favourite.view_favourite_list(donee_a.account_id)) == 1
 
 
 def test_search_favourite_matches_activity_fields_for_the_donee() -> None:

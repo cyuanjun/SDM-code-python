@@ -12,7 +12,7 @@ import streamlit as st
 
 from controller.remove_favourite_controller import RemoveFavouriteController
 from controller.search_favourite_controller import SearchFavouriteController
-from controller.view_favourite_controller import ViewFavouriteController
+from controller.view_favourite_list_controller import ViewFavouriteListController
 
 
 class MyFavouritesPage:
@@ -34,7 +34,7 @@ class MyFavouritesPage:
                 search_criteria=search_term.strip(), account_id=account_id,
             )
         else:
-            favourites = ViewFavouriteController().view_favourites(account_id)
+            favourites = ViewFavouriteListController().view_favourite_list(account_id)
 
         if not favourites:
             st.info(

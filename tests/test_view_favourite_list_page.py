@@ -1,19 +1,19 @@
-"""Smoke tests for ViewFavouritePage (US-24)."""
+"""Smoke tests for ViewFavouriteListPage (US-24)."""
 from __future__ import annotations
 
 from streamlit.testing.v1 import AppTest
 
-from boundary.view_favourite_page import ViewFavouritePage
+from boundary.view_favourite_list_page import ViewFavouriteListPage
 
 
 def test_page_class_is_importable_and_has_render() -> None:
-    assert callable(ViewFavouritePage().render)
+    assert callable(ViewFavouriteListPage().render)
 
 
 def test_render_does_not_raise_when_not_logged_in() -> None:
     script = """
-from boundary.view_favourite_page import ViewFavouritePage
-ViewFavouritePage().render()
+from boundary.view_favourite_list_page import ViewFavouriteListPage
+ViewFavouriteListPage().render()
 """
     at = AppTest.from_string(script)
     at.run()
@@ -26,7 +26,7 @@ import streamlit as st
 from datetime import date
 from entity.user_profile import UserProfile
 from entity.user_account import UserAccount
-from boundary.view_favourite_page import ViewFavouritePage
+from boundary.view_favourite_list_page import ViewFavouriteListPage
 
 profile = UserProfile.create_profile(role="donee", description="r")
 account = UserAccount.create_account(
@@ -34,7 +34,7 @@ account = UserAccount.create_account(
     phone_num="0", profile_id=profile.profile_id,
 )
 st.session_state["user"] = account
-ViewFavouritePage().render()
+ViewFavouriteListPage().render()
 """
     at = AppTest.from_string(script)
     at.run()
@@ -50,7 +50,7 @@ from entity.user_profile import UserProfile
 from entity.user_account import UserAccount
 from entity.fundraising_activity import FundraisingActivity
 from entity.favourite import Favourite
-from boundary.view_favourite_page import ViewFavouritePage
+from boundary.view_favourite_list_page import ViewFavouriteListPage
 
 donee_profile = UserProfile.create_profile(role="donee", description="r")
 donee = UserAccount.create_account(
@@ -71,7 +71,7 @@ Favourite.save_fundraising_activity(
     account_id=donee.account_id, fra_id=activity.fra_id
 )
 st.session_state["user"] = donee
-ViewFavouritePage().render()
+ViewFavouriteListPage().render()
 """
     at = AppTest.from_string(script)
     at.run()

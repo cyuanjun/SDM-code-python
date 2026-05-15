@@ -22,10 +22,10 @@ Diagrams: [diagrams/sprint-1_diagrams/](../diagrams/sprint-1_diagrams/).
 
 Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/).
 
-- **[US-14.jpg](../diagrams/sprint-2_diagrams/US-14.jpg) boundary method:** `displayMyFundraisingActivity(fundraisingActivity: FundraiserActivity): void`. `FundraiserActivity` is not an entity. Should be `FundraisingActivity` to match the Sprint 1 US-13 entity.
-- **[US-15.jpg](../diagrams/sprint-2_diagrams/US-15.jpg) class diagram is missing `ownerAccountId` on the update method.** Class shows `updateFundraiserActivity(FRAId: String, updatedActivity: FundraiserActivity): Boolean` (2 params) but the sequence diagram shows `updateFundraiserActivity(ownerAccountId: String, FRAId: String, updatedActivity: FundraiserActivity)` (3 params). Implementation uses the 3-param sequence version so ownership is enforced. Plus the same `FundraiserActivity` → `FundraisingActivity` typo.
-- **[US-20.jpg](../diagrams/sprint-2_diagrams/US-20.jpg) boundary class name:** `ViewFundraisingActivities` (no `Page` suffix). Project rule mandates the `Page` suffix on every Boundary class — implementation uses `ViewFundraisingActivitiesPage`.
-- **[US-24.jpg](../diagrams/sprint-2_diagrams/US-24.jpg) return type:** `viewFavourite(accountId: String): Favourite` — returns a single Favourite, but the user story is "view all my favourites" which implies many. Should be `viewFavourites(accountId: String): List<Favourite>` (note plural method name too). Implementation uses the list version.
+- ~~**[US-14.jpg](../diagrams/sprint-2_diagrams/US-14.jpg) boundary method:** `displayMyFundraisingActivity(fundraisingActivity: FundraiserActivity): void`. `FundraiserActivity` is not an entity. Should be `FundraisingActivity` to match the Sprint 1 US-13 entity.~~ **Resolved 2026-05-16.** Re-exported diagram now types the boundary method (class + sequence) `displayMyFundraisingActivity(fundraisingActivity: FundraisingActivity): void`.
+- ~~**[US-15.jpg](../diagrams/sprint-2_diagrams/US-15.jpg) class diagram is missing `ownerAccountId` on the update method.**~~ **Resolved 2026-05-16.** Re-exported diagram now signs the method (class + sequence) `updateFundraisingActivity(ownerAccountId: String, FRAId: String, updatedActivity: FundraisingActivity): Boolean` consistently — 3 params, correct entity type. Code renamed to match: entity method [`update_fundraising_activity`](../entity/fundraising_activity.py) (previously `update_fundraiser_activity`); controller delegator updated to the same name.
+- ~~**[US-20.jpg](../diagrams/sprint-2_diagrams/US-20.jpg) boundary class name:** `ViewFundraisingActivities` (no `Page` suffix). Project rule mandates the `Page` suffix on every Boundary class — implementation uses `ViewFundraisingActivitiesPage`.~~ **Resolved 2026-05-16.** Re-exported diagram now names the boundary `ViewFundraisingActivitiesPage`.
+- ~~**[US-24.jpg](../diagrams/sprint-2_diagrams/US-24.jpg) return type:** `viewFavourite(accountId: String): Favourite` — returns a single Favourite, but the user story is "view all my favourites" which implies many.~~ **Resolved 2026-05-16.** Re-exported diagram names the boundary `ViewFavouriteListPage`, the controller `ViewFavouriteListController`, and the method `viewFavouriteList(accountId: String): List<Favourite>`. Code renamed to match: [boundary/view_favourite_list_page.py](../boundary/view_favourite_list_page.py), [controller/view_favourite_list_controller.py](../controller/view_favourite_list_controller.py), `Favourite.view_favourite_list`.
 
 ## Sprint 3
 
@@ -63,7 +63,7 @@ The diagrams themselves don't need to change — the per-US classes are still re
 | `ManageUserAccountPage` | `CreateAccountPage`, `ViewUserAccountPage`, `UpdateUserAccountPage`, `ViewUserAccountsPage` (and the suspend button on `ViewUserAccountPage`) |
 | `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage`, `SearchMyCompletedActivityPage`, `ViewMyCompletedActivityPage` (All/Completed tabs) |
 | `BrowseFundraisingActivityPage` | `ViewFundraisingActivityPage` (donee detail + US-22 save button), `ViewFundraisingActivitiesPage` (US-20 search) |
-| `MyFavouritesPage` | `ViewFavouritePage` (with US-23 remove), `SearchFavouritePage` |
+| `MyFavouritesPage` | `ViewFavouriteListPage` (with US-23 remove), `SearchFavouritePage` |
 | `MyDonationsPage` | `ViewMyDonationHistoryPage`, `ViewMyDonationHistoriesPage` |
 | `ManageFundraisingActivityCategoryPage` | `CreateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoryPage`, `UpdateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoriesPage` (suspend button on view detail) |
 

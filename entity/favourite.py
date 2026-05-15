@@ -109,7 +109,7 @@ class Favourite:
         ]
 
     @classmethod
-    def view_favourites(cls, account_id: str) -> list["Favourite"]:
+    def view_favourite_list(cls, account_id: str) -> list["Favourite"]:
         account_rowid = parse_id(account_id)
         with get_connection() as conn:
             rows = conn.execute(
