@@ -34,6 +34,45 @@ EDIT_MODE_KEY = "manage_account_edit_mode"
 CREATE_MODE_KEY = "manage_account_create_mode"
 JUST_CREATED_KEY = "manage_account_just_created"
 ACTION_MSG_KEY = "manage_account_action_msg"
+PENDING_ACTION_KEY = "manage_account_pending_action"
+
+
+@st.dialog("Confirm")
+def _confirm_suspend_dialog(action: str, account_id: str) -> None:
+    """Popup confirmation for suspend / unsuspend on a user account."""
+    verb = action
+    st.write(f"Are you sure you want to **{verb}** account `{account_id}`?")
+    col_cancel, col_confirm = st.columns(2)
+    with col_cancel:
+        if st.button(
+            "Cancel",
+            use_container_width=True,
+            key=f"_account_dlg_cancel_{action}",
+        ):
+            st.session_state.pop(PENDING_ACTION_KEY, None)
+            st.rerun()
+    with col_confirm:
+        if st.button(
+            "Confirm",
+            type="primary",
+            use_container_width=True,
+            key=f"_account_dlg_confirm_{action}",
+        ):
+            if action == "suspend":
+                ok = SuspendUserAccountController().suspend_user_account(
+                    account_id
+                )
+                msg = "Account suspended."
+            else:
+                ok = (
+                    UnsuspendUserAccountController()
+                    .unsuspend_user_account(account_id)
+                )
+                msg = "Account unsuspended."
+            st.session_state.pop(PENDING_ACTION_KEY, None)
+            if ok:
+                st.session_state[ACTION_MSG_KEY] = msg
+            st.rerun()
 
 
 class ManageUserAccountPage:
@@ -48,6 +87,11 @@ class ManageUserAccountPage:
                 self._render_action_confirmation()
                 return
             self._render_detail()
+            pending = st.session_state.get(PENDING_ACTION_KEY)
+            if pending:
+                _confirm_suspend_dialog(
+                    pending, st.session_state[SELECTED_KEY]
+                )
             return
 
         col_title, col_create = st.columns([4, 1])
@@ -227,25 +271,12 @@ class ManageUserAccountPage:
         with col_suspend:
             if account.suspended:
                 if st.button("✅ Unsuspend", use_container_width=True):
-                    ok = (
-                        UnsuspendUserAccountController()
-                        .unsuspend_user_account(account.account_id)
-                    )
-                    if ok:
-                        st.session_state[ACTION_MSG_KEY] = "Account unsuspended."
-                        st.rerun()
-                    else:
-                        st.error("Could not unsuspend account.")
+                    st.session_state[PENDING_ACTION_KEY] = "unsuspend"
+                    st.rerun()
             else:
                 if st.button("🚫 Suspend", use_container_width=True):
-                    ok = SuspendUserAccountController().suspend_user_account(
-                        account.account_id
-                    )
-                    if ok:
-                        st.session_state[ACTION_MSG_KEY] = "Account suspended."
-                        st.rerun()
-                    else:
-                        st.error("Could not suspend account.")
+                    st.session_state[PENDING_ACTION_KEY] = "suspend"
+                    st.rerun()
 
     def _render_edit_form(self, account) -> None:
         profiles = ViewProfilesController().view_all_profiles()
