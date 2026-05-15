@@ -32,34 +32,65 @@ from entity.user_profile import UserProfile
 
 SELECTED_KEY = "manage_profile_selected_id"
 EDIT_MODE_KEY = "manage_profile_edit_mode"
+CREATE_MODE_KEY = "manage_profile_create_mode"
 
 
 class ManageUserProfilePage:
     def render(self) -> None:
-        st.header("Manage user profiles")
+        if st.session_state.get(CREATE_MODE_KEY):
+            self._render_create()
+            return
 
         if SELECTED_KEY in st.session_state:
+            st.header("Manage user profiles")
             self._render_detail()
-        else:
-            self._render_list()
+            return
+
+        # List view — title on left, Create button on right.
+        col_title, col_create = st.columns([4, 1])
+        with col_title:
+            st.header("Manage user profiles")
+        with col_create:
+            st.write("")  # vertical spacer to align with the header
+            if st.button("➕ Create new", key="manage_profile_create_btn"):
+                st.session_state[CREATE_MODE_KEY] = True
+                st.rerun()
+        self._render_list()
+
+    # -------- Create view ----------------------------------------------------
+
+    def _render_create(self) -> None:
+        st.header("Create user profile")
+
+        with st.form("manage_profile_create_form"):
+            role = st.text_input("Role")
+            description = st.text_area("Description")
+            col_submit, col_cancel = st.columns(2)
+            with col_submit:
+                submitted = st.form_submit_button("Create")
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+
+        if cancel:
+            st.session_state.pop(CREATE_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate_create(role, description):
+            st.error("Role and description are both required.")
+            return
+
+        CreateProfileController().create_profile(
+            role=role.strip(), description=description.strip()
+        )
+        st.success("Profile created.")
+        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.rerun()
 
     # -------- List view ------------------------------------------------------
 
     def _render_list(self) -> None:
-        with st.expander("➕ Create new profile"):
-            with st.form("manage_profile_create_form"):
-                role = st.text_input("Role")
-                description = st.text_area("Description")
-                if st.form_submit_button("Create"):
-                    if self._validate_create(role, description):
-                        CreateProfileController().create_profile(
-                            role=role.strip(), description=description.strip()
-                        )
-                        st.success("Profile created.")
-                        st.rerun()
-                    else:
-                        st.error("Role and description are both required.")
-
         search_term = st.text_input(
             "Search profiles", placeholder="Role or description…"
         )

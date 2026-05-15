@@ -31,64 +31,93 @@ from entity.user_account import UserAccount
 
 SELECTED_KEY = "manage_account_selected_id"
 EDIT_MODE_KEY = "manage_account_edit_mode"
+CREATE_MODE_KEY = "manage_account_create_mode"
 
 
 class ManageUserAccountPage:
     def render(self) -> None:
-        st.header("Manage user accounts")
+        if st.session_state.get(CREATE_MODE_KEY):
+            self._render_create()
+            return
 
         if SELECTED_KEY in st.session_state:
+            st.header("Manage user accounts")
             self._render_detail()
-        else:
-            self._render_list()
+            return
+
+        col_title, col_create = st.columns([4, 1])
+        with col_title:
+            st.header("Manage user accounts")
+        with col_create:
+            st.write("")
+            if st.button("➕ Create new", key="manage_account_create_btn"):
+                st.session_state[CREATE_MODE_KEY] = True
+                st.rerun()
+        self._render_list()
+
+    # -------- Create view ----------------------------------------------------
+
+    def _render_create(self) -> None:
+        st.header("Create user account")
+        profiles = ViewProfilesController().view_all_profiles()
+
+        if not profiles:
+            st.warning(
+                "No profiles exist yet. Create a user profile first."
+            )
+            if st.button("← Back"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.rerun()
+            return
+
+        with st.form("manage_account_create_form"):
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            name = st.text_input("Name")
+            dob = st.date_input(
+                "Date of birth",
+                value=date(2000, 1, 1),
+                min_value=date(1900, 1, 1),
+                max_value=date.today(),
+            )
+            phone_num = st.text_input("Phone number")
+            profile_options = {
+                f"{p.profile_id} — {p.role}": p.profile_id for p in profiles
+            }
+            profile_label = st.selectbox(
+                "Profile", list(profile_options.keys())
+            )
+            col_submit, col_cancel = st.columns(2)
+            with col_submit:
+                submitted = st.form_submit_button("Create")
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+
+        if cancel:
+            st.session_state.pop(CREATE_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate_create(email, password, name, phone_num):
+            st.error(
+                "Email must contain '@', and email, password, name, "
+                "and phone are all required."
+            )
+            return
+
+        CreateAccountController().create_account(
+            email=email.strip(), password=password, name=name.strip(),
+            dob=dob, phone_num=phone_num.strip(),
+            profile_id=profile_options[profile_label],
+        )
+        st.success("Account created.")
+        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.rerun()
 
     # -------- List view ------------------------------------------------------
 
     def _render_list(self) -> None:
-        profiles = ViewProfilesController().view_all_profiles()
-
-        with st.expander("➕ Create new account"):
-            if not profiles:
-                st.warning(
-                    "No profiles exist yet. Create a user profile first."
-                )
-            else:
-                with st.form("manage_account_create_form"):
-                    email = st.text_input("Email")
-                    password = st.text_input("Password", type="password")
-                    name = st.text_input("Name")
-                    dob = st.date_input(
-                        "Date of birth",
-                        value=date(2000, 1, 1),
-                        min_value=date(1900, 1, 1),
-                        max_value=date.today(),
-                    )
-                    phone_num = st.text_input("Phone number")
-                    profile_options = {
-                        f"{p.profile_id} — {p.role}": p.profile_id
-                        for p in profiles
-                    }
-                    profile_label = st.selectbox(
-                        "Profile", list(profile_options.keys())
-                    )
-                    if st.form_submit_button("Create"):
-                        if self._validate_create(email, password, name, phone_num):
-                            CreateAccountController().create_account(
-                                email=email.strip(),
-                                password=password,
-                                name=name.strip(),
-                                dob=dob,
-                                phone_num=phone_num.strip(),
-                                profile_id=profile_options[profile_label],
-                            )
-                            st.success("Account created.")
-                            st.rerun()
-                        else:
-                            st.error(
-                                "Email must contain '@', and email, password, "
-                                "name, and phone are all required."
-                            )
-
         search_term = st.text_input(
             "Search accounts", placeholder="Email or name…"
         )

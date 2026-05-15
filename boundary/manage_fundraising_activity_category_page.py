@@ -32,35 +32,61 @@ from entity.fundraising_activity_category import FundraisingActivityCategory
 
 SELECTED_KEY = "manage_fra_cat_selected_id"
 EDIT_MODE_KEY = "manage_fra_cat_edit_mode"
+CREATE_MODE_KEY = "manage_fra_cat_create_mode"
 
 
 class ManageFundraisingActivityCategoryPage:
     def render(self) -> None:
-        st.header("Manage fundraising activity categories")
+        if st.session_state.get(CREATE_MODE_KEY):
+            self._render_create()
+            return
 
         if SELECTED_KEY in st.session_state:
+            st.header("Manage fundraising activity categories")
             self._render_detail()
-        else:
-            self._render_list()
+            return
+
+        col_title, col_create = st.columns([4, 1])
+        with col_title:
+            st.header("Manage fundraising activity categories")
+        with col_create:
+            st.write("")
+            if st.button("➕ Create new", key="manage_fra_cat_create_btn"):
+                st.session_state[CREATE_MODE_KEY] = True
+                st.rerun()
+        self._render_list()
+
+    def _render_create(self) -> None:
+        st.header("Create fundraising activity category")
+
+        with st.form("manage_fra_cat_create_form"):
+            name = st.text_input("Category name")
+            description = st.text_area("Description")
+            col_submit, col_cancel = st.columns(2)
+            with col_submit:
+                submitted = st.form_submit_button("Create")
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+
+        if cancel:
+            st.session_state.pop(CREATE_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate(name, description):
+            st.error("Both category name and description are required.")
+            return
+
+        CreateFundraisingActivityCategoryController().create_category(
+            category_name=name.strip(),
+            description=description.strip(),
+        )
+        st.success("Category created.")
+        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.rerun()
 
     def _render_list(self) -> None:
-        with st.expander("➕ Create new category"):
-            with st.form("manage_fra_cat_create_form"):
-                name = st.text_input("Category name")
-                description = st.text_area("Description")
-                if st.form_submit_button("Create"):
-                    if self._validate(name, description):
-                        CreateFundraisingActivityCategoryController().create_category(
-                            category_name=name.strip(),
-                            description=description.strip(),
-                        )
-                        st.success("Category created.")
-                        st.rerun()
-                    else:
-                        st.error(
-                            "Both category name and description are required."
-                        )
-
         search_term = st.text_input(
             "Search categories", placeholder="Name or description…"
         )

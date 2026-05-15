@@ -42,60 +42,87 @@ from entity.fundraising_activity import FundraisingActivity
 SELECTED_KEY = "manage_my_fra_selected_id"
 EDIT_MODE_KEY = "manage_my_fra_edit_mode"
 SELECTED_TAB_KEY = "manage_my_fra_selected_tab"  # "all" or "completed"
+CREATE_MODE_KEY = "manage_my_fra_create_mode"
 
 
 class ManageMyFundraisingActivityPage:
     def render(self) -> None:
-        st.header("Manage my fundraising activities")
-
         if "user" not in st.session_state:
+            st.header("Manage my fundraising activities")
             st.warning("Please log in first.")
             return
 
         owner_account_id = st.session_state["user"].account_id
 
+        if st.session_state.get(CREATE_MODE_KEY):
+            self._render_create(owner_account_id)
+            return
+
         if SELECTED_KEY in st.session_state:
+            st.header("Manage my fundraising activities")
             self._render_detail(owner_account_id)
-        else:
-            self._render_list(owner_account_id)
+            return
+
+        col_title, col_create = st.columns([4, 1])
+        with col_title:
+            st.header("Manage my fundraising activities")
+        with col_create:
+            st.write("")
+            if st.button("➕ Create new", key="manage_my_fra_create_btn"):
+                st.session_state[CREATE_MODE_KEY] = True
+                st.rerun()
+        self._render_list(owner_account_id)
+
+    # -------- Create view ----------------------------------------------------
+
+    def _render_create(self, owner_account_id: str) -> None:
+        st.header("Create fundraising activity")
+
+        with st.form("manage_my_fra_create_form"):
+            title = st.text_input("Title")
+            description = st.text_area("Description")
+            target_amount_str = st.text_input("Target amount", value="0.00")
+            category = st.text_input("Category")
+            start_date = st.date_input("Start date", value=date.today())
+            end_date = st.date_input("End date", value=date.today())
+            col_submit, col_cancel = st.columns(2)
+            with col_submit:
+                submitted = st.form_submit_button("Create")
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+
+        if cancel:
+            st.session_state.pop(CREATE_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate_create(
+            title, description, target_amount_str,
+            category, start_date, end_date,
+        ):
+            st.error(
+                "All fields required; target must be positive; "
+                "start date must be on/before end date."
+            )
+            return
+
+        CreateFundraisingActivityController().create_fundraising_activity(
+            title=title.strip(),
+            description=description.strip(),
+            target_amount=Decimal(target_amount_str),
+            category=category.strip(),
+            start_date=start_date,
+            end_date=end_date,
+            owner_account_id=owner_account_id,
+        )
+        st.success("Activity created.")
+        st.session_state.pop(CREATE_MODE_KEY, None)
+        st.rerun()
 
     # -------- List view ------------------------------------------------------
 
     def _render_list(self, owner_account_id: str) -> None:
-        with st.expander("➕ Create new fundraising activity"):
-            with st.form("manage_my_fra_create_form"):
-                title = st.text_input("Title")
-                description = st.text_area("Description")
-                target_amount_str = st.text_input(
-                    "Target amount", value="0.00"
-                )
-                category = st.text_input("Category")
-                start_date = st.date_input(
-                    "Start date", value=date.today()
-                )
-                end_date = st.date_input("End date", value=date.today())
-                if st.form_submit_button("Create"):
-                    if self._validate_create(
-                        title, description, target_amount_str,
-                        category, start_date, end_date,
-                    ):
-                        CreateFundraisingActivityController().create_fundraising_activity(
-                            title=title.strip(),
-                            description=description.strip(),
-                            target_amount=Decimal(target_amount_str),
-                            category=category.strip(),
-                            start_date=start_date,
-                            end_date=end_date,
-                            owner_account_id=owner_account_id,
-                        )
-                        st.success("Activity created.")
-                        st.rerun()
-                    else:
-                        st.error(
-                            "All fields required; target must be positive; "
-                            "start date must be on/before end date."
-                        )
-
         all_tab, completed_tab = st.tabs(["All", "Completed"])
         with all_tab:
             self._render_tab(owner_account_id, completed_only=False)
