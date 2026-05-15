@@ -179,8 +179,8 @@ class ManageUserProfilePage:
             st.rerun()
 
     def _render_view(self, profile) -> None:
-        st.subheader(profile.role)
         st.write(f"**Profile ID:** {profile.profile_id}")
+        st.write(f"**Role:** {profile.role}")
         st.write(f"**Description:** {profile.description or '(none)'}")
         st.write(f"**Suspended:** {'yes' if profile.suspended else 'no'}")
 
@@ -213,8 +213,7 @@ class ManageUserProfilePage:
                         st.error("Could not suspend profile.")
 
     def _render_edit_form(self, profile) -> None:
-        st.subheader(profile.role)
-        st.caption(f"Editing {profile.profile_id}")
+        st.write(f"**Editing:** {profile.profile_id}")
         with st.form("manage_profile_edit_form"):
             role = st.text_input("Role", value=profile.role)
             description = st.text_area("Description", value=profile.description)
