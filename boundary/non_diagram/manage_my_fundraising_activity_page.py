@@ -73,7 +73,7 @@ class ManageMyFundraisingActivityPage:
         with col_create:
             st.write("")
             if st.button(
-                "+ Create new activity",
+                "+ Create new fundraising activity",
                 key="manage_my_fra_create_btn",
                 use_container_width=True,
             ):
