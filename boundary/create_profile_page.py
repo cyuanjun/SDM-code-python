@@ -12,12 +12,14 @@ import streamlit as st
 
 from controller.create_profile_controller import CreateProfileController
 
+ROLE_OPTIONS = ("admin", "fundraiser", "donee", "platform_manager")
+
 
 class CreateProfilePage:
     def render(self) -> None:
         st.header("Create User Profile")
         with st.form("create_profile_form"):
-            role = st.text_input("Role")
+            role = st.selectbox("Role", ROLE_OPTIONS)
             description = st.text_area("Description")
             submitted = st.form_submit_button("Create profile")
 
