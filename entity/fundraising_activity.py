@@ -202,23 +202,21 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    def view_my_completed_activity(
-        cls, owner_account_id: str, fra_id: str
-    ) -> Optional["FundraisingActivity"]:
-        """US-31 — fundraiser views one of their completed activities.
-        Returns None if the row is missing, owned by someone else, OR
-        not yet completed."""
+    def view_my_completed_fundraising_activities(
+        cls, owner_account_id: str
+    ) -> list["FundraisingActivity"]:
+        """US-31 — fundraiser views the list of their completed activities."""
         owner_rowid = parse_id(owner_account_id)
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
-            row = conn.execute(
+            rows = conn.execute(
                 "SELECT fra_id, title, description, target_amount, category, "
                 "start_date, end_date, completed, suspended, owner_account_id, "
                 "view_count, save_count FROM fundraising_activity "
-                "WHERE fra_id = ? AND owner_account_id = ? AND completed = 1",
-                (rowid, owner_rowid),
-            ).fetchone()
-        return None if row is None else cls._from_row(row)
+                "WHERE owner_account_id = ? AND completed = 1 "
+                "ORDER BY fra_id",
+                (owner_rowid,),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
 
     @classmethod
     def search_fundraising_activity(

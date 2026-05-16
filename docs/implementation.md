@@ -42,7 +42,7 @@ CSIT314 group project — online fundraising platform (Python + Streamlit + SQLi
 | US-28 | 4 | Fundraiser | View fundraising activity view count | Manage My Fundraising Activities |
 | US-29 | 4 | Fundraiser | View fundraising activity save count | Manage My Fundraising Activities |
 | US-30 | 3 | Fundraiser | Search my completed fundraising activities | Manage My Fundraising Activities |
-| US-31 | 3 | Fundraiser | View my completed fundraising activity | Manage My Fundraising Activities |
+| US-31 | 3 | Fundraiser | View my completed fundraising activities | Manage My Fundraising Activities |
 | US-32 | 3 | Donee | Search my donation history | My Donations |
 | US-33 | 3 | Donee | View my donation history | My Donations |
 | US-34 | 4 | Platform Manager | Create fundraising activity category | Manage FRA Categories |
@@ -885,31 +885,31 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 **Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 dropped the FRA short form and adopted full form (`searchMyCompletedFundraisingActivity`) — code renamed to match (previously `search_my_completed_fra`). US-30 and US-31 share the boundary class `ViewMyCompletedFundraisingActivitiesPage`; the page lives in a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class).
 
-### US-31 — View my completed fundraising activity ([diagram](../diagrams/sprint-3_diagrams/US-31.jpg))
+### US-31 — View my completed fundraising activities ([diagram](../diagrams/sprint-3_diagrams/US-31.jpg))
 
-**Actor:** Fundraiser — *As a fundraiser, I want to view the history of my completed fundraising activities so that I can review the previous campaign records.*
+**Actor:** Fundraiser — *As a fundraiser, I want to view a list of my completed fundraising activities so that I can keep track of them.*
 
 **Diagram-defined surface**
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyCompletedActivityPage` (diagram shares with US-30) | `displayMyCompletedActivity(fundraisingActivity: FundraisingActivity): void` |
-| Controller | `ViewMyCompletedActivityController` | `viewMyCompletedActivity(ownerAccountId: String, FRAId: String): FundraisingActivity` |
-| Entity | `FundraisingActivity (attrs as US-14)` | `viewMyCompletedActivity(ownerAccountId: String, FRAId: String): FundraisingActivity` |
+| Boundary | `ViewMyCompletedFundraisingActivitiesPage` *(shared with US-30)* | `displayMyCompletedFundraisingActivities(myCompletedFRAList: List<FundraisingActivity>): void` |
+| Controller | `ViewMyCompletedFundraisingActivitiesController` | `viewMyCompletedFundraisingActivities(ownerAccountId: String): List<FundraisingActivity>` |
+| Entity | `FundraisingActivity (attrs as US-14)` | `viewMyCompletedFundraisingActivities(ownerAccountId: String): List<FundraisingActivity>` |
 
 **Code**
-- [boundary/view_my_completed_activity_page.py:24](../boundary/view_my_completed_activity_page.py#L24)
-- [controller/view_my_completed_activity_controller.py:12](../controller/view_my_completed_activity_controller.py#L12)
-- [entity/fundraising_activity.py:205](../entity/fundraising_activity.py#L205) — owner + `completed = 1` scoped; returns `None` if missing, cross-owner, or not yet completed
+- [boundary/view_my_completed_fundraising_activities_page.py](../boundary/view_my_completed_fundraising_activities_page.py) — shared with US-30
+- [controller/view_my_completed_fundraising_activities_controller.py](../controller/view_my_completed_fundraising_activities_controller.py)
+- [entity/fundraising_activity.py:204](../entity/fundraising_activity.py#L204) — owner-scoped + `completed = 1` filter; returns list
 
-**Sidebar wiring:** Surfaced via `ManageMyFundraisingActivityPage` (the "Completed" tab; clicking a search row opens the detail panel); fundraiser only.
+**Sidebar wiring:** Surfaced via `ManageMyFundraisingActivityPage` (the "Completed" tab). Clicking a row reuses US-13's `view_my_fundraising_activity(owner, fra_id)` for the detail panel — since the picker only shows completed activities, the picked id is always for a completed one, so no separate per-id "completed" lookup is needed. Fundraiser only.
 
 **Tests**
-- [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — completed happy + missing + cross-owner + not-yet-completed negatives
-- [tests/test_view_my_completed_activity_controller.py](../tests/test_view_my_completed_activity_controller.py) — delegation + `None` mirror
-- [tests/test_view_my_completed_activity_page.py](../tests/test_view_my_completed_activity_page.py) — page smoke
+- [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — completed-only owner happy + cross-owner-excluded + empty-when-no-completed negatives
+- [tests/test_view_my_completed_fundraising_activities_controller.py](../tests/test_view_my_completed_fundraising_activities_controller.py) — delegation + empty-list mirror
+- [tests/test_view_my_completed_fundraising_activities_page.py](../tests/test_view_my_completed_fundraising_activities_page.py) — page smoke (shared with US-30)
 
-**Notes / assumptions / deferred:** Same **deferred 2026-05-16** boundary-class split as US-30. Diagram returns `FundraisingActivity` with no failure branch — implementation returns `None`, accepted under the same implicit-failure-branch convention as US-11 login.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 reframed US-31 from a per-id detail view into a list view (`viewMyCompletedFundraisingActivities(owner): List<FundraisingActivity>`). The old per-id method `view_my_completed_activity(owner, fra_id)` was removed; the detail panel in `ManageMyFundraisingActivityPage` now reuses US-13's `view_my_fundraising_activity(owner, fra_id)`. The "is completed" guard moves from the entity (old: `WHERE completed = 1`) into the boundary picker (the click-source is the completed-only list, so the picked id is guaranteed completed).
 
 ### US-32 — Search my donation history ([diagram](../diagrams/sprint-3_diagrams/US-32.jpg))
 

@@ -1,10 +1,12 @@
-"""ViewMyCompletedFundraisingActivitiesPage <<Boundary>> — Sprint 3 US-30.
+"""ViewMyCompletedFundraisingActivitiesPage <<Boundary>> — Sprint 3 US-30 + US-31.
 
-Diagram contract (US-30.jpg):
-    + displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void
+Diagram contracts:
+    US-30: + displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void
+    US-31: + displayMyCompletedFundraisingActivities(myCompletedFRAList: List<FundraisingActivity>): void
 
-The same boundary class is named on the US-31 diagram for "view a list
-of my completed activities"; US-31's contribution is added by commit 3.
+Both USes name the same Boundary class on their diagrams. The page renders
+US-31's full list by default; supplying search criteria switches to US-30's
+filtered results.
 """
 from __future__ import annotations
 
@@ -13,11 +15,14 @@ import streamlit as st
 from controller.search_my_completed_fundraising_activity_controller import (
     SearchMyCompletedFundraisingActivityController,
 )
+from controller.view_my_completed_fundraising_activities_controller import (
+    ViewMyCompletedFundraisingActivitiesController,
+)
 
 
 class ViewMyCompletedFundraisingActivitiesPage:
     def render(self) -> None:
-        st.header("Search My Completed Activities")
+        st.header("My Completed Fundraising Activities")
 
         if "user" not in st.session_state:
             st.warning("Please log in first.")
@@ -25,28 +30,40 @@ class ViewMyCompletedFundraisingActivitiesPage:
 
         owner_account_id = st.session_state["user"].account_id
 
-        with st.form("search_my_completed_fra_form"):
+        with st.form("my_completed_fra_form"):
             criteria = st.text_input(
-                "Search criteria",
+                "Search criteria (leave blank to list all)",
                 placeholder="Title, description, or category…",
             )
-            submitted = st.form_submit_button("Search")
+            submitted = st.form_submit_button("Show")
 
         if not submitted:
-            return
-
-        if not self.validate_criteria(criteria):
-            self.display_error()
-            return
-
-        results = (
-            SearchMyCompletedFundraisingActivityController()
-            .search_my_completed_fundraising_activity(
-                owner_account_id=owner_account_id,
-                search_criteria=criteria.strip(),
+            activities = (
+                ViewMyCompletedFundraisingActivitiesController()
+                .view_my_completed_fundraising_activities(
+                    owner_account_id=owner_account_id,
+                )
             )
-        )
-        self.display_matching_my_completed_fundraising_activity(results)
+            self.display_my_completed_fundraising_activities(activities)
+            return
+
+        if criteria.strip():
+            results = (
+                SearchMyCompletedFundraisingActivityController()
+                .search_my_completed_fundraising_activity(
+                    owner_account_id=owner_account_id,
+                    search_criteria=criteria.strip(),
+                )
+            )
+            self.display_matching_my_completed_fundraising_activity(results)
+        else:
+            activities = (
+                ViewMyCompletedFundraisingActivitiesController()
+                .view_my_completed_fundraising_activities(
+                    owner_account_id=owner_account_id,
+                )
+            )
+            self.display_my_completed_fundraising_activities(activities)
 
     @staticmethod
     def validate_criteria(criteria: str) -> bool:
@@ -58,6 +75,22 @@ class ViewMyCompletedFundraisingActivitiesPage:
             st.info("No completed activities of yours match.")
             return
         st.caption(f"{len(activities)} match")
+        ViewMyCompletedFundraisingActivitiesPage._render_table(activities)
+
+    @staticmethod
+    def display_my_completed_fundraising_activities(activities) -> None:
+        if not activities:
+            st.info("You have no completed activities yet.")
+            return
+        st.caption(f"{len(activities)} of your completed activities")
+        ViewMyCompletedFundraisingActivitiesPage._render_table(activities)
+
+    @staticmethod
+    def display_error() -> None:
+        st.error("Please enter a search term.")
+
+    @staticmethod
+    def _render_table(activities) -> None:
         rows = [
             {
                 "ID": a.fra_id,
@@ -70,7 +103,3 @@ class ViewMyCompletedFundraisingActivitiesPage:
             for a in activities
         ]
         st.dataframe(rows, width="stretch", hide_index=True)
-
-    @staticmethod
-    def display_error() -> None:
-        st.error("Please enter a search term.")

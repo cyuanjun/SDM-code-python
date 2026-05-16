@@ -31,9 +31,6 @@ from controller.unsuspend_my_fundraising_activity_controller import (
 from controller.update_my_fundraising_activity_controller import (
     UpdateMyFundraisingActivityController,
 )
-from controller.view_my_completed_activity_controller import (
-    ViewMyCompletedActivityController,
-)
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
@@ -252,20 +249,12 @@ class ManageMyFundraisingActivityPage:
         fra_id = st.session_state[SELECTED_KEY]
         tab = st.session_state.get(SELECTED_TAB_KEY, "all")
 
-        if tab == "completed":
-            current = (
-                ViewMyCompletedActivityController()
-                .view_my_completed_activity(
-                    owner_account_id=owner_account_id, fra_id=fra_id,
-                )
+        current = (
+            ViewMyFundraisingActivityController()
+            .view_my_fundraising_activity(
+                owner_account_id=owner_account_id, fra_id=fra_id,
             )
-        else:
-            current = (
-                ViewMyFundraisingActivityController()
-                .view_my_fundraising_activity(
-                    owner_account_id=owner_account_id, fra_id=fra_id,
-                )
-            )
+        )
 
         if current is None:
             st.error("Activity is not yours or no longer exists.")

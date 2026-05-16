@@ -540,36 +540,25 @@ def test_search_my_completed_fundraising_activity_returns_empty_for_no_matches()
     )
 
 
-def test_view_my_completed_activity_returns_activity_for_correct_owner() -> None:
+def test_view_my_completed_fundraising_activities_returns_only_completed_for_owner() -> None:
     owner = _seed_fundraiser_account()
-    completed = _seed_completed_activity(owner)
+    completed_a = _seed_completed_activity(owner, title="Hospital fund")
+    completed_b = _seed_completed_activity(owner, title="School fund")
+    _seed_activity(owner, title="Ongoing thing")  # not completed
 
-    fetched = FundraisingActivity.view_my_completed_activity(
-        owner_account_id=owner.account_id, fra_id=completed.fra_id,
-    )
-    assert fetched is not None
-    assert fetched.fra_id == completed.fra_id
-    assert fetched.completed is True
-
-
-def test_view_my_completed_activity_returns_none_for_not_completed() -> None:
-    """Negative path: ongoing activity isn't returned by the 'completed'
-    view even if the caller owns it."""
-    owner = _seed_fundraiser_account()
-    ongoing = _seed_activity(owner)
-    assert ongoing.completed is False
-
-    assert (
-        FundraisingActivity.view_my_completed_activity(
-            owner_account_id=owner.account_id, fra_id=ongoing.fra_id
-        )
-        is None
+    results = FundraisingActivity.view_my_completed_fundraising_activities(
+        owner_account_id=owner.account_id,
     )
 
+    titles = {a.title for a in results}
+    assert titles == {"Hospital fund", "School fund"}
+    assert all(a.completed for a in results)
+    assert {completed_a.fra_id, completed_b.fra_id} == {a.fra_id for a in results}
 
-def test_view_my_completed_activity_returns_none_for_wrong_owner() -> None:
+
+def test_view_my_completed_fundraising_activities_excludes_other_owners() -> None:
     owner = _seed_fundraiser_account()
-    completed = _seed_completed_activity(owner)
+    _seed_completed_activity(owner, title="Mine")
 
     other_profile = UserProfile.create_profile(
         role="fundraiser", description="Other"
@@ -579,12 +568,23 @@ def test_view_my_completed_activity_returns_none_for_wrong_owner() -> None:
         dob=date(1990, 1, 1), phone_num="0",
         profile_id=other_profile.profile_id,
     )
+    _seed_completed_activity(other, title="Theirs")
+
+    mine = FundraisingActivity.view_my_completed_fundraising_activities(
+        owner_account_id=owner.account_id,
+    )
+    assert {a.title for a in mine} == {"Mine"}
+
+
+def test_view_my_completed_fundraising_activities_returns_empty_for_no_completed() -> None:
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner, title="Ongoing only")  # not completed
 
     assert (
-        FundraisingActivity.view_my_completed_activity(
-            owner_account_id=other.account_id, fra_id=completed.fra_id
+        FundraisingActivity.view_my_completed_fundraising_activities(
+            owner_account_id=owner.account_id,
         )
-        is None
+        == []
     )
 
 
