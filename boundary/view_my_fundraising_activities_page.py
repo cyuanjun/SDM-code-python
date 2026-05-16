@@ -1,12 +1,7 @@
-"""ViewMyFundraisingActivitiesPage <<Boundary>> — Sprint 3 US-17 (+ US-30).
+"""ViewMyFundraisingActivitiesPage <<Boundary>> — Sprint 3 US-17.
 
 Diagram contract (US-17.jpg):
-    + displayMatchingFundraisingActivity(myFRAList: List<FundraisingActivity>): void
-
-The same boundary class is named on the US-30 diagram for "search my
-completed activities" — implementation routes by an in-page selector
-(all / completed-only). Sprint 3 US-30 is implemented in a separate
-controller; this page only handles US-17 directly.
+    + displayMatchingMyFundraisingActivity(myFRAList: List<FundraisingActivity>): void
 """
 from __future__ import annotations
 
@@ -48,14 +43,14 @@ class ViewMyFundraisingActivitiesPage:
                 search_criteria=criteria.strip(),
             )
         )
-        self.display_matching_my_fra(results)
+        self.display_matching_my_fundraising_activity(results)
 
     @staticmethod
     def validate_criteria(criteria: str) -> bool:
         return bool(criteria.strip())
 
     @staticmethod
-    def display_matching_my_fra(activities) -> None:
+    def display_matching_my_fundraising_activity(activities) -> None:
         if not activities:
             st.info("No activities of yours match.")
             return

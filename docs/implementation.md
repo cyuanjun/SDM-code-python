@@ -789,7 +789,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyFundraisingActivitiesPage` | `displayMatchingFundraisingActivity(myFRAList: List<FundraisingActivity>): void` |
+| Boundary | `ViewMyFundraisingActivitiesPage` | `displayMatchingMyFundraisingActivity(myFRAList: List<FundraisingActivity>): void` |
 | Controller | `SearchMyFundraisingActivityController` | `searchMyFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
 | Entity | `FundraisingActivity (attrs as US-14)` | `searchMyFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
 
