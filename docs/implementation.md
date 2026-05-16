@@ -82,7 +82,7 @@ Numbers below are summaries — the detail tables further down hold the full tex
 - **Exception B** — 1 debug-only page (`.info`, [boundary/non_diagram/info_page.py](../boundary/non_diagram/info_page.py)).
 - **Exception C** — 7 combined sidebar pages compose 27 per-US Boundary classes (every per-US class still exists as a tested artifact).
 - **Lecturer decisions (4)** — donation seed (2026-05-15), `UNIQUE(email)` on UserAccount (2026-05-15), no `displayError` on Sprint 1 boundaries (2026-05-16), login failure return type implicit on US-11/18/26/39 (2026-05-16).
-- **Deferred typos (6)** — US-23 boundary name; US-25 `viewMode` param; US-25 boundary name; US-30/31 shared boundary; US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
+- **Deferred typos** — US-25 boundary name; US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
 - **Open architectural items (1)** — plain-text passwords on `UserAccount` (deferred to a hardening sprint).
 - **Resolved diagram typos** — 14 resolved across Sprints 1–4 over 2026-05-14 to 2026-05-16; 6 deferred (see above) and 2 lecturer-deferred (displayError, login failure return type). See [docs/diagram_typos.md](diagram_typos.md) for the full struck-through list.
 
@@ -643,7 +643,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 - [tests/test_view_favourite_list_controller.py](../tests/test_view_favourite_list_controller.py) — delegation + empty-list mirror
 - [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke
 
-**Notes / assumptions / deferred:** The original diagram named the boundary `ViewFavouritePage`, controller `ViewFavouriteController`, and entity method `viewFavourite(accountId): Favourite` (singular). **Resolved 2026-05-16** by re-exporting with the `List` suffix throughout — code was renamed to match. Same page is reused for US-23 remove-favourite (Sprint 3); the US-23 diagram still says `ViewFavouritePage` and is listed as a deferred naming preference in [docs/todo.md](todo.md).
+**Notes / assumptions / deferred:** The original diagram named the boundary `ViewFavouritePage`, controller `ViewFavouriteController`, and entity method `viewFavourite(accountId): Favourite` (singular). **Resolved 2026-05-16** by re-exporting with the `List` suffix throughout — code was renamed to match. Same page is reused for US-23 remove-favourite (Sprint 3); US-23's re-exported diagram 2026-05-17 now also names the boundary `ViewFavouriteListPage`, so the previously-deferred mismatch is resolved.
 
 ---
 
@@ -809,13 +809,13 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 ### US-23 — Remove from favourite list ([diagram](../diagrams/sprint-3_diagrams/US-23.jpg))
 
-**Actor:** Donee — *As a donee, I want to remove a fundraising activity from my favourite list so that I can drop activities I'm no longer interested in.*
+**Actor:** Donee — *As a donee, I want to remove a fundraising activity from my favourites list so that I can keep my favourites list relevant.*
 
 **Diagram-defined surface**
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewFavouritePage` (diagram) / `ViewFavouriteListPage` (code) | `displaySuccess(): void` |
+| Boundary | `ViewFavouriteListPage` | `displaySuccess(): void` |
 | Controller | `RemoveFavouriteController` | `removeFavourite(FRAId: String, accountId: String): Boolean` |
 | Entity | `Favourite (FRAId, accountId)` | `removeFavourite(FRAId: String, accountId: String): Boolean` |
 
@@ -831,7 +831,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_remove_favourite_controller.py](../tests/test_remove_favourite_controller.py) — delegation + `False` mirror
 - [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke
 
-**Notes / assumptions / deferred:** **Deferred 2026-05-16** — the diagram names the boundary `ViewFavouritePage` (singular) but the code reuses the renamed US-24 boundary `ViewFavouriteListPage`; same screen, accepted as a minor name inconsistency (see [docs/todo.md](todo.md)). The save-count decrement is an Exception A side effect that keeps US-29's `view_fundraising_activity_save_count` in sync.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 names the boundary `ViewFavouriteListPage` (class + sequence consistent) and fixes the user-story wording ("suspend" → "remove"; "favourite list" → "favourites list"). The previously-deferred boundary naming typo is now resolved. The save-count decrement is an Exception A side effect that keeps US-29's `view_fundraising_activity_save_count` in sync.
 
 ### US-25 — Search my favourites list ([diagram](../diagrams/sprint-3_diagrams/US-25.jpg))
 
@@ -1296,7 +1296,6 @@ Items the lecturer has explicitly accepted; diagrams and code stay as-is. See [d
 
 Sprint 3 / Sprint 4 items where the diagram and code disagree but the team has chosen to live with the divergence. Each has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md). See [todo.md "Deferred typos"](todo.md) for the consolidated index.
 
-- **US-23 boundary class name** — diagram `ViewFavouritePage`; code `ViewFavouriteListPage` (shared with US-24).
 - **US-25 `viewMode` param** — class diagram has 3 params; sequence has 2; code uses the 2-param version.
 - **US-25 boundary class name** — diagram `ViewFavouritesPage`; code `SearchFavouritePage`.
 - **US-30 / US-31 shared boundary** — both diagrams name `ViewMyCompletedFundraisingActivitiesPage`; code consolidates into a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class). Resolved 2026-05-17.

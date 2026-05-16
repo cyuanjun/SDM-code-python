@@ -40,7 +40,7 @@ Things the lecturer has explicitly accepted as-is. The diagram does not need to 
 
 Sprint 3 + Sprint 4 items where the diagram and code disagree but the team has chosen to accept the divergence rather than fix either side. Each entry has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md); this section is the consolidated index.
 
-- **[US-23.jpg](../diagrams/sprint-3_diagrams/US-23.jpg) boundary class name.** Diagram: `ViewFavouritePage` (singular). Code: `ViewFavouriteListPage` (shared with US-24). Same screen, different names.
+- ~~**[US-23.jpg](../diagrams/sprint-3_diagrams/US-23.jpg) boundary class name.**~~ **Resolved 2026-05-17.** Re-exported diagram now names the boundary `ViewFavouriteListPage`, matching code.
 - **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) `viewMode` param.** Class diagram has 3-param `searchFavourite(viewMode, searchCriteria, accountId)`; sequence diagram has 2 params. Code uses the 2-param sequence version.
 - **[US-25.jpg](../diagrams/sprint-3_diagrams/US-25.jpg) boundary class name.** Diagram: `ViewFavouritesPage`. Code: `SearchFavouritePage` (matches the user story "search my favourites list").
 - ~~**[US-30.jpg](../diagrams/sprint-3_diagrams/US-30.jpg) / [US-31.jpg](../diagrams/sprint-3_diagrams/US-31.jpg) shared boundary class.**~~ **Resolved 2026-05-17.** Re-exported diagrams name the shared boundary `ViewMyCompletedFundraisingActivitiesPage`; code now consolidates US-30 + US-31 into a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern).
