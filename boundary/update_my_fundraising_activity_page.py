@@ -83,10 +83,10 @@ class UpdateMyFundraisingActivityPage:
             return
 
         target_amount = Decimal(target_amount_str)
-        ok = UpdateMyFundraisingActivityController().update_fundraising_activity(
+        ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=st.session_state[SELECTED_KEY],
-            updated_activity=FundraisingActivity(
+            updated_my_fra=FundraisingActivity(
                 title=title.strip(),
                 description=description.strip(),
                 target_amount=target_amount,

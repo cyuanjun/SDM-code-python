@@ -31,10 +31,10 @@ def test_controller_returns_true_when_entity_updates_a_row() -> None:
         owner_account_id=account.account_id,
     )
 
-    ok = UpdateMyFundraisingActivityController().update_fundraising_activity(
+    ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
         owner_account_id=account.account_id,
         fra_id=created.fra_id,
-        updated_activity=updated,
+        updated_my_fra=updated,
     )
 
     assert ok is True
@@ -46,16 +46,16 @@ def test_controller_returns_false_when_entity_returns_false(
     """Negative-path mirror: entity returns False (wrong owner or missing)."""
     monkeypatch.setattr(
         FundraisingActivity,
-        "update_fundraising_activity",
+        "update_my_fundraising_activity",
         classmethod(
-            lambda cls, owner_account_id, fra_id, updated_activity: False
+            lambda cls, owner_account_id, fra_id, updated_my_fra: False
         ),
     )
 
-    result = UpdateMyFundraisingActivityController().update_fundraising_activity(
+    result = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
         owner_account_id="acc_001",
         fra_id="fra_001",
-        updated_activity=FundraisingActivity(
+        updated_my_fra=FundraisingActivity(
             title="x", description="x", target_amount=Decimal("1"),
             category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
             owner_account_id="acc_001",

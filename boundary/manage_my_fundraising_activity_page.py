@@ -445,10 +445,10 @@ class ManageMyFundraisingActivityPage:
             st.error("Invalid input.")
             return
 
-        ok = UpdateMyFundraisingActivityController().update_fundraising_activity(
+        ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=activity.fra_id,
-            updated_activity=FundraisingActivity(
+            updated_my_fra=FundraisingActivity(
                 title=title.strip(),
                 description=description.strip(),
                 target_amount=Decimal(target_amount_str),

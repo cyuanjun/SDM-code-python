@@ -1,8 +1,8 @@
 """UpdateMyFundraisingActivityController <<Controller>> — Sprint 2 US-15.
 
-Pure delegator. Forwards (owner_account_id, fra_id, updated_activity) to
-FundraisingActivity.update_fundraising_activity. Ownership is enforced at
-the entity layer.
+Pure delegator. Forwards (owner_account_id, fra_id, updated_my_fra) to
+FundraisingActivity.update_my_fundraising_activity. Ownership is enforced
+at the entity layer.
 """
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ from entity.fundraising_activity import FundraisingActivity
 
 
 class UpdateMyFundraisingActivityController:
-    def update_fundraising_activity(
+    def update_my_fundraising_activity(
         self,
         owner_account_id: str,
         fra_id: str,
-        updated_activity: FundraisingActivity,
+        updated_my_fra: FundraisingActivity,
     ) -> bool:
-        return FundraisingActivity.update_fundraising_activity(
+        return FundraisingActivity.update_my_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=fra_id,
-            updated_activity=updated_activity,
+            updated_my_fra=updated_my_fra,
         )

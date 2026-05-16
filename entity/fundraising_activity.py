@@ -241,17 +241,15 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    def update_fundraising_activity(
+    def update_my_fundraising_activity(
         cls,
         owner_account_id: str,
         fra_id: str,
-        updated_activity: "FundraisingActivity",
+        updated_my_fra: "FundraisingActivity",
     ) -> bool:
         """US-15 — fundraiser updates one of their own activities.
         Returns True iff a row matched both fra_id AND owner_account_id;
         cross-owner writes are refused (rowcount stays 0).
-        The diagram's class-level method signature omits owner_account_id
-        but the sequence diagram includes it — logged as a Sprint 2 typo.
         """
         owner_rowid = parse_id(owner_account_id)
         rowid = parse_id(fra_id)
@@ -263,14 +261,14 @@ class FundraisingActivity:
                 "completed = ?, suspended = ? "
                 "WHERE fra_id = ? AND owner_account_id = ?",
                 (
-                    updated_activity.title,
-                    updated_activity.description,
-                    str(updated_activity.target_amount),
-                    updated_activity.category,
-                    updated_activity.start_date.isoformat(),
-                    updated_activity.end_date.isoformat(),
-                    1 if updated_activity.completed else 0,
-                    1 if updated_activity.suspended else 0,
+                    updated_my_fra.title,
+                    updated_my_fra.description,
+                    str(updated_my_fra.target_amount),
+                    updated_my_fra.category,
+                    updated_my_fra.start_date.isoformat(),
+                    updated_my_fra.end_date.isoformat(),
+                    1 if updated_my_fra.completed else 0,
+                    1 if updated_my_fra.suspended else 0,
                     rowid,
                     owner_rowid,
                 ),

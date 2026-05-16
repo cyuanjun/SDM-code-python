@@ -550,13 +550,13 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 | Layer | Class | Method |
 |---|---|---|
 | Boundary | `UpdateMyFundraisingActivityPage` | `displaySuccess(): void` |
-| Controller | `UpdateMyFundraisingActivityController` | `updateFundraisingActivity(ownerAccountId: String, FRAId: String, updatedActivity: FundraisingActivity): Boolean` |
-| Entity | `FundraisingActivity (attrs as US-14)` | `updateFundraisingActivity(ownerAccountId: String, FRAId: String, updatedActivity: FundraisingActivity): Boolean` |
+| Controller | `UpdateMyFundraisingActivityController` | `updateMyFundraisingActivity(ownerAccountId: String, FRAId: String, updatedMyFRA: FundraisingActivity): Boolean` |
+| Entity | `FundraisingActivity (attrs as US-14)` | `updateMyFundraisingActivity(ownerAccountId: String, FRAId: String, updatedMyFRA: FundraisingActivity): Boolean` |
 
 **Code**
 - [boundary/update_my_fundraising_activity_page.py](../boundary/update_my_fundraising_activity_page.py)
-- [controller/update_my_fundraising_activity_controller.py:12](../controller/update_my_fundraising_activity_controller.py#L12)
-- [entity/fundraising_activity.py:243](../entity/fundraising_activity.py#L243)
+- [controller/update_my_fundraising_activity_controller.py:13](../controller/update_my_fundraising_activity_controller.py#L13)
+- [entity/fundraising_activity.py:244](../entity/fundraising_activity.py#L244)
 
 **Sidebar wiring:** Folded into `ManageMyFundraisingActivityPage`. Fundraiser role only.
 
@@ -565,7 +565,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 - [tests/test_update_my_fundraising_activity_controller.py](../tests/test_update_my_fundraising_activity_controller.py) — delegation + `False` mirror
 - [tests/test_update_my_fundraising_activity_page.py](../tests/test_update_my_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Boundary validation requires non-empty `title/description/category`, a positive `Decimal` target, and `start_date <= end_date`. Entity refuses cross-owner writes via `WHERE fra_id = ? AND owner_account_id = ?` → `rowcount == 0` → `False`. Diagram originally omitted `ownerAccountId` from the class signature and used `FundraiserActivity` type names; re-exported 2026-05-16 now signs the 3-param `updateFundraisingActivity` with the correct `FundraisingActivity` type, and the code's method was renamed from `update_fundraiser_activity` → `update_fundraising_activity` to match (per [docs/diagram_typos.md](diagram_typos.md)).
+**Notes / assumptions / deferred:** Boundary validation requires non-empty `title/description/category`, a positive `Decimal` target, and `start_date <= end_date`. Entity refuses cross-owner writes via `WHERE fra_id = ? AND owner_account_id = ?` → `rowcount == 0` → `False`. Diagram originally omitted `ownerAccountId` from the class signature and used `FundraiserActivity` type names; re-exported 2026-05-16 fixed the 3-param signature + the type. Further refined 2026-05-17: method renamed `updateFundraisingActivity` → `updateMyFundraisingActivity` and parameter to `updatedMyFRA` for consistency with the per-US class names and to mark this as an owner-scoped operation — code uses `update_my_fundraising_activity` / `updated_my_fra` (per [docs/diagram_typos.md](diagram_typos.md)).
 
 ### US-20 — Search fundraising activities ([diagram](../diagrams/sprint-2_diagrams/US-20.jpg))
 
