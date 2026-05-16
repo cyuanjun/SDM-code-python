@@ -72,15 +72,11 @@ class Favourite:
 
     @classmethod
     def search_favourite(
-        cls, search_criteria: str, account_id: str
+        cls, account_id: str, search_criteria: str
     ) -> list["Favourite"]:
         """US-25 — donee searches their favourites. Joins to
         fundraising_activity and matches title / description / category
         against the criteria, scoped to the caller's account_id.
-
-        Sequence diagram signature has 2 params; class diagram adds a
-        viewMode that isn't used in the sequence. Logged in docs/todo.md;
-        implementation follows the 2-param sequence version.
         """
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:

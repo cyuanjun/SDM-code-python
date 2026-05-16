@@ -31,7 +31,7 @@ class MyFavouritesPage:
         )
         if search_term.strip():
             favourites = SearchFavouriteController().search_favourite(
-                search_criteria=search_term.strip(), account_id=account_id,
+                account_id=account_id, search_criteria=search_term.strip(),
             )
         else:
             favourites = ViewFavouriteListController().view_favourite_list(account_id)

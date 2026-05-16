@@ -82,7 +82,7 @@ Numbers below are summaries — the detail tables further down hold the full tex
 - **Exception B** — 1 debug-only page (`.info`, [boundary/non_diagram/info_page.py](../boundary/non_diagram/info_page.py)).
 - **Exception C** — 7 combined sidebar pages compose 27 per-US Boundary classes (every per-US class still exists as a tested artifact).
 - **Lecturer decisions (4)** — donation seed (2026-05-15), `UNIQUE(email)` on UserAccount (2026-05-15), no `displayError` on Sprint 1 boundaries (2026-05-16), login failure return type implicit on US-11/18/26/39 (2026-05-16).
-- **Deferred typos** — US-25 boundary name; US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
+- **Deferred typos** — US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
 - **Open architectural items (1)** — plain-text passwords on `UserAccount` (deferred to a hardening sprint).
 - **Resolved diagram typos** — 14 resolved across Sprints 1–4 over 2026-05-14 to 2026-05-16; 6 deferred (see above) and 2 lecturer-deferred (displayError, login failure return type). See [docs/diagram_typos.md](diagram_typos.md) for the full struck-through list.
 
@@ -841,23 +841,23 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewFavouritesPage` (diagram) / `SearchFavouritePage` (code) | `displayMatchingFavourite(favouriteList: List<Favourite>): void` |
-| Controller | `SearchFavouriteController` | `searchFavourite(searchCriteria: String, accountId: String): List<Favourite>` |
-| Entity | `Favourite (FRAId, accountId)` | `searchFavourite(searchCriteria: String, accountId: String): List<Favourite>` |
+| Boundary | `ViewFavouriteListPage` *(shared with US-23/24)* | `displayMatchingFavourites(favouriteList: List<Favourite>): void` |
+| Controller | `SearchFavouriteController` | `searchFavourite(accountId: String, searchCriteria: String): List<Favourite>` |
+| Entity | `Favourite (FRAId, accountId)` | `searchFavourite(accountId: String, searchCriteria: String): List<Favourite>` |
 
 **Code**
-- [boundary/search_favourite_page.py:17](../boundary/search_favourite_page.py#L17)
-- [controller/search_favourite_controller.py:12](../controller/search_favourite_controller.py#L12)
-- [entity/favourite.py:79](../entity/favourite.py#L79) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
+- [boundary/view_favourite_list_page.py:21](../boundary/view_favourite_list_page.py#L21) *(shared with US-23/24)*
+- [controller/search_favourite_controller.py:11](../controller/search_favourite_controller.py#L11)
+- [entity/favourite.py:73](../entity/favourite.py#L73) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
 
 **Sidebar wiring:** Surfaced via `MyFavouritesPage` (search box at top); donee only.
 
 **Tests**
 - [tests/test_favourite.py](../tests/test_favourite.py) — match + cross-account-isolation + empty-result negatives
 - [tests/test_search_favourite_controller.py](../tests/test_search_favourite_controller.py) — delegation + empty-list mirror
-- [tests/test_search_favourite_page.py](../tests/test_search_favourite_page.py) — page smoke
+- [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke (shared with US-23/24)
 
-**Notes / assumptions / deferred:** Two **deferred 2026-05-16** divergences live here: (1) class diagram has 3-param `searchFavourite(viewMode, searchCriteria, accountId)` while the sequence has 2 params — code follows the sequence; (2) diagram boundary is `ViewFavouritesPage` while code uses `SearchFavouritePage` to match the user story's "search my favourites". Both indexed in [docs/todo.md](todo.md).
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 drops the `viewMode` param (class + sequence both 2-param now) and names the boundary `ViewFavouriteListPage` shared with US-23/24. Code's per-US `SearchFavouritePage` retired and merged into `view_favourite_list_page.py` (mirrors US-14/17 + US-30/31 patterns). Param order also flipped to `(accountId, searchCriteria)` — owner first, consistent with other owner-scoped methods. Both previously-deferred US-25 typos are now resolved.
 
 ### US-30 — Search my completed fundraising activities ([diagram](../diagrams/sprint-3_diagrams/US-30.jpg))
 
@@ -1277,7 +1277,7 @@ The reworked diagrams define 27 per-US Boundary classes. The sidebar would be un
 | `ManageUserAccountPage` | `CreateAccountPage`, `ViewUserAccountPage`, `UpdateUserAccountPage`, `ViewUserAccountsPage` (+ US-9 suspend button) |
 | `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage`, `ViewMyCompletedFundraisingActivitiesPage` |
 | `BrowseFundraisingActivityPage` | `ViewFundraisingActivityPage` (+ US-22 save), `ViewFundraisingActivitiesPage` (US-20 search) |
-| `MyFavouritesPage` | `ViewFavouriteListPage` (+ US-23 remove), `SearchFavouritePage` |
+| `MyFavouritesPage` | `ViewFavouriteListPage` (US-23 remove + US-24 list + US-25 search) |
 | `MyDonationsPage` | `ViewMyDonationHistoryPage`, `ViewMyDonationHistoriesPage` |
 | `ManageFundraisingActivityCategoryPage` | `CreateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoryPage`, `UpdateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoriesPage` (+ US-38 suspend) |
 
@@ -1296,8 +1296,6 @@ Items the lecturer has explicitly accepted; diagrams and code stay as-is. See [d
 
 Sprint 3 / Sprint 4 items where the diagram and code disagree but the team has chosen to live with the divergence. Each has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md). See [todo.md "Deferred typos"](todo.md) for the consolidated index.
 
-- **US-25 `viewMode` param** — class diagram has 3 params; sequence has 2; code uses the 2-param version.
-- **US-25 boundary class name** — diagram `ViewFavouritesPage`; code `SearchFavouritePage`.
 - **US-30 / US-31 shared boundary** — both diagrams name `ViewMyCompletedFundraisingActivitiesPage`; code consolidates into a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class). Resolved 2026-05-17.
 - **US-32 "My" naming** — diagram `SearchMyDonationHistoryController` / `searchMyDonationHistory`; code drops "My" (`SearchDonationHistoryController` / `Donation.search_donation_history`).
 - **US-41 / US-42 / US-43 shared `GenerateReportPage`** — accepted as a deliberate consolidation; one boundary handles daily / weekly / monthly via a radio selector.

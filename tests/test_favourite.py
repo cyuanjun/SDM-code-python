@@ -214,7 +214,7 @@ def test_search_favourite_matches_activity_fields_for_the_donee() -> None:
     # a3 is not favourited.
 
     results = Favourite.search_favourite(
-        search_criteria="hospital", account_id=donee.account_id
+        account_id=donee.account_id, search_criteria="hospital"
     )
     assert [f.fra_id for f in results] == [a1.fra_id]
 
@@ -228,7 +228,7 @@ def test_search_favourite_returns_empty_for_no_match() -> None:
 
     assert (
         Favourite.search_favourite(
-            search_criteria="nothing", account_id=donee.account_id
+            account_id=donee.account_id, search_criteria="nothing"
         )
         == []
     )
@@ -239,7 +239,7 @@ def test_search_favourite_returns_empty_for_no_favourites() -> None:
     donee = _seed_donee()
     assert (
         Favourite.search_favourite(
-            search_criteria="anything", account_id=donee.account_id
+            account_id=donee.account_id, search_criteria="anything"
         )
         == []
     )
