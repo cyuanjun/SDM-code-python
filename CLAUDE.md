@@ -87,7 +87,7 @@ Current Exception A methods (live in [docs/todo.md](docs/todo.md)): `UserProfile
 
 ### Exception B — Debug-only utilities
 
-A page intended purely for development inspection (currently [boundary/info_page.py](boundary/info_page.py)) may bypass the B-C-E layers and read/write the database directly. Conditions:
+A page intended purely for development inspection (currently [boundary/non_diagram/info_page.py](boundary/non_diagram/info_page.py)) may bypass the B-C-E layers and read/write the database directly. Conditions:
 
 - The page docstring states clearly that it is a debug utility, not part of the design.
 - The page is logged under **"Debug-only artifacts"** in [docs/todo.md](docs/todo.md).
@@ -110,7 +110,8 @@ When adding a new story whose diagram fits an existing combined page, extend the
 ```
 SDM-code/
 ├── app.py                 # Streamlit entry; PAGES + PAGES_BY_ROLE; role-gated routing
-├── boundary/              # <<Boundary>> pages — 27 per-US classes + 7 combined Manage/Browse/My pages
+├── boundary/              # <<Boundary>> pages — 27 per-US diagram-derived classes
+│   └── non_diagram/       # 7 UX-consolidated Manage/Browse/My pages + 1 debug page (not on any diagram)
 ├── controller/            # <<Controller>> classes — pure delegators, one method per use case
 ├── entity/                # <<Entity>> classes — UserProfile, UserAccount, FundraisingActivity, Favourite, Donation, FundraisingActivityCategory, Report
 ├── persistence/

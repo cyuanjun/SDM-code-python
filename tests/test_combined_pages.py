@@ -10,19 +10,19 @@ from datetime import date
 
 from streamlit.testing.v1 import AppTest
 
-from boundary.browse_fundraising_activity_page import (
+from boundary.non_diagram.browse_fundraising_activity_page import (
     BrowseFundraisingActivityPage,
 )
-from boundary.manage_fundraising_activity_category_page import (
+from boundary.non_diagram.manage_fundraising_activity_category_page import (
     ManageFundraisingActivityCategoryPage,
 )
-from boundary.manage_my_fundraising_activity_page import (
+from boundary.non_diagram.manage_my_fundraising_activity_page import (
     ManageMyFundraisingActivityPage,
 )
-from boundary.manage_user_account_page import ManageUserAccountPage
-from boundary.manage_user_profile_page import ManageUserProfilePage
-from boundary.my_donations_page import MyDonationsPage
-from boundary.my_favourites_page import MyFavouritesPage
+from boundary.non_diagram.manage_user_account_page import ManageUserAccountPage
+from boundary.non_diagram.manage_user_profile_page import ManageUserProfilePage
+from boundary.non_diagram.my_donations_page import MyDonationsPage
+from boundary.non_diagram.my_favourites_page import MyFavouritesPage
 
 
 def test_combined_pages_are_importable_and_have_render() -> None:
@@ -46,7 +46,7 @@ def _run(script: str) -> None:
 
 def test_manage_user_profile_page_renders_when_empty() -> None:
     _run(
-        "from boundary.manage_user_profile_page import ManageUserProfilePage\n"
+        "from boundary.non_diagram.manage_user_profile_page import ManageUserProfilePage\n"
         "ManageUserProfilePage().render()\n"
     )
 
@@ -54,7 +54,7 @@ def test_manage_user_profile_page_renders_when_empty() -> None:
 def test_manage_user_profile_page_renders_with_a_profile() -> None:
     _run(
         "from entity.user_profile import UserProfile\n"
-        "from boundary.manage_user_profile_page import ManageUserProfilePage\n"
+        "from boundary.non_diagram.manage_user_profile_page import ManageUserProfilePage\n"
         "UserProfile.create_profile(role='admin', description='a')\n"
         "ManageUserProfilePage().render()\n"
     )
@@ -62,14 +62,14 @@ def test_manage_user_profile_page_renders_with_a_profile() -> None:
 
 def test_manage_user_account_page_renders_when_empty() -> None:
     _run(
-        "from boundary.manage_user_account_page import ManageUserAccountPage\n"
+        "from boundary.non_diagram.manage_user_account_page import ManageUserAccountPage\n"
         "ManageUserAccountPage().render()\n"
     )
 
 
 def test_manage_my_fundraising_activity_page_renders_when_not_logged_in() -> None:
     _run(
-        "from boundary.manage_my_fundraising_activity_page import ManageMyFundraisingActivityPage\n"
+        "from boundary.non_diagram.manage_my_fundraising_activity_page import ManageMyFundraisingActivityPage\n"
         "ManageMyFundraisingActivityPage().render()\n"
     )
 
@@ -80,7 +80,7 @@ def test_manage_my_fundraising_activity_page_renders_when_logged_in() -> None:
         "from datetime import date\n"
         "from entity.user_profile import UserProfile\n"
         "from entity.user_account import UserAccount\n"
-        "from boundary.manage_my_fundraising_activity_page import ManageMyFundraisingActivityPage\n"
+        "from boundary.non_diagram.manage_my_fundraising_activity_page import ManageMyFundraisingActivityPage\n"
         "profile = UserProfile.create_profile(role='fundraiser', description='r')\n"
         "account = UserAccount.create_account(\n"
         "    email='o@x.com', password='p', name='O', dob=date(1990, 1, 1),\n"
@@ -93,14 +93,14 @@ def test_manage_my_fundraising_activity_page_renders_when_logged_in() -> None:
 
 def test_browse_fundraising_activity_page_renders_when_empty() -> None:
     _run(
-        "from boundary.browse_fundraising_activity_page import BrowseFundraisingActivityPage\n"
+        "from boundary.non_diagram.browse_fundraising_activity_page import BrowseFundraisingActivityPage\n"
         "BrowseFundraisingActivityPage().render()\n"
     )
 
 
 def test_my_favourites_page_renders_when_not_logged_in() -> None:
     _run(
-        "from boundary.my_favourites_page import MyFavouritesPage\n"
+        "from boundary.non_diagram.my_favourites_page import MyFavouritesPage\n"
         "MyFavouritesPage().render()\n"
     )
 
@@ -111,7 +111,7 @@ def test_my_favourites_page_renders_when_logged_in() -> None:
         "from datetime import date\n"
         "from entity.user_profile import UserProfile\n"
         "from entity.user_account import UserAccount\n"
-        "from boundary.my_favourites_page import MyFavouritesPage\n"
+        "from boundary.non_diagram.my_favourites_page import MyFavouritesPage\n"
         "profile = UserProfile.create_profile(role='donee', description='r')\n"
         "account = UserAccount.create_account(\n"
         "    email='d@x.com', password='p', name='D', dob=date(1990, 1, 1),\n"
@@ -128,7 +128,7 @@ def test_my_donations_page_renders_when_logged_in() -> None:
         "from datetime import date\n"
         "from entity.user_profile import UserProfile\n"
         "from entity.user_account import UserAccount\n"
-        "from boundary.my_donations_page import MyDonationsPage\n"
+        "from boundary.non_diagram.my_donations_page import MyDonationsPage\n"
         "profile = UserProfile.create_profile(role='donee', description='r')\n"
         "account = UserAccount.create_account(\n"
         "    email='d@x.com', password='p', name='D', dob=date(1990, 1, 1),\n"
@@ -141,6 +141,6 @@ def test_my_donations_page_renders_when_logged_in() -> None:
 
 def test_manage_fra_category_page_renders_when_empty() -> None:
     _run(
-        "from boundary.manage_fundraising_activity_category_page import ManageFundraisingActivityCategoryPage\n"
+        "from boundary.non_diagram.manage_fundraising_activity_category_page import ManageFundraisingActivityCategoryPage\n"
         "ManageFundraisingActivityCategoryPage().render()\n"
     )

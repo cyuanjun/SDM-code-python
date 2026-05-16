@@ -79,7 +79,7 @@ CSIT314 group project — online fundraising platform (Python + Streamlit + SQLi
 Numbers below are summaries — the detail tables further down hold the full text and links.
 
 - **Exception A** — 12 off-diagram entity methods added to power UX (list dropdowns + count writes + unsuspend toggles): `UserProfile.view_all_profiles`, `UserAccount.view_all_user_accounts`, `FundraisingActivity.view_all_fundraising_activities` + `view_my_fundraising_activities` + `increment_view_count` + `increment_save_count`, `FundraisingActivityCategory.view_all_categories`, `Donation.view_my_donations`, plus four `unsuspend_*` methods.
-- **Exception B** — 1 debug-only page (`.info`, [boundary/info_page.py](../boundary/info_page.py)).
+- **Exception B** — 1 debug-only page (`.info`, [boundary/non_diagram/info_page.py](../boundary/non_diagram/info_page.py)).
 - **Exception C** — 7 combined sidebar pages compose 27 per-US Boundary classes (every per-US class still exists as a tested artifact).
 - **Lecturer decisions (4)** — donation seed (2026-05-15), `UNIQUE(email)` on UserAccount (2026-05-15), no `displayError` on Sprint 1 boundaries (2026-05-16), login failure return type implicit on US-11/18/26/39 (2026-05-16).
 - **Deferred typos (6)** — US-23 boundary name; US-25 `viewMode` param; US-25 boundary name; US-30/31 shared boundary; US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
@@ -1265,7 +1265,7 @@ Methods added to entities (with pure-delegator controllers) so a Boundary can sh
 
 ### Exception B — Debug-only utilities
 
-[boundary/info_page.py](../boundary/info_page.py) (`.info (debug)`) reads every table directly via `persistence/db.get_connection()`, bypassing the B-C-E layers. Tracked in [docs/todo.md](todo.md); to be hidden before the final recorded demo.
+[boundary/non_diagram/info_page.py](../boundary/non_diagram/info_page.py) (`.info (debug)`) reads every table directly via `persistence/db.get_connection()`, bypassing the B-C-E layers. Tracked in [docs/todo.md](todo.md); to be hidden before the final recorded demo.
 
 ### Exception C — UX consolidation (combined Boundary pages)
 

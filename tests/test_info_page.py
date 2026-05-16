@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from streamlit.testing.v1 import AppTest
 
-from boundary.info_page import InfoPage
+from boundary.non_diagram.info_page import InfoPage
 
 
 def test_info_page_is_importable_and_has_render() -> None:
@@ -12,7 +12,7 @@ def test_info_page_is_importable_and_has_render() -> None:
 
 def test_info_page_renders_on_empty_db() -> None:
     script = """
-from boundary.info_page import InfoPage
+from boundary.non_diagram.info_page import InfoPage
 InfoPage().render()
 """
     at = AppTest.from_string(script)
@@ -31,7 +31,7 @@ from entity.favourite import Favourite
 from entity.donation import Donation
 from entity.fundraising_activity_category import FundraisingActivityCategory
 from entity.report import Report
-from boundary.info_page import InfoPage
+from boundary.non_diagram.info_page import InfoPage
 
 donee_profile = UserProfile.create_profile(role='donee', description='r')
 fr_profile = UserProfile.create_profile(role='fundraiser', description='r')

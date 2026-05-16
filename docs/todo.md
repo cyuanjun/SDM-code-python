@@ -6,7 +6,7 @@ Pure **diagram typos** (signatures, attribute types, boundary class names) live 
 
 ## Debug-only artifacts (hide or remove before final demo)
 
-- **[boundary/info_page.py](../boundary/info_page.py)** — `.info (debug)` sidebar page. Reads every table directly via `persistence/db.get_connection()`, bypassing the B-C-E layers. Shows row counts at the top, raw table dumps in tabs, and the live schema. Not a use case; for dev inspection only. Remove or hide before any recorded demo.
+- **[boundary/non_diagram/info_page.py](../boundary/non_diagram/info_page.py)** — `.info (debug)` sidebar page. Reads every table directly via `persistence/db.get_connection()`, bypassing the B-C-E layers. Shows row counts at the top, raw table dumps in tabs, and the live schema. Not a use case; for dev inspection only. Remove or hide before any recorded demo.
 
 ## Bootstrap deviations (data/seed.py)
 

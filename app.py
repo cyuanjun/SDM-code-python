@@ -14,23 +14,23 @@ from __future__ import annotations
 
 import streamlit as st
 
-from boundary.browse_fundraising_activity_page import (
-    BrowseFundraisingActivityPage,
-)
 from boundary.generate_report_page import GenerateReportPage
-from boundary.info_page import InfoPage
 from boundary.login_page import LoginPage
 from boundary.logout_page import LogoutPage
-from boundary.manage_fundraising_activity_category_page import (
+from boundary.non_diagram.browse_fundraising_activity_page import (
+    BrowseFundraisingActivityPage,
+)
+from boundary.non_diagram.info_page import InfoPage
+from boundary.non_diagram.manage_fundraising_activity_category_page import (
     ManageFundraisingActivityCategoryPage,
 )
-from boundary.manage_my_fundraising_activity_page import (
+from boundary.non_diagram.manage_my_fundraising_activity_page import (
     ManageMyFundraisingActivityPage,
 )
-from boundary.manage_user_account_page import ManageUserAccountPage
-from boundary.manage_user_profile_page import ManageUserProfilePage
-from boundary.my_donations_page import MyDonationsPage
-from boundary.my_favourites_page import MyFavouritesPage
+from boundary.non_diagram.manage_user_account_page import ManageUserAccountPage
+from boundary.non_diagram.manage_user_profile_page import ManageUserProfilePage
+from boundary.non_diagram.my_donations_page import MyDonationsPage
+from boundary.non_diagram.my_favourites_page import MyFavouritesPage
 from controller.view_user_profile_controller import ViewUserProfileController
 from data.seed import (
     seed_default_admin,
