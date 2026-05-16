@@ -52,6 +52,10 @@ Sprint 3 + Sprint 4 items where the diagram and code disagree but the team has c
 Stack / policy concerns, not diagram-bound. Will re-surface as the rebuild touches each area.
 
 - **Plain-text passwords.** Sprint 1's `UserAccount` stores the password as a plain string per the diagram. Hashing (bcrypt / argon2) belongs in a hardening sprint.
+- **`category` on `FundraisingActivity` is unlinked from `FundraisingActivityCategory`** (flagged 2026-05-17). The PM curates a category list via US-34/35/36/37/38, but the US-12 create-activity diagram types `category: String` rather than a FK to `FundraisingActivityCategory`. A fundraiser can therefore type any string and bypass the curated list — the category entity is decorative on the create flow. To make it functional, the diagram changes needed are:
+  - **[US-12.jpg](../diagrams/sprint-1_diagrams/US-12.jpg)** — the primary one. Either change `createFundraisingActivity(... category: String, ...)` to `... categoryId: String, ...` (FK form, parallel to how `createAccount` takes `profileId`), or change `category: String` to `category: FundraisingActivityCategory`. The boundary input then becomes a `st.selectbox` populated from `FundraisingActivityCategory.view_all_categories()` — a legitimate dropdown because it's an FK, not a String enum.
+  - **`FundraisingActivity` entity attribute** — `category: String` → `categoryId: String` (or `category: FundraisingActivityCategory`). This attribute appears in every FRA class diagram, so the change cascades to US-13, US-14, US-15, US-17, US-20, US-21, US-30, US-31 wherever the entity attributes are listed.
+  - **[US-35.jpg](../diagrams/sprint-3_diagrams/US-35.jpg)** *(or a new US)* — add `view_all_categories(): List<FundraisingActivityCategory>` to the `FundraisingActivityCategory` class diagram so the dropdown has a diagram-defined source. Currently exists in code as an Exception A method (listed above).
 
 ## Resolved
 
