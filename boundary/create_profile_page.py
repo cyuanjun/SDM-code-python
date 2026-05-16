@@ -15,7 +15,7 @@ from controller.create_profile_controller import CreateProfileController
 
 class CreateProfilePage:
     def render(self) -> None:
-        st.header("Create New User Profile")
+        st.header("Create User Profile")
         with st.form("create_profile_form"):
             role = st.text_input("Role")
             description = st.text_area("Description")

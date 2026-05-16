@@ -25,7 +25,7 @@ class CreateAccountPage:
         if not profiles:
             st.warning(
                 "No profiles exist yet. Create a user profile first "
-                "(see the Create New User Profile page)."
+                "(see the Create user profile page)."
             )
             return
 
