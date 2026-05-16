@@ -1,9 +1,8 @@
-"""Tests for persistence/ids.py — happy and negative paths for both helpers."""
+"""Tests for persistence.ids helpers."""
 from __future__ import annotations
 
-import pytest
-
-from persistence.ids import format_id, parse_id
+from persistence.db import get_connection
+from persistence.ids import format_id, next_id
 
 
 def test_format_id_zero_pads_to_three_digits() -> None:
@@ -11,21 +10,38 @@ def test_format_id_zero_pads_to_three_digits() -> None:
     assert format_id("acc", 42) == "acc_042"
 
 
-def test_format_id_overflows_padding_gracefully_for_large_rowids() -> None:
+def test_format_id_overflows_padding_gracefully_for_large_numbers() -> None:
     assert format_id("fra", 1234) == "fra_1234"
 
 
-def test_parse_id_extracts_rowid() -> None:
-    assert parse_id("prof_001") == 1
-    assert parse_id("acc_042") == 42
-    assert parse_id("fra_1234") == 1234
+def test_next_id_returns_001_when_table_is_empty() -> None:
+    with get_connection() as conn:
+        assert next_id(conn, "user_profile", "profile_id", "prof") == "prof_001"
 
 
-def test_parse_id_raises_on_missing_underscore() -> None:
-    with pytest.raises(ValueError):
-        parse_id("malformed")
+def test_next_id_increments_after_existing_rows() -> None:
+    with get_connection() as conn:
+        conn.execute(
+            "INSERT INTO user_profile (profile_id, role, description) "
+            "VALUES (?, ?, ?)",
+            ("prof_001", "admin", ""),
+        )
+        conn.execute(
+            "INSERT INTO user_profile (profile_id, role, description) "
+            "VALUES (?, ?, ?)",
+            ("prof_002", "fundraiser", ""),
+        )
+        assert next_id(conn, "user_profile", "profile_id", "prof") == "prof_003"
 
 
-def test_parse_id_raises_on_non_numeric_suffix() -> None:
-    with pytest.raises(ValueError):
-        parse_id("prof_abc")
+def test_next_id_uses_lexicographic_max_so_zero_padding_matters() -> None:
+    """With 3-digit zero-padding, lexicographic ORDER BY ... DESC LIMIT 1
+    matches numeric ORDER BY ... DESC LIMIT 1 up to 999 rows."""
+    with get_connection() as conn:
+        for n in (1, 2, 9, 10):
+            conn.execute(
+                "INSERT INTO user_profile (profile_id, role, description) "
+                "VALUES (?, ?, ?)",
+                (format_id("prof", n), "r", ""),
+            )
+        assert next_id(conn, "user_profile", "profile_id", "prof") == "prof_011"

@@ -20,7 +20,7 @@ from decimal import Decimal
 from typing import Optional
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
+from persistence.ids import next_id
 
 
 @dataclass
@@ -39,18 +39,16 @@ class Donation:
         amount: Decimal,
         donation_date: date,
     ) -> "Donation":
-        account_rowid = parse_id(account_id)
-        fra_rowid = parse_id(fra_id)
         with get_connection() as conn:
-            cursor = conn.execute(
+            new_id = next_id(conn, "donation", "donation_id", "don")
+            conn.execute(
                 "INSERT INTO donation "
-                "(account_id, fra_id, amount, donation_date) "
-                "VALUES (?, ?, ?, ?)",
-                (account_rowid, fra_rowid, str(amount), donation_date.isoformat()),
+                "(donation_id, account_id, fra_id, amount, donation_date) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (new_id, account_id, fra_id, str(amount), donation_date.isoformat()),
             )
-            rowid = cursor.lastrowid
         return cls(
-            donation_id=format_id("don", rowid),
+            donation_id=new_id,
             account_id=account_id,
             fra_id=fra_id,
             amount=amount,
@@ -63,7 +61,6 @@ class Donation:
     ) -> list["Donation"]:
         """US-32 — donee searches donation history. Joins to
         fundraising_activity and matches title / description / category."""
-        account_rowid = parse_id(account_id)
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -75,7 +72,7 @@ class Donation:
                 "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
                 "  OR LOWER(a.category) LIKE ?"
                 ") ORDER BY d.donation_id",
-                (account_rowid, like, like, like),
+                (account_id, like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -85,13 +82,11 @@ class Donation:
     ) -> Optional["Donation"]:
         """US-33 — donee views one of their donations. Returns None when
         the row is missing or belongs to another donee."""
-        account_rowid = parse_id(account_id)
-        rowid = parse_id(donation_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT donation_id, account_id, fra_id, amount, donation_date "
                 "FROM donation WHERE donation_id = ? AND account_id = ?",
-                (rowid, account_rowid),
+                (donation_id, account_id),
             ).fetchone()
         return None if row is None else cls._from_row(row)
 
@@ -99,21 +94,20 @@ class Donation:
     def view_my_donations(cls, account_id: str) -> list["Donation"]:
         """Exception A: list-by-owner so ViewMyDonationHistoryPage can show
         a picker. Logged in docs/todo.md."""
-        account_rowid = parse_id(account_id)
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT donation_id, account_id, fra_id, amount, donation_date "
                 "FROM donation WHERE account_id = ? ORDER BY donation_id",
-                (account_rowid,),
+                (account_id,),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
     @classmethod
     def _from_row(cls, row) -> "Donation":
         return cls(
-            donation_id=format_id("don", row["donation_id"]),
-            account_id=format_id("acc", row["account_id"]),
-            fra_id=format_id("fra", row["fra_id"]),
+            donation_id=row["donation_id"],
+            account_id=row["account_id"],
+            fra_id=row["fra_id"],
             amount=Decimal(row["amount"]),
             donation_date=date.fromisoformat(row["donation_date"]),
         )

@@ -16,7 +16,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
 
 
 @dataclass
@@ -28,22 +27,20 @@ class Favourite:
     def save_fundraising_activity(cls, account_id: str, fra_id: str) -> bool:
         from entity.fundraising_activity import FundraisingActivity
 
-        account_rowid = parse_id(account_id)
-        fra_rowid = parse_id(fra_id)
         # Pre-check for duplicates so the FK violations on account_id /
         # fra_id still raise IntegrityError while genuine duplicates
         # return False.
         with get_connection() as conn:
             existing = conn.execute(
                 "SELECT 1 FROM favourite WHERE account_id = ? AND fra_id = ?",
-                (account_rowid, fra_rowid),
+                (account_id, fra_id),
             ).fetchone()
         if existing is not None:
             return False
         with get_connection() as conn:
             cursor = conn.execute(
                 "INSERT INTO favourite (account_id, fra_id) VALUES (?, ?)",
-                (account_rowid, fra_rowid),
+                (account_id, fra_id),
             )
         if cursor.rowcount > 0:
             # Exception A: bump save_count so US-29 has something to show.
@@ -61,13 +58,11 @@ class Favourite:
         """
         from entity.fundraising_activity import FundraisingActivity
 
-        fra_rowid = parse_id(fra_id)
-        account_rowid = parse_id(account_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "DELETE FROM favourite "
                 "WHERE fra_id = ? AND account_id = ?",
-                (fra_rowid, account_rowid),
+                (fra_id, account_id),
             )
         if cursor.rowcount > 0:
             # Exception A: bump save_count down.
@@ -87,7 +82,6 @@ class Favourite:
         viewMode that isn't used in the sequence. Logged in docs/todo.md;
         implementation follows the 2-param sequence version.
         """
-        account_rowid = parse_id(account_id)
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -98,29 +92,28 @@ class Favourite:
                 "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
                 "  OR LOWER(a.category) LIKE ?"
                 ") ORDER BY f.fra_id",
-                (account_rowid, like, like, like),
+                (account_id, like, like, like),
             ).fetchall()
         return [
             cls(
-                account_id=format_id("acc", row["account_id"]),
-                fra_id=format_id("fra", row["fra_id"]),
+                account_id=row["account_id"],
+                fra_id=row["fra_id"],
             )
             for row in rows
         ]
 
     @classmethod
     def view_favourite_list(cls, account_id: str) -> list["Favourite"]:
-        account_rowid = parse_id(account_id)
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT account_id, fra_id FROM favourite "
                 "WHERE account_id = ? ORDER BY fra_id",
-                (account_rowid,),
+                (account_id,),
             ).fetchall()
         return [
             cls(
-                account_id=format_id("acc", row["account_id"]),
-                fra_id=format_id("fra", row["fra_id"]),
+                account_id=row["account_id"],
+                fra_id=row["fra_id"],
             )
             for row in rows
         ]

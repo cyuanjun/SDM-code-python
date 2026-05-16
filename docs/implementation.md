@@ -1311,8 +1311,8 @@ Sprint 3 / Sprint 4 items where the diagram and code disagree but the team has c
 
 - **DB file:** `app.db` at the repo root (gitignored). Created on first call to `init_db()` which runs [persistence/schema.sql](../persistence/schema.sql).
 - **Connection helper:** [persistence/db.py](../persistence/db.py) exposes `get_connection()` (returns a `sqlite3.Connection` with `row_factory = sqlite3.Row` and `PRAGMA foreign_keys = ON`) and `init_db()`. Entities open a connection per operation — no shared session.
-- **Schema:** 7 tables — `user_profile`, `user_account` (with `UNIQUE` on `email`), `fundraising_activity` (with `view_count`, `save_count`, `completed`, `suspended`), `fundraising_activity_category`, `favourite` (composite PK `(account_id, fra_id)`), `donation`, `report`. All `*_id` PKs are `INTEGER AUTOINCREMENT`.
-- **Prefixed string IDs:** [persistence/ids.py](../persistence/ids.py) defines `format_id(prefix, rowid)` / `parse_id(id_str)`. Every entity surfaces its rowid as `prof_NNN`, `acc_NNN`, `fra_NNN`, `cat_NNN`, `fav_NNN`, `don_NNN`, `rep_NNN`. Tests assert against the prefixed form.
+- **Schema:** 7 tables — `user_profile`, `user_account` (with `UNIQUE` on `email`), `fundraising_activity` (with `view_count`, `save_count`, `completed`, `suspended`), `fundraising_activity_category`, `favourite` (composite PK `(account_id, fra_id)`), `donation`, `report`. All `*_id` PKs are `TEXT` storing the prefixed `prefix_NNN` form directly.
+- **Prefixed string IDs:** [persistence/ids.py](../persistence/ids.py) defines `format_id(prefix, n)` + `next_id(conn, table, id_column, prefix)`. Entities call `next_id` on every INSERT to mint the next `prof_NNN`, `acc_NNN`, `fra_NNN`, `cat_NNN`, `don_NNN`, `rep_NNN`. Tests assert against the prefixed form.
 
 ## Session, routing, RBAC
 

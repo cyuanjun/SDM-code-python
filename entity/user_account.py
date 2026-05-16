@@ -24,7 +24,7 @@ from typing import Optional
 
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
+from persistence.ids import next_id
 
 
 @dataclass
@@ -48,20 +48,19 @@ class UserAccount:
         phone_num: str,
         profile_id: str,
     ) -> Optional["UserAccount"]:
-        profile_rowid = parse_id(profile_id)
         try:
             with get_connection() as conn:
-                cursor = conn.execute(
+                new_id = next_id(conn, "user_account", "account_id", "acc")
+                conn.execute(
                     "INSERT INTO user_account "
-                    "(email, password, name, dob, phone_num, profile_id, suspended) "
-                    "VALUES (?, ?, ?, ?, ?, ?, 0)",
-                    (email, password, name, dob.isoformat(), phone_num, profile_rowid),
+                    "(account_id, email, password, name, dob, phone_num, profile_id, suspended) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+                    (new_id, email, password, name, dob.isoformat(), phone_num, profile_id),
                 )
-                rowid = cursor.lastrowid
         except sqlite3.IntegrityError:
             return None
         return cls(
-            account_id=format_id("acc", rowid),
+            account_id=new_id,
             email=email,
             password=password,
             name=name,
@@ -74,12 +73,11 @@ class UserAccount:
     @classmethod
     def view_user_account(cls, account_id: str) -> Optional["UserAccount"]:
         """US-7 — admin views one account by id. Returns None when missing."""
-        rowid = parse_id(account_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT account_id, email, password, name, dob, phone_num, "
                 "profile_id, suspended FROM user_account WHERE account_id = ?",
-                (rowid,),
+                (account_id,),
             ).fetchone()
         return None if row is None else cls._from_row(row)
 
@@ -99,10 +97,7 @@ class UserAccount:
         cls, account_id: str, updated_account: "UserAccount"
     ) -> bool:
         """US-8 — admin updates an account. Returns True on success, False
-        when no row matches account_id. profile_id parses from the
-        prefixed string back to the underlying integer FK."""
-        rowid = parse_id(account_id)
-        profile_rowid = parse_id(updated_account.profile_id)
+        when no row matches account_id."""
         try:
             with get_connection() as conn:
                 cursor = conn.execute(
@@ -115,9 +110,9 @@ class UserAccount:
                         updated_account.name,
                         updated_account.dob.isoformat(),
                         updated_account.phone_num,
-                        profile_rowid,
+                        updated_account.profile_id,
                         1 if updated_account.suspended else 0,
-                        rowid,
+                        account_id,
                     ),
                 )
                 affected = cursor.rowcount
@@ -128,13 +123,13 @@ class UserAccount:
     @classmethod
     def _from_row(cls, row) -> "UserAccount":
         return cls(
-            account_id=format_id("acc", row["account_id"]),
+            account_id=row["account_id"],
             email=row["email"],
             password=row["password"],
             name=row["name"],
             dob=date.fromisoformat(row["dob"]),
             phone_num=row["phone_num"],
-            profile_id=format_id("prof", row["profile_id"]),
+            profile_id=row["profile_id"],
             suspended=bool(row["suspended"]),
         )
 
@@ -154,11 +149,10 @@ class UserAccount:
     def suspend_user_account(cls, account_id: str) -> bool:
         """US-9 — admin suspends an account. Returns True on rowcount > 0,
         False when no row matches."""
-        rowid = parse_id(account_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_account SET suspended = 1 WHERE account_id = ?",
-                (rowid,),
+                (account_id,),
             )
         return cursor.rowcount > 0
 
@@ -166,11 +160,10 @@ class UserAccount:
     def unsuspend_user_account(cls, account_id: str) -> bool:
         """Exception A — mirror of suspend so the UI can toggle.
         Logged in docs/diagram_typos.md."""
-        rowid = parse_id(account_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_account SET suspended = 0 WHERE account_id = ?",
-                (rowid,),
+                (account_id,),
             )
         return cursor.rowcount > 0
 

@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
+from persistence.ids import next_id
 
 
 @dataclass
@@ -32,15 +32,15 @@ class FundraisingActivityCategory:
         cls, category_name: str, description: str
     ) -> "FundraisingActivityCategory":
         with get_connection() as conn:
-            cursor = conn.execute(
+            new_id = next_id(conn, "fundraising_activity_category", "fra_cat_id", "cat")
+            conn.execute(
                 "INSERT INTO fundraising_activity_category "
-                "(category_name, description, suspended) "
-                "VALUES (?, ?, 0)",
-                (category_name, description),
+                "(fra_cat_id, category_name, description, suspended) "
+                "VALUES (?, ?, ?, 0)",
+                (new_id, category_name, description),
             )
-            rowid = cursor.lastrowid
         return cls(
-            fra_cat_id=format_id("cat", rowid),
+            fra_cat_id=new_id,
             category_name=category_name,
             description=description,
             suspended=False,
@@ -50,12 +50,11 @@ class FundraisingActivityCategory:
     def view_fundraising_activity_category(
         cls, fra_cat_id: str
     ) -> Optional["FundraisingActivityCategory"]:
-        rowid = parse_id(fra_cat_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT fra_cat_id, category_name, description, suspended "
                 "FROM fundraising_activity_category WHERE fra_cat_id = ?",
-                (rowid,),
+                (fra_cat_id,),
             ).fetchone()
         return None if row is None else cls._from_row(row)
 
@@ -65,7 +64,6 @@ class FundraisingActivityCategory:
         fra_cat_id: str,
         updated_category: "FundraisingActivityCategory",
     ) -> bool:
-        rowid = parse_id(fra_cat_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity_category "
@@ -75,7 +73,7 @@ class FundraisingActivityCategory:
                     updated_category.category_name,
                     updated_category.description,
                     1 if updated_category.suspended else 0,
-                    rowid,
+                    fra_cat_id,
                 ),
             )
         return cursor.rowcount > 0
@@ -98,12 +96,11 @@ class FundraisingActivityCategory:
 
     @classmethod
     def suspend_fundraising_activity_category(cls, fra_cat_id: str) -> bool:
-        rowid = parse_id(fra_cat_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity_category "
                 "SET suspended = 1 WHERE fra_cat_id = ?",
-                (rowid,),
+                (fra_cat_id,),
             )
         return cursor.rowcount > 0
 
@@ -111,12 +108,11 @@ class FundraisingActivityCategory:
     def unsuspend_fundraising_activity_category(cls, fra_cat_id: str) -> bool:
         """Exception A — mirror of suspend so the UI can toggle.
         Logged in docs/diagram_typos.md."""
-        rowid = parse_id(fra_cat_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity_category "
                 "SET suspended = 0 WHERE fra_cat_id = ?",
-                (rowid,),
+                (fra_cat_id,),
             )
         return cursor.rowcount > 0
 
@@ -134,7 +130,7 @@ class FundraisingActivityCategory:
     @classmethod
     def _from_row(cls, row) -> "FundraisingActivityCategory":
         return cls(
-            fra_cat_id=format_id("cat", row["fra_cat_id"]),
+            fra_cat_id=row["fra_cat_id"],
             category_name=row["category_name"],
             description=row["description"] or "",
             suspended=bool(row["suspended"]),

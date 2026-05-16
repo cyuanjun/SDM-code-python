@@ -27,7 +27,7 @@ from decimal import Decimal
 from typing import Optional
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
+from persistence.ids import next_id
 
 
 @dataclass
@@ -56,26 +56,26 @@ class FundraisingActivity:
         end_date: date,
         owner_account_id: str,
     ) -> "FundraisingActivity":
-        owner_rowid = parse_id(owner_account_id)
         with get_connection() as conn:
-            cursor = conn.execute(
+            new_id = next_id(conn, "fundraising_activity", "fra_id", "fra")
+            conn.execute(
                 "INSERT INTO fundraising_activity "
-                "(title, description, target_amount, category, start_date, "
+                "(fra_id, title, description, target_amount, category, start_date, "
                 " end_date, completed, suspended, owner_account_id, view_count, save_count) "
-                "VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, 0, 0)",
+                "VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 0, 0)",
                 (
+                    new_id,
                     title,
                     description,
                     str(target_amount),
                     category,
                     start_date.isoformat(),
                     end_date.isoformat(),
-                    owner_rowid,
+                    owner_account_id,
                 ),
             )
-            rowid = cursor.lastrowid
         return cls(
-            fra_id=format_id("fra", rowid),
+            fra_id=new_id,
             title=title,
             description=description,
             target_amount=target_amount,
@@ -95,15 +95,13 @@ class FundraisingActivity:
     ) -> Optional["FundraisingActivity"]:
         """US-14 — fundraiser views one of their own activities.
         Ownership scoped at the entity layer per the diagram signature."""
-        owner_rowid = parse_id(owner_account_id)
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT fra_id, title, description, target_amount, category, "
                 "start_date, end_date, completed, suspended, owner_account_id, "
                 "view_count, save_count FROM fundraising_activity "
                 "WHERE fra_id = ? AND owner_account_id = ?",
-                (rowid, owner_rowid),
+                (fra_id, owner_account_id),
             ).fetchone()
         return None if row is None else cls._from_row(row)
 
@@ -115,14 +113,13 @@ class FundraisingActivity:
         this the fundraiser would have to know their own activity ids
         verbatim before triggering viewMyFundraisingActivity. Logged in
         docs/todo.md."""
-        owner_rowid = parse_id(owner_account_id)
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT fra_id, title, description, target_amount, category, "
                 "start_date, end_date, completed, suspended, owner_account_id, "
                 "view_count, save_count FROM fundraising_activity "
                 "WHERE owner_account_id = ? ORDER BY fra_id",
-                (owner_rowid,),
+                (owner_account_id,),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -132,13 +129,11 @@ class FundraisingActivity:
     ) -> bool:
         """US-16 — fundraiser suspends one of their own activities.
         Ownership scoped: UPDATE … WHERE fra_id AND owner_account_id."""
-        owner_rowid = parse_id(owner_account_id)
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity SET suspended = 1 "
                 "WHERE fra_id = ? AND owner_account_id = ?",
-                (rowid, owner_rowid),
+                (fra_id, owner_account_id),
             )
         return cursor.rowcount > 0
 
@@ -148,13 +143,11 @@ class FundraisingActivity:
     ) -> bool:
         """Exception A — mirror of suspend so the UI can toggle.
         Logged in docs/diagram_typos.md."""
-        owner_rowid = parse_id(owner_account_id)
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity SET suspended = 0 "
                 "WHERE fra_id = ? AND owner_account_id = ?",
-                (rowid, owner_rowid),
+                (fra_id, owner_account_id),
             )
         return cursor.rowcount > 0
 
@@ -165,7 +158,6 @@ class FundraisingActivity:
         """US-17 — fundraiser searches their own activities. Case-insensitive
         substring match against title / description / category, scoped to
         owner_account_id."""
-        owner_rowid = parse_id(owner_account_id)
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -176,7 +168,7 @@ class FundraisingActivity:
                 "  LOWER(title) LIKE ? OR LOWER(description) LIKE ? "
                 "  OR LOWER(category) LIKE ?"
                 ") ORDER BY fra_id",
-                (owner_rowid, like, like, like),
+                (owner_account_id, like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -186,7 +178,6 @@ class FundraisingActivity:
     ) -> list["FundraisingActivity"]:
         """US-30 — fundraiser searches their completed activities. Scoped
         to owner + completed = 1."""
-        owner_rowid = parse_id(owner_account_id)
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -197,7 +188,7 @@ class FundraisingActivity:
                 "  LOWER(title) LIKE ? OR LOWER(description) LIKE ? "
                 "  OR LOWER(category) LIKE ?"
                 ") ORDER BY fra_id",
-                (owner_rowid, like, like, like),
+                (owner_account_id, like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -206,7 +197,6 @@ class FundraisingActivity:
         cls, owner_account_id: str
     ) -> list["FundraisingActivity"]:
         """US-31 — fundraiser views the list of their completed activities."""
-        owner_rowid = parse_id(owner_account_id)
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT fra_id, title, description, target_amount, category, "
@@ -214,7 +204,7 @@ class FundraisingActivity:
                 "view_count, save_count FROM fundraising_activity "
                 "WHERE owner_account_id = ? AND completed = 1 "
                 "ORDER BY fra_id",
-                (owner_rowid,),
+                (owner_account_id,),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -249,8 +239,6 @@ class FundraisingActivity:
         Returns True iff a row matched both fra_id AND owner_account_id;
         cross-owner writes are refused (rowcount stays 0).
         """
-        owner_rowid = parse_id(owner_account_id)
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
@@ -267,8 +255,8 @@ class FundraisingActivity:
                     updated_my_fra.end_date.isoformat(),
                     1 if updated_my_fra.completed else 0,
                     1 if updated_my_fra.suspended else 0,
-                    rowid,
-                    owner_rowid,
+                    fra_id,
+                    owner_account_id,
                 ),
             )
         return cursor.rowcount > 0
@@ -277,14 +265,13 @@ class FundraisingActivity:
     def view_fundraising_activity(
         cls, activity_id: str
     ) -> Optional["FundraisingActivity"]:
-        rowid = parse_id(activity_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT fra_id, title, description, target_amount, category, "
                 "start_date, end_date, completed, suspended, owner_account_id, "
                 "view_count, save_count FROM fundraising_activity "
                 "WHERE fra_id = ?",
-                (rowid,),
+                (activity_id,),
             ).fetchone()
         if row is None:
             return None
@@ -309,11 +296,10 @@ class FundraisingActivity:
         """US-28 — fundraiser reads the view count of an activity. Returns
         0 when the row is missing (rather than raising) so callers can
         always display a number."""
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT view_count FROM fundraising_activity WHERE fra_id = ?",
-                (rowid,),
+                (fra_id,),
             ).fetchone()
         return int(row["view_count"]) if row is not None else 0
 
@@ -321,11 +307,10 @@ class FundraisingActivity:
     def view_fundraising_activity_save_count(cls, fra_id: str) -> int:
         """US-29 — fundraiser reads the save count of an activity. Returns
         0 when the row is missing."""
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT save_count FROM fundraising_activity WHERE fra_id = ?",
-                (rowid,),
+                (fra_id,),
             ).fetchone()
         return int(row["save_count"]) if row is not None else 0
 
@@ -333,12 +318,11 @@ class FundraisingActivity:
     def increment_view_count(cls, fra_id: str) -> bool:
         """Exception A: bump view_count by 1. Fired when a donee opens the
         activity detail in US-21. Returns True iff a row was updated."""
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
                 "SET view_count = view_count + 1 WHERE fra_id = ?",
-                (rowid,),
+                (fra_id,),
             )
         return cursor.rowcount > 0
 
@@ -347,19 +331,18 @@ class FundraisingActivity:
         """Exception A: bump save_count by delta (+1 on favourite,
         -1 on remove favourite). Floors at 0 so a missing favourite-record
         can't drive the count negative."""
-        rowid = parse_id(fra_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
                 "SET save_count = MAX(save_count + ?, 0) WHERE fra_id = ?",
-                (delta, rowid),
+                (delta, fra_id),
             )
         return cursor.rowcount > 0
 
     @classmethod
     def _from_row(cls, row) -> "FundraisingActivity":
         return cls(
-            fra_id=format_id("fra", row["fra_id"]),
+            fra_id=row["fra_id"],
             title=row["title"],
             description=row["description"],
             target_amount=Decimal(row["target_amount"]),
@@ -368,7 +351,7 @@ class FundraisingActivity:
             end_date=date.fromisoformat(row["end_date"]),
             completed=bool(row["completed"]),
             suspended=bool(row["suspended"]),
-            owner_account_id=format_id("acc", row["owner_account_id"]),
+            owner_account_id=row["owner_account_id"],
             view_count=int(row["view_count"]),
             save_count=int(row["save_count"]),
         )

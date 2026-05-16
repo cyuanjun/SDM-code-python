@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
+from persistence.ids import next_id
 
 
 @dataclass
@@ -26,14 +26,14 @@ class UserProfile:
     @classmethod
     def create_profile(cls, role: str, description: str) -> "UserProfile":
         with get_connection() as conn:
-            cursor = conn.execute(
-                "INSERT INTO user_profile (role, description, suspended) "
-                "VALUES (?, ?, 0)",
-                (role, description),
+            new_id = next_id(conn, "user_profile", "profile_id", "prof")
+            conn.execute(
+                "INSERT INTO user_profile (profile_id, role, description, suspended) "
+                "VALUES (?, ?, ?, 0)",
+                (new_id, role, description),
             )
-            rowid = cursor.lastrowid
         return cls(
-            profile_id=format_id("prof", rowid),
+            profile_id=new_id,
             role=role,
             description=description,
             suspended=False,
@@ -43,17 +43,16 @@ class UserProfile:
     def view_user_profile(cls, profile_id: str) -> Optional["UserProfile"]:
         """US-2 — admin views a single profile by id. Returns None for a
         missing row (negative branch implicit in the diagram)."""
-        rowid = parse_id(profile_id)
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT profile_id, role, description, suspended "
                 "FROM user_profile WHERE profile_id = ?",
-                (rowid,),
+                (profile_id,),
             ).fetchone()
         if row is None:
             return None
         return cls(
-            profile_id=format_id("prof", row["profile_id"]),
+            profile_id=row["profile_id"],
             role=row["role"],
             description=row["description"] or "",
             suspended=bool(row["suspended"]),
@@ -65,7 +64,6 @@ class UserProfile:
     ) -> bool:
         """US-3 — admin updates a profile. Returns True on success, False
         when no row matches profile_id."""
-        rowid = parse_id(profile_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_profile SET role = ?, description = ?, suspended = ? "
@@ -74,7 +72,7 @@ class UserProfile:
                     updated_profile.role,
                     updated_profile.description,
                     1 if updated_profile.suspended else 0,
-                    rowid,
+                    profile_id,
                 ),
             )
         return cursor.rowcount > 0
@@ -83,11 +81,10 @@ class UserProfile:
     def suspend_user_profile(cls, profile_id: str) -> bool:
         """US-4 — admin suspends a profile. Returns True on rowcount > 0,
         False when no row matches."""
-        rowid = parse_id(profile_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_profile SET suspended = 1 WHERE profile_id = ?",
-                (rowid,),
+                (profile_id,),
             )
         return cursor.rowcount > 0
 
@@ -95,11 +92,10 @@ class UserProfile:
     def unsuspend_user_profile(cls, profile_id: str) -> bool:
         """Exception A — mirror of suspend so the UI can toggle.
         Logged in docs/diagram_typos.md."""
-        rowid = parse_id(profile_id)
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_profile SET suspended = 0 WHERE profile_id = ?",
-                (rowid,),
+                (profile_id,),
             )
         return cursor.rowcount > 0
 
@@ -118,7 +114,7 @@ class UserProfile:
             ).fetchall()
         return [
             cls(
-                profile_id=format_id("prof", row["profile_id"]),
+                profile_id=row["profile_id"],
                 role=row["role"],
                 description=row["description"] or "",
                 suspended=bool(row["suspended"]),
@@ -138,7 +134,7 @@ class UserProfile:
             ).fetchall()
         return [
             cls(
-                profile_id=format_id("prof", row["profile_id"]),
+                profile_id=row["profile_id"],
                 role=row["role"],
                 description=row["description"] or "",
                 suspended=bool(row["suspended"]),

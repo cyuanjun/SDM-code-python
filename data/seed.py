@@ -25,7 +25,6 @@ from entity.fundraising_activity import FundraisingActivity
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 from persistence.db import get_connection
-from persistence.ids import format_id
 
 DEFAULT_PASSWORD = "123"
 
@@ -155,7 +154,7 @@ def _ensure_profile_for_role(role: str, description: str) -> str:
             (role,),
         ).fetchone()
     if row is not None:
-        return format_id("prof", row["profile_id"])
+        return row["profile_id"]
     return UserProfile.create_profile(
         role=role, description=description
     ).profile_id
@@ -177,9 +176,7 @@ def _ensure_demo_activity() -> FundraisingActivity:
             "WHERE title = 'Demo hospital fund' LIMIT 1"
         ).fetchone()
     if row is not None:
-        activity = FundraisingActivity.view_fundraising_activity(
-            format_id("fra", row["fra_id"])
-        )
+        activity = FundraisingActivity.view_fundraising_activity(row["fra_id"])
         assert activity is not None
         return activity
 

@@ -21,7 +21,7 @@ from decimal import Decimal
 from typing import Optional
 
 from persistence.db import get_connection
-from persistence.ids import format_id, parse_id
+from persistence.ids import next_id
 
 
 @dataclass
@@ -70,24 +70,25 @@ class Report:
         end_date: date,
         platform_manager_id: str,
     ) -> "Report":
-        pm_rowid = parse_id(platform_manager_id)
         stats = cls._aggregate_stats(start_date, end_date)
         generated_at = datetime.now()
 
         with get_connection() as conn:
-            cursor = conn.execute(
+            new_id = next_id(conn, "report", "report_id", "rep")
+            conn.execute(
                 "INSERT INTO report ("
-                "  report_type, start_date, end_date, generated_at, "
+                "  report_id, report_type, start_date, end_date, generated_at, "
                 "  platform_manager_id, total_donation_amount, "
                 "  total_donation_count, total_activity_count, "
                 "  total_fundraiser_count, total_donee_count"
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
+                    new_id,
                     report_type,
                     start_date.isoformat(),
                     end_date.isoformat(),
                     generated_at.isoformat(),
-                    pm_rowid,
+                    platform_manager_id,
                     str(stats["total_donation_amount"]),
                     stats["total_donation_count"],
                     stats["total_activity_count"],
@@ -95,10 +96,9 @@ class Report:
                     stats["total_donee_count"],
                 ),
             )
-            rowid = cursor.lastrowid
 
         return cls(
-            report_id=format_id("rep", rowid),
+            report_id=new_id,
             report_type=report_type,
             start_date=start_date,
             end_date=end_date,

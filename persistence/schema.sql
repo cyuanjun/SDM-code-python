@@ -1,28 +1,29 @@
 -- Revamp schema. Tables land here as their entities are rebuilt from the
 -- reworked diagrams. Each table mirrors one Entity class.
--- SQLite column types follow type-affinity rules; INTEGER PKs are surfaced
--- as prefixed strings via persistence/ids.py.
+-- PKs are TEXT in the form "{prefix}_{NNN}" (e.g. "prof_001"); see
+-- persistence/ids.py for the next_id helper that mints them on INSERT.
+-- FKs are TEXT too, holding the same prefixed string the parent stores.
 
 CREATE TABLE IF NOT EXISTS user_profile (
-    profile_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id  TEXT PRIMARY KEY,
     role        TEXT NOT NULL,
     description TEXT,
     suspended   INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS user_account (
-    account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id TEXT PRIMARY KEY,
     email      TEXT NOT NULL UNIQUE,
     password   TEXT NOT NULL,
     name       TEXT NOT NULL,
     dob        TEXT NOT NULL,
     phone_num  TEXT NOT NULL,
-    profile_id INTEGER NOT NULL REFERENCES user_profile(profile_id),
+    profile_id TEXT NOT NULL REFERENCES user_profile(profile_id),
     suspended  INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS fundraising_activity (
-    fra_id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    fra_id           TEXT PRIMARY KEY,
     title            TEXT NOT NULL,
     description      TEXT NOT NULL,
     target_amount    TEXT NOT NULL,
@@ -31,39 +32,39 @@ CREATE TABLE IF NOT EXISTS fundraising_activity (
     end_date         TEXT NOT NULL,
     completed        INTEGER NOT NULL DEFAULT 0,
     suspended        INTEGER NOT NULL DEFAULT 0,
-    owner_account_id INTEGER NOT NULL REFERENCES user_account(account_id),
+    owner_account_id TEXT NOT NULL REFERENCES user_account(account_id),
     view_count       INTEGER NOT NULL DEFAULT 0,
     save_count       INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS favourite (
-    account_id INTEGER NOT NULL REFERENCES user_account(account_id) ON DELETE CASCADE,
-    fra_id     INTEGER NOT NULL REFERENCES fundraising_activity(fra_id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES user_account(account_id) ON DELETE CASCADE,
+    fra_id     TEXT NOT NULL REFERENCES fundraising_activity(fra_id) ON DELETE CASCADE,
     PRIMARY KEY (account_id, fra_id)
 );
 
 CREATE TABLE IF NOT EXISTS donation (
-    donation_id   INTEGER PRIMARY KEY AUTOINCREMENT,
-    account_id    INTEGER NOT NULL REFERENCES user_account(account_id),
-    fra_id        INTEGER NOT NULL REFERENCES fundraising_activity(fra_id),
+    donation_id   TEXT PRIMARY KEY,
+    account_id    TEXT NOT NULL REFERENCES user_account(account_id),
+    fra_id        TEXT NOT NULL REFERENCES fundraising_activity(fra_id),
     amount        TEXT NOT NULL,
     donation_date TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS fundraising_activity_category (
-    fra_cat_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    fra_cat_id    TEXT PRIMARY KEY,
     category_name TEXT NOT NULL,
     description   TEXT,
     suspended     INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS report (
-    report_id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_id              TEXT PRIMARY KEY,
     report_type            TEXT NOT NULL,
     start_date             TEXT NOT NULL,
     end_date               TEXT NOT NULL,
     generated_at           TEXT NOT NULL,
-    platform_manager_id    INTEGER NOT NULL REFERENCES user_account(account_id),
+    platform_manager_id    TEXT NOT NULL REFERENCES user_account(account_id),
     total_donation_amount  TEXT NOT NULL DEFAULT '0',
     total_donation_count   INTEGER NOT NULL DEFAULT 0,
     total_activity_count   INTEGER NOT NULL DEFAULT 0,
