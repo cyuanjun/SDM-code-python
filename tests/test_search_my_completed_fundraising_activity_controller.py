@@ -14,11 +14,11 @@ def test_controller_returns_entity_list_unchanged(
 ) -> None:
     monkeypatch.setattr(
         FundraisingActivity,
-        "search_my_completed_fra",
+        "search_my_completed_fundraising_activity",
         classmethod(lambda cls, owner_account_id, search_criteria: ["sentinel"]),
     )
     assert (
-        SearchMyCompletedFundraisingActivityController().search_my_completed_fra(
+        SearchMyCompletedFundraisingActivityController().search_my_completed_fundraising_activity(
             owner_account_id="acc_001", search_criteria="x"
         )
         == ["sentinel"]
@@ -30,11 +30,11 @@ def test_controller_returns_empty_list_when_entity_returns_empty(
 ) -> None:
     monkeypatch.setattr(
         FundraisingActivity,
-        "search_my_completed_fra",
+        "search_my_completed_fundraising_activity",
         classmethod(lambda cls, owner_account_id, search_criteria: []),
     )
     assert (
-        SearchMyCompletedFundraisingActivityController().search_my_completed_fra(
+        SearchMyCompletedFundraisingActivityController().search_my_completed_fundraising_activity(
             owner_account_id="x", search_criteria="y"
         )
         == []

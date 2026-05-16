@@ -182,7 +182,7 @@ class ManageMyFundraisingActivityPage:
             if search_term.strip():
                 activities = (
                     SearchMyCompletedFundraisingActivityController()
-                    .search_my_completed_fra(
+                    .search_my_completed_fundraising_activity(
                         owner_account_id=owner_account_id,
                         search_criteria=search_term.strip(),
                     )

@@ -1,11 +1,10 @@
-"""SearchMyCompletedActivityPage <<Boundary>> — Sprint 3 US-30.
+"""ViewMyCompletedFundraisingActivitiesPage <<Boundary>> — Sprint 3 US-30.
 
 Diagram contract (US-30.jpg):
-    + displayMatchingCompletedActivity(myCompletedFRAList: List<FundraisingActivity>): void
+    + displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void
 
-Class diagram names the boundary `ViewMyFundraisingActivitiesPage`
-(same as US-17). Implementation uses `SearchMyCompletedActivityPage`
-to keep US-30 distinct from US-17 in the sidebar. Logged in docs/todo.md.
+The same boundary class is named on the US-31 diagram for "view a list
+of my completed activities"; US-31's contribution is added by commit 3.
 """
 from __future__ import annotations
 
@@ -16,7 +15,7 @@ from controller.search_my_completed_fundraising_activity_controller import (
 )
 
 
-class SearchMyCompletedActivityPage:
+class ViewMyCompletedFundraisingActivitiesPage:
     def render(self) -> None:
         st.header("Search My Completed Activities")
 
@@ -42,19 +41,19 @@ class SearchMyCompletedActivityPage:
 
         results = (
             SearchMyCompletedFundraisingActivityController()
-            .search_my_completed_fra(
+            .search_my_completed_fundraising_activity(
                 owner_account_id=owner_account_id,
                 search_criteria=criteria.strip(),
             )
         )
-        self.display_matching_completed_activity(results)
+        self.display_matching_my_completed_fundraising_activity(results)
 
     @staticmethod
     def validate_criteria(criteria: str) -> bool:
         return bool(criteria.strip())
 
     @staticmethod
-    def display_matching_completed_activity(activities) -> None:
+    def display_matching_my_completed_fundraising_activity(activities) -> None:
         if not activities:
             st.info("No completed activities of yours match.")
             return

@@ -867,12 +867,12 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyCompletedActivityPage` (diagram; shared with US-31) / `SearchMyCompletedActivityPage` (code) | `displayMatchingCompletedActivity(myCompletedFRAList: List<FundraisingActivity>): void` |
-| Controller | `SearchMyCompletedFundraisingActivityController` | `searchMyCompletedFRA(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
-| Entity | `FundraisingActivity (attrs as US-14)` | `searchMyCompletedFRA(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
+| Boundary | `ViewMyCompletedFundraisingActivitiesPage` *(shared with US-31)* | `displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void` |
+| Controller | `SearchMyCompletedFundraisingActivityController` | `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
+| Entity | `FundraisingActivity (attrs as US-14)` | `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
 
 **Code**
-- [boundary/search_my_completed_activity_page.py:19](../boundary/search_my_completed_activity_page.py#L19)
+- [boundary/view_my_completed_fundraising_activities_page.py:19](../boundary/view_my_completed_fundraising_activities_page.py#L19)
 - [controller/search_my_completed_fundraising_activity_controller.py:10](../controller/search_my_completed_fundraising_activity_controller.py#L10)
 - [entity/fundraising_activity.py:184](../entity/fundraising_activity.py#L184) — owner-scoped + `completed = 1` filter + `LIKE` against `title / description / category`
 
@@ -881,9 +881,9 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Tests**
 - [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — completed match + skip-non-completed + cross-owner-isolation negatives
 - [tests/test_search_my_completed_fundraising_activity_controller.py](../tests/test_search_my_completed_fundraising_activity_controller.py) — delegation + empty-list mirror
-- [tests/test_search_my_completed_activity_page.py](../tests/test_search_my_completed_activity_page.py) — page smoke
+- [tests/test_view_my_completed_fundraising_activities_page.py](../tests/test_view_my_completed_fundraising_activities_page.py) — page smoke
 
-**Notes / assumptions / deferred:** **Deferred 2026-05-16** — US-30 and US-31 diagrams share boundary `ViewMyCompletedActivityPage`; code splits them into `SearchMyCompletedActivityPage` (US-30) and `ViewMyCompletedActivityPage` (US-31) as separate per-US testable artifacts. The `searchMyCompletedFRA` parameter-order typo was **resolved 2026-05-16** (now `owner` first, matching code).
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 dropped the FRA short form and adopted full form (`searchMyCompletedFundraisingActivity`) — code renamed to match (previously `search_my_completed_fra`). US-30 and US-31 share the boundary class `ViewMyCompletedFundraisingActivitiesPage`; the page lives in a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class).
 
 ### US-31 — View my completed fundraising activity ([diagram](../diagrams/sprint-3_diagrams/US-31.jpg))
 
@@ -1275,7 +1275,7 @@ The reworked diagrams define 27 per-US Boundary classes. The sidebar would be un
 |---|---|
 | `ManageUserProfilePage` | `CreateProfilePage`, `ViewUserProfilePage`, `UpdateUserProfilePage`, `ViewUserProfilesPage` (+ US-4 suspend button) |
 | `ManageUserAccountPage` | `CreateAccountPage`, `ViewUserAccountPage`, `UpdateUserAccountPage`, `ViewUserAccountsPage` (+ US-9 suspend button) |
-| `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage`, `SearchMyCompletedActivityPage`, `ViewMyCompletedActivityPage` |
+| `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage`, `ViewMyCompletedFundraisingActivitiesPage` |
 | `BrowseFundraisingActivityPage` | `ViewFundraisingActivityPage` (+ US-22 save), `ViewFundraisingActivitiesPage` (US-20 search) |
 | `MyFavouritesPage` | `ViewFavouriteListPage` (+ US-23 remove), `SearchFavouritePage` |
 | `MyDonationsPage` | `ViewMyDonationHistoryPage`, `ViewMyDonationHistoriesPage` |
@@ -1299,7 +1299,7 @@ Sprint 3 / Sprint 4 items where the diagram and code disagree but the team has c
 - **US-23 boundary class name** — diagram `ViewFavouritePage`; code `ViewFavouriteListPage` (shared with US-24).
 - **US-25 `viewMode` param** — class diagram has 3 params; sequence has 2; code uses the 2-param version.
 - **US-25 boundary class name** — diagram `ViewFavouritesPage`; code `SearchFavouritePage`.
-- **US-30 / US-31 shared boundary** — both diagrams name `ViewMyCompletedActivityPage`; code keeps two separate per-US boundary classes (`SearchMyCompletedActivityPage` + `ViewMyCompletedActivityPage`) for testability.
+- **US-30 / US-31 shared boundary** — both diagrams name `ViewMyCompletedFundraisingActivitiesPage`; code consolidates into a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class). Resolved 2026-05-17.
 - **US-32 "My" naming** — diagram `SearchMyDonationHistoryController` / `searchMyDonationHistory`; code drops "My" (`SearchDonationHistoryController` / `Donation.search_donation_history`).
 - **US-41 / US-42 / US-43 shared `GenerateReportPage`** — accepted as a deliberate consolidation; one boundary handles daily / weekly / monthly via a radio selector.
 

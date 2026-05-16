@@ -181,7 +181,7 @@ class FundraisingActivity:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    def search_my_completed_fra(
+    def search_my_completed_fundraising_activity(
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:
         """US-30 — fundraiser searches their completed activities. Scoped

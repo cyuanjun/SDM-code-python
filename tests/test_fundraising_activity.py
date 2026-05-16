@@ -493,21 +493,21 @@ def _seed_completed_activity(
     return activity
 
 
-def test_search_my_completed_fra_matches_only_completed_and_owner_scoped() -> None:
+def test_search_my_completed_fundraising_activity_matches_only_completed_and_owner_scoped() -> None:
     owner = _seed_fundraiser_account()
     completed = _seed_completed_activity(owner, title="Hospital fund")
     ongoing = _seed_activity(owner, title="Hospital research")  # NOT completed
     assert ongoing.completed is False
     assert completed.fra_id != ongoing.fra_id
 
-    results = FundraisingActivity.search_my_completed_fra(
+    results = FundraisingActivity.search_my_completed_fundraising_activity(
         owner_account_id=owner.account_id, search_criteria="hospital",
     )
 
     assert [a.fra_id for a in results] == [completed.fra_id]
 
 
-def test_search_my_completed_fra_excludes_other_owners_completed_activities() -> None:
+def test_search_my_completed_fundraising_activity_excludes_other_owners_completed_activities() -> None:
     owner = _seed_fundraiser_account()
     _seed_completed_activity(owner, title="Mine done")
 
@@ -521,19 +521,19 @@ def test_search_my_completed_fra_excludes_other_owners_completed_activities() ->
     )
     _seed_completed_activity(other, title="Theirs done")
 
-    results = FundraisingActivity.search_my_completed_fra(
+    results = FundraisingActivity.search_my_completed_fundraising_activity(
         owner_account_id=owner.account_id, search_criteria="done",
     )
     assert [a.title for a in results] == ["Mine done"]
 
 
-def test_search_my_completed_fra_returns_empty_for_no_matches() -> None:
+def test_search_my_completed_fundraising_activity_returns_empty_for_no_matches() -> None:
     """Negative path: owner has no completed activities → []."""
     owner = _seed_fundraiser_account()
     _seed_activity(owner, title="Still going")  # not completed
 
     assert (
-        FundraisingActivity.search_my_completed_fra(
+        FundraisingActivity.search_my_completed_fundraising_activity(
             owner_account_id=owner.account_id, search_criteria="going"
         )
         == []
