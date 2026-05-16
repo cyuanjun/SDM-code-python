@@ -36,8 +36,6 @@ CREATE_MODE_KEY = "manage_profile_create_mode"
 JUST_CREATED_KEY = "manage_profile_just_created"
 ACTION_MSG_KEY = "manage_profile_action_msg"
 
-ROLE_OPTIONS = ("admin", "fundraiser", "donee", "platform_manager")
-
 
 class ManageUserProfilePage:
     def render(self) -> None:
@@ -90,7 +88,7 @@ class ManageUserProfilePage:
             return
 
         with st.form("manage_profile_create_form"):
-            role = st.selectbox("Role", ROLE_OPTIONS)
+            role = st.text_input("Role")
             description = st.text_area("Description")
             col_submit, col_cancel, _ = st.columns([1, 1, 4])
             with col_submit:
@@ -252,12 +250,8 @@ class ManageUserProfilePage:
         is_completed = ACTION_MSG_KEY in st.session_state
 
         with st.form("manage_profile_edit_form"):
-            try:
-                role_index = ROLE_OPTIONS.index(profile.role)
-            except ValueError:
-                role_index = 0
-            role = st.selectbox(
-                "Role", ROLE_OPTIONS, index=role_index, disabled=is_completed
+            role = st.text_input(
+                "Role", value=profile.role, disabled=is_completed
             )
             description = st.text_area(
                 "Description", value=profile.description, disabled=is_completed

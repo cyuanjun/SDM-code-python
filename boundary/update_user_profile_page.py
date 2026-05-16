@@ -20,8 +20,6 @@ from entity.user_profile import UserProfile
 
 SELECTED_KEY = "update_profile_selected_id"
 
-ROLE_OPTIONS = ("admin", "fundraiser", "donee", "platform_manager")
-
 
 class UpdateUserProfilePage:
     def render(self) -> None:
@@ -41,11 +39,7 @@ class UpdateUserProfilePage:
 
         with st.form("update_profile_form"):
             st.write(f"**Editing:** {current.profile_id}")
-            try:
-                role_index = ROLE_OPTIONS.index(current.role)
-            except ValueError:
-                role_index = 0
-            role = st.selectbox("Role", ROLE_OPTIONS, index=role_index)
+            role = st.text_input("Role", value=current.role)
             description = st.text_area("Description", value=current.description)
             suspended = st.checkbox("Suspended", value=current.suspended)
             col_a, col_b = st.columns(2)
