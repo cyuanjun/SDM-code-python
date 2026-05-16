@@ -57,7 +57,7 @@ class ManageUserProfilePage:
         with col_create:
             st.write("")  # vertical spacer to align with the header
             if st.button(
-                "+ Create new profile",
+                "+ Create new user profile",
                 key="manage_profile_create_btn",
                 use_container_width=True,
             ):
