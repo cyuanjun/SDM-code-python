@@ -68,7 +68,7 @@ class ManageUserProfilePage:
     # -------- Create view ----------------------------------------------------
 
     def _render_create(self) -> None:
-        st.header("Create User Profile")
+        st.header("Create New User Profile")
 
         # Post-create confirmation: shown after a successful create.
         if JUST_CREATED_KEY in st.session_state:
