@@ -55,7 +55,7 @@ class ManageUserAccountPage:
         with col_create:
             st.write("")
             if st.button(
-                "+ Create new account",
+                "+ Create new user account",
                 key="manage_account_create_btn",
                 use_container_width=True,
             ):
