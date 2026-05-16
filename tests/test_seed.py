@@ -152,6 +152,6 @@ def test_seed_demo_donations_visible_via_search_for_default_donee() -> None:
     donee = UserAccount.login(DEFAULT_DONEE_EMAIL, DEFAULT_DONEE_PASSWORD)
     assert donee is not None
     results = Donation.search_donation_history(
-        search_criteria="hospital", account_id=donee.account_id
+        account_id=donee.account_id, search_criteria="hospital"
     )
     assert len(results) == 3

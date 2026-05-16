@@ -15,11 +15,11 @@ def test_controller_returns_entity_list_unchanged(
     monkeypatch.setattr(
         Donation,
         "search_donation_history",
-        classmethod(lambda cls, search_criteria, account_id: ["sentinel"]),
+        classmethod(lambda cls, account_id, search_criteria: ["sentinel"]),
     )
     assert (
         SearchDonationHistoryController().search_donation_history(
-            search_criteria="x", account_id="acc_001"
+            account_id="acc_001", search_criteria="x"
         )
         == ["sentinel"]
     )
@@ -31,11 +31,11 @@ def test_controller_returns_empty_list_when_entity_returns_empty(
     monkeypatch.setattr(
         Donation,
         "search_donation_history",
-        classmethod(lambda cls, search_criteria, account_id: []),
+        classmethod(lambda cls, account_id, search_criteria: []),
     )
     assert (
         SearchDonationHistoryController().search_donation_history(
-            search_criteria="x", account_id="y"
+            account_id="y", search_criteria="x"
         )
         == []
     )

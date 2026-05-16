@@ -1,7 +1,7 @@
 """ViewMyDonationHistoriesPage <<Boundary>> — Sprint 3 US-32.
 
 Diagram contract (US-32.jpg):
-    + displayMatchingDonationHistory(donationList: List<Donation>): void
+    + displayMatchingMyDonationHistories(donationList: List<Donation>): void
 
 Donee searches their donation history by activity title/description/category.
 """
@@ -39,16 +39,16 @@ class ViewMyDonationHistoriesPage:
             return
 
         results = SearchDonationHistoryController().search_donation_history(
-            search_criteria=criteria.strip(), account_id=account_id,
+            account_id=account_id, search_criteria=criteria.strip(),
         )
-        self.display_matching_donation_history(results)
+        self.display_matching_my_donation_histories(results)
 
     @staticmethod
     def validate_criteria(criteria: str) -> bool:
         return bool(criteria.strip())
 
     @staticmethod
-    def display_matching_donation_history(donations) -> None:
+    def display_matching_my_donation_histories(donations) -> None:
         if not donations:
             st.info("No donations match.")
             return

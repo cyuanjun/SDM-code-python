@@ -9,8 +9,8 @@ from entity.donation import Donation
 
 class SearchDonationHistoryController:
     def search_donation_history(
-        self, search_criteria: str, account_id: str
+        self, account_id: str, search_criteria: str
     ) -> list[Donation]:
         return Donation.search_donation_history(
-            search_criteria=search_criteria, account_id=account_id
+            account_id=account_id, search_criteria=search_criteria
         )

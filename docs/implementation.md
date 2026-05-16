@@ -919,9 +919,9 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyDonationHistoriesPage` | `displayMatchingMyDonationHistory(donationList: List<Donation>): void` |
-| Controller | `SearchMyDonationHistoryController` (diagram) / `SearchDonationHistoryController` (code) | `searchMyDonationHistory(searchCriteria: String, accountId: String): List<Donation>` |
-| Entity | `Donation (donationId, accountId, FRAId, amount: Decimal, donationDate: Date)` | `searchMyDonationHistory(searchCriteria: String, accountId: String): List<Donation>` |
+| Boundary | `ViewMyDonationHistoriesPage` | `displayMatchingMyDonationHistories(donationList: List<Donation>): void` |
+| Controller | `SearchMyDonationHistoryController` (diagram) / `SearchDonationHistoryController` (code) | `searchMyDonationHistory(accountId: String, searchCriteria: String): List<Donation>` |
+| Entity | `Donation (donationId, accountId, FRAId, amount: Decimal, donationDate: Date)` | `searchMyDonationHistory(accountId: String, searchCriteria: String): List<Donation>` |
 
 **Code**
 - [boundary/view_my_donation_histories_page.py:17](../boundary/view_my_donation_histories_page.py#L17)
@@ -935,7 +935,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_search_donation_history_controller.py](../tests/test_search_donation_history_controller.py) — delegation + empty-list mirror
 - [tests/test_view_my_donation_histories_page.py](../tests/test_view_my_donation_histories_page.py) — page smoke
 
-**Notes / assumptions / deferred:** **Deferred 2026-05-16** — diagram (now consistent across class + sequence) uses `SearchMyDonationHistoryController` / `searchMyDonationHistory`; code drops "My" — `SearchDonationHistoryController.search_donation_history`. Identical behaviour; just a name preference. The `accountId: Integer` typo on the source diagram was **resolved 2026-05-16**. No "create donation" use case exists on any diagram — the three rows displayed at demo time come from `seed_demo_donations` ([data/seed.py](../data/seed.py)) using `Donation.create_donation`.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 pluralizes the display method (`displayMatchingMyDonationHistories`) and flips the controller/entity param order to `(accountId, searchCriteria)` — owner first, consistent with US-25 / US-30. Code aligned: param order flipped on `Donation.search_donation_history` and the controller; boundary display method renamed. The remaining naming divergence — diagram uses `SearchMyDonationHistoryController` / `searchMyDonationHistory` while code drops "My" (`SearchDonationHistoryController.search_donation_history`) — is still **deferred** as a minor name preference; identical behaviour. The `accountId: Integer` typo on the source diagram was **resolved 2026-05-16**. No "create donation" use case exists on any diagram — the three rows displayed at demo time come from `seed_demo_donations` ([data/seed.py](../data/seed.py)) using `Donation.create_donation`.
 
 ### US-33 — View my donation history ([diagram](../diagrams/sprint-3_diagrams/US-33.jpg))
 

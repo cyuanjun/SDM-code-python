@@ -41,7 +41,7 @@ class MyDonationsPage:
         )
         if search_term.strip():
             donations = SearchDonationHistoryController().search_donation_history(
-                search_criteria=search_term.strip(), account_id=account_id,
+                account_id=account_id, search_criteria=search_term.strip(),
             )
         else:
             donations = (

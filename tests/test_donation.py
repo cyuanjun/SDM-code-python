@@ -105,7 +105,7 @@ def test_search_donation_history_matches_activity_fields_for_the_donee() -> None
     _seed_donation(donee, school, amount="20")
 
     results = Donation.search_donation_history(
-        search_criteria="school", account_id=donee.account_id
+        account_id=donee.account_id, search_criteria="school"
     )
     assert [d.fra_id for d in results] == [school.fra_id]
 
@@ -116,7 +116,7 @@ def test_search_donation_history_returns_empty_for_no_match() -> None:
 
     assert (
         Donation.search_donation_history(
-            search_criteria="nothing", account_id=donee.account_id
+            account_id=donee.account_id, search_criteria="nothing"
         )
         == []
     )
@@ -126,7 +126,7 @@ def test_search_donation_history_returns_empty_for_no_donations() -> None:
     donee, _ = _seed_donee_and_activity()
     assert (
         Donation.search_donation_history(
-            search_criteria="anything", account_id=donee.account_id
+            account_id=donee.account_id, search_criteria="anything"
         )
         == []
     )
