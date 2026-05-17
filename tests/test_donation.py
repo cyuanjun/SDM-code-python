@@ -87,7 +87,7 @@ def test_create_donation_raises_on_unknown_fra_id() -> None:
         )
 
 
-def test_search_donation_history_matches_activity_fields_for_the_donee() -> None:
+def test_search_my_donation_history_matches_activity_fields_for_the_donee() -> None:
     donee, hospital = _seed_donee_and_activity()
     # Create a second activity with a different title, owned by the same
     # fundraiser (the singleton fundraiser profile rules out a second one).
@@ -100,28 +100,28 @@ def test_search_donation_history_matches_activity_fields_for_the_donee() -> None
     _seed_donation(donee, hospital, amount="50")
     _seed_donation(donee, school, amount="20")
 
-    results = Donation.search_donation_history(
+    results = Donation.search_my_donation_history(
         account_id=donee.account_id, search_criteria="school"
     )
     assert [d.fra_id for d in results] == [school.fra_id]
 
 
-def test_search_donation_history_returns_empty_for_no_match() -> None:
+def test_search_my_donation_history_returns_empty_for_no_match() -> None:
     donee, activity = _seed_donee_and_activity()
     _seed_donation(donee, activity)
 
     assert (
-        Donation.search_donation_history(
+        Donation.search_my_donation_history(
             account_id=donee.account_id, search_criteria="nothing"
         )
         == []
     )
 
 
-def test_search_donation_history_returns_empty_for_no_donations() -> None:
+def test_search_my_donation_history_returns_empty_for_no_donations() -> None:
     donee, _ = _seed_donee_and_activity()
     assert (
-        Donation.search_donation_history(
+        Donation.search_my_donation_history(
             account_id=donee.account_id, search_criteria="anything"
         )
         == []

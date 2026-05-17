@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from controller.search_donation_history_controller import (
-    SearchDonationHistoryController,
+from controller.search_my_donation_histories_controller import (
+    SearchMyDonationHistoriesController,
 )
 
 
@@ -24,7 +24,7 @@ class ViewMyDonationHistoriesPage:
 
         account_id = st.session_state["user"].account_id
 
-        with st.form("search_donation_history_form"):
+        with st.form("search_my_donation_history_form"):
             criteria = st.text_input(
                 "Search criteria",
                 placeholder="Activity title, description, or category…",
@@ -38,7 +38,7 @@ class ViewMyDonationHistoriesPage:
             self.display_error()
             return
 
-        results = SearchDonationHistoryController().search_donation_history(
+        results = SearchMyDonationHistoriesController().search_my_donation_history(
             account_id=account_id, search_criteria=criteria.strip(),
         )
         self.display_matching_my_donation_histories(results)

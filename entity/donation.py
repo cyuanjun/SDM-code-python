@@ -56,7 +56,7 @@ class Donation:
         )
 
     @classmethod
-    def search_donation_history(
+    def search_my_donation_history(
         cls, account_id: str, search_criteria: str
     ) -> list["Donation"]:
         """US-32 — donee searches donation history. Joins to

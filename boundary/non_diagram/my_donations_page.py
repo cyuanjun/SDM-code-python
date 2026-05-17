@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from controller.search_donation_history_controller import (
-    SearchDonationHistoryController,
+from controller.search_my_donation_histories_controller import (
+    SearchMyDonationHistoriesController,
 )
 from controller.view_my_donation_history_controller import (
     ViewMyDonationHistoryController,
@@ -40,7 +40,7 @@ class MyDonationsPage:
             placeholder="Activity title, description, or category…",
         )
         if search_term.strip():
-            donations = SearchDonationHistoryController().search_donation_history(
+            donations = SearchMyDonationHistoriesController().search_my_donation_history(
                 account_id=account_id, search_criteria=search_term.strip(),
             )
         else:
