@@ -78,11 +78,11 @@ CSIT314 group project — online fundraising platform (Python + Streamlit + SQLi
 
 Numbers below are summaries — the detail tables further down hold the full text and links.
 
-- **Exception A** — 12 off-diagram entity methods added to power UX (list dropdowns + count writes + unsuspend toggles): `UserProfile.view_all_profiles`, `UserAccount.view_all_user_accounts`, `FundraisingActivity.view_all_fundraising_activities` + `view_my_fundraising_activities` + `increment_view_count` + `increment_save_count`, `FundraisingActivityCategory.view_all_categories`, `Donation.view_my_donations`, plus four `unsuspend_*` methods.
+- **Exception A** — 11 off-diagram entity methods added to power UX (list dropdowns + count writes + unsuspend toggles): `UserProfile.view_all_profiles`, `UserAccount.view_all_user_accounts`, `FundraisingActivity.view_all_fundraising_activities` + `view_my_fundraising_activities` + `increment_view_count` + `increment_save_count`, `FundraisingActivityCategory.view_all_categories`, plus four `unsuspend_*` methods. *(Was 12 — `Donation.view_my_donations` retired 2026-05-18; replaced by the diagram-defined `view_my_donation_histories` per the new US-33 diagram.)*
 - **Exception B** — 1 debug-only page (`.info`, [boundary/non_diagram/info_page.py](../boundary/non_diagram/info_page.py)).
 - **Exception C** — 7 combined sidebar pages compose 27 per-US Boundary classes (every per-US class still exists as a tested artifact).
 - **Lecturer decisions (4)** — donation seed (2026-05-15), `UNIQUE(email)` on UserAccount (2026-05-15), no `displayError` on Sprint 1 boundaries (2026-05-16), login failure return type implicit on US-11/18/26/39 (2026-05-16).
-- **Deferred typos** — US-32 "My" naming; US-41/42/43 shared `GenerateReportPage`.
+- **Deferred typos** — US-41/42/43 shared `GenerateReportPage`. *(US-32 "My" naming resolved 2026-05-18 in the new diagram set.)*
 - **Open architectural items (1)** — plain-text passwords on `UserAccount` (deferred to a hardening sprint).
 - **Resolved diagram typos** — 14 resolved across Sprints 1–4 over 2026-05-14 to 2026-05-16; 6 deferred (see above) and 2 lecturer-deferred (displayError, login failure return type). See [docs/diagram_typos.md](diagram_typos.md) for the full struck-through list.
 
@@ -815,23 +815,23 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewFavouriteListPage` | `displaySuccess(): void` |
+| Boundary | `ViewFundraisingActivityPage` *(shared with US-21/22/28/29)* | `displaySuccess(): void` |
 | Controller | `RemoveFavouriteController` | `removeFavourite(FRAId: String, accountId: String): Boolean` |
 | Entity | `Favourite (FRAId, accountId)` | `removeFavourite(FRAId: String, accountId: String): Boolean` |
 
 **Code**
-- [boundary/view_favourite_list_page.py:17](../boundary/view_favourite_list_page.py#L17) (shared with US-24)
+- [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py) — [Remove from favourites] button rendered when the activity is already in the donee's favourites; symmetric with US-22's [Save] button
 - [controller/remove_favourite_controller.py:10](../controller/remove_favourite_controller.py#L10)
 - [entity/favourite.py:55](../entity/favourite.py#L55) — `DELETE … WHERE fra_id = ? AND account_id = ?`, then calls `FundraisingActivity.increment_save_count(fra_id, -1)` on success
 
-**Sidebar wiring:** Surfaced via `MyFavouritesPage` under **[Donee] My Favourites**; donee only.
+**Sidebar wiring:** Surfaced via `BrowseFundraisingActivityPage` (the donee detail screen reached from the activity list); donee only.
 
 **Tests**
 - [tests/test_favourite.py](../tests/test_favourite.py) — happy delete + non-existent-pair negative + cross-account isolation
 - [tests/test_remove_favourite_controller.py](../tests/test_remove_favourite_controller.py) — delegation + `False` mirror
-- [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke
+- [tests/test_view_fundraising_activity_page.py](../tests/test_view_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 names the boundary `ViewFavouriteListPage` (class + sequence consistent) and fixes the user-story wording ("suspend" → "remove"; "favourite list" → "favourites list"). The previously-deferred boundary naming typo is now resolved. The save-count decrement is an Exception A side effect that keeps US-29's `view_fundraising_activity_save_count` in sync.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 moves the boundary from `ViewFavouriteListPage` to `ViewFundraisingActivityPage` — symmetric with US-22 Save-to-favourites on the same detail screen, and parallel to how US-15 Update + US-16 Suspend live on the fundraiser's `ViewMyFundraisingActivityPage`. `ViewFavouriteListPage` no longer renders per-row Remove buttons. The save-count decrement is an Exception A side effect that keeps US-29's `view_fundraising_activity_save_count` in sync.
 
 ### US-25 — Search my favourites list ([diagram](../diagrams/sprint-3_diagrams/US-25.jpg))
 
@@ -841,12 +841,12 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewFavouriteListPage` *(shared with US-23/24)* | `displayMatchingFavourites(favouriteList: List<Favourite>): void` |
+| Boundary | `ViewFavouriteListPage` *(shared with US-24)* | `displayMatchingFavourites(favouriteList: List<Favourite>): void` |
 | Controller | `SearchFavouriteController` | `searchFavourite(accountId: String, searchCriteria: String): List<Favourite>` |
 | Entity | `Favourite (FRAId, accountId)` | `searchFavourite(accountId: String, searchCriteria: String): List<Favourite>` |
 
 **Code**
-- [boundary/view_favourite_list_page.py:21](../boundary/view_favourite_list_page.py#L21) *(shared with US-23/24)*
+- [boundary/view_favourite_list_page.py:21](../boundary/view_favourite_list_page.py#L21) *(shared with US-24)*
 - [controller/search_favourite_controller.py:11](../controller/search_favourite_controller.py#L11)
 - [entity/favourite.py:73](../entity/favourite.py#L73) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
 
@@ -855,7 +855,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Tests**
 - [tests/test_favourite.py](../tests/test_favourite.py) — match + cross-account-isolation + empty-result negatives
 - [tests/test_search_favourite_controller.py](../tests/test_search_favourite_controller.py) — delegation + empty-list mirror
-- [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke (shared with US-23/24)
+- [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke (shared with US-24)
 
 **Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 drops the `viewMode` param (class + sequence both 2-param now) and names the boundary `ViewFavouriteListPage` shared with US-23/24. Code's per-US `SearchFavouritePage` retired and merged into `view_favourite_list_page.py` (mirrors US-14/17 + US-30/31 patterns). Param order also flipped to `(accountId, searchCriteria)` — owner first, consistent with other owner-scoped methods. Both previously-deferred US-25 typos are now resolved.
 
@@ -867,12 +867,12 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyCompletedFundraisingActivitiesPage` *(shared with US-31)* | `displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void` |
+| Boundary | `ViewMyFundraisingActivitiesPage` *(shared with US-17 + US-31)* | `displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void` |
 | Controller | `SearchMyCompletedFundraisingActivityController` | `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
 | Entity | `FundraisingActivity (attrs as US-14)` | `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>` |
 
 **Code**
-- [boundary/view_my_completed_fundraising_activities_page.py:19](../boundary/view_my_completed_fundraising_activities_page.py#L19)
+- [boundary/view_my_fundraising_activities_page.py](../boundary/view_my_fundraising_activities_page.py) — search in the `[Completed]` tab
 - [controller/search_my_completed_fundraising_activity_controller.py:10](../controller/search_my_completed_fundraising_activity_controller.py#L10)
 - [entity/fundraising_activity.py:184](../entity/fundraising_activity.py#L184) — owner-scoped + `completed = 1` filter + `LIKE` against `title / description / category`
 
@@ -881,9 +881,9 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Tests**
 - [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — completed match + skip-non-completed + cross-owner-isolation negatives
 - [tests/test_search_my_completed_fundraising_activity_controller.py](../tests/test_search_my_completed_fundraising_activity_controller.py) — delegation + empty-list mirror
-- [tests/test_view_my_completed_fundraising_activities_page.py](../tests/test_view_my_completed_fundraising_activities_page.py) — page smoke
+- [tests/test_view_my_fundraising_activities_page.py](../tests/test_view_my_fundraising_activities_page.py) — page smoke (shared with US-17 + US-31)
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 dropped the FRA short form and adopted full form (`searchMyCompletedFundraisingActivity`) — code renamed to match (previously `search_my_completed_fra`). US-30 and US-31 share the boundary class `ViewMyCompletedFundraisingActivitiesPage`; the page lives in a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class).
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 places US-30 on `ViewMyFundraisingActivitiesPage` (the same boundary as US-17 and US-31). The page renders an `[All]` / `[Completed]` tab toggle plus a search box — search-while-Completed fires US-30, search-while-All fires US-17, default Completed view fires US-31. The previous dedicated `ViewMyCompletedFundraisingActivitiesPage` retired; its tests folded into `test_view_my_fundraising_activities_page.py`.
 
 ### US-31 — View my completed fundraising activities ([diagram](../diagrams/sprint-3_diagrams/US-31.jpg))
 
@@ -893,12 +893,12 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyCompletedFundraisingActivitiesPage` *(shared with US-30)* | `displayMyCompletedFundraisingActivities(myCompletedFRAList: List<FundraisingActivity>): void` |
+| Boundary | `ViewMyFundraisingActivitiesPage` *(shared with US-17 + US-30)* | `displayMyCompletedFundraisingActivities(myCompletedFRAList: List<FundraisingActivity>): void` |
 | Controller | `ViewMyCompletedFundraisingActivitiesController` | `viewMyCompletedFundraisingActivities(ownerAccountId: String): List<FundraisingActivity>` |
 | Entity | `FundraisingActivity (attrs as US-14)` | `viewMyCompletedFundraisingActivities(ownerAccountId: String): List<FundraisingActivity>` |
 
 **Code**
-- [boundary/view_my_completed_fundraising_activities_page.py](../boundary/view_my_completed_fundraising_activities_page.py) — shared with US-30
+- [boundary/view_my_fundraising_activities_page.py](../boundary/view_my_fundraising_activities_page.py) — default render of the `[Completed]` tab
 - [controller/view_my_completed_fundraising_activities_controller.py](../controller/view_my_completed_fundraising_activities_controller.py)
 - [entity/fundraising_activity.py:204](../entity/fundraising_activity.py#L204) — owner-scoped + `completed = 1` filter; returns list
 
@@ -907,9 +907,9 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Tests**
 - [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — completed-only owner happy + cross-owner-excluded + empty-when-no-completed negatives
 - [tests/test_view_my_completed_fundraising_activities_controller.py](../tests/test_view_my_completed_fundraising_activities_controller.py) — delegation + empty-list mirror
-- [tests/test_view_my_completed_fundraising_activities_page.py](../tests/test_view_my_completed_fundraising_activities_page.py) — page smoke (shared with US-30)
+- [tests/test_view_my_fundraising_activities_page.py](../tests/test_view_my_fundraising_activities_page.py) — page smoke (shared with US-17 + US-30)
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 reframed US-31 from a per-id detail view into a list view (`viewMyCompletedFundraisingActivities(owner): List<FundraisingActivity>`). The old per-id method `view_my_completed_activity(owner, fra_id)` was removed; the detail panel in `ManageMyFundraisingActivityPage` now reuses US-13's `view_my_fundraising_activity(owner, fra_id)`. The "is completed" guard moves from the entity (old: `WHERE completed = 1`) into the boundary picker (the click-source is the completed-only list, so the picked id is guaranteed completed).
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 places US-31 on `ViewMyFundraisingActivitiesPage` (shared with US-17 and US-30). Earlier the 2026-05-17 export reframed US-31 from a per-id detail view to a list method (`viewMyCompletedFundraisingActivities(owner): List<FundraisingActivity>`); the latest export keeps that shape and moves the boundary one page over. The old dedicated `ViewMyCompletedFundraisingActivitiesPage` retired.
 
 ### US-32 — Search my donation history ([diagram](../diagrams/sprint-3_diagrams/US-32.jpg))
 
@@ -919,25 +919,25 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyDonationHistoriesPage` | `displayMatchingMyDonationHistories(donationList: List<Donation>): void` |
-| Controller | `SearchMyDonationHistoryController` (diagram) / `SearchDonationHistoryController` (code) | `searchMyDonationHistory(accountId: String, searchCriteria: String): List<Donation>` |
+| Boundary | `ViewMyDonationHistoriesPage` *(shared with US-33)* | `displayMatchingMyDonationHistories(donationList: List<Donation>): void` |
+| Controller | `SearchMyDonationHistoriesController` | `searchMyDonationHistory(accountId: String, searchCriteria: String): List<Donation>` |
 | Entity | `Donation (donationId, accountId, FRAId, amount: Decimal, donationDate: Date)` | `searchMyDonationHistory(accountId: String, searchCriteria: String): List<Donation>` |
 
 **Code**
-- [boundary/view_my_donation_histories_page.py:17](../boundary/view_my_donation_histories_page.py#L17)
-- [controller/search_donation_history_controller.py:10](../controller/search_donation_history_controller.py#L10) (no "My" in class/method name)
-- [entity/donation.py:61](../entity/donation.py#L61) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
+- [boundary/view_my_donation_histories_page.py](../boundary/view_my_donation_histories_page.py) — shared with US-33
+- [controller/search_my_donation_histories_controller.py](../controller/search_my_donation_histories_controller.py)
+- [entity/donation.py:55](../entity/donation.py#L55) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
 
 **Sidebar wiring:** Surfaced via `MyDonationsPage` under **[Donee] My Donations**; donee only.
 
 **Tests**
 - [tests/test_donation.py](../tests/test_donation.py) — match + cross-account-isolation + empty-result negatives
-- [tests/test_search_donation_history_controller.py](../tests/test_search_donation_history_controller.py) — delegation + empty-list mirror
+- [tests/test_search_my_donation_histories_controller.py](../tests/test_search_my_donation_histories_controller.py) — delegation + empty-list mirror
 - [tests/test_view_my_donation_histories_page.py](../tests/test_view_my_donation_histories_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 pluralizes the display method (`displayMatchingMyDonationHistories`) and flips the controller/entity param order to `(accountId, searchCriteria)` — owner first, consistent with US-25 / US-30. Code aligned: param order flipped on `Donation.search_donation_history` and the controller; boundary display method renamed. The remaining naming divergence — diagram uses `SearchMyDonationHistoryController` / `searchMyDonationHistory` while code drops "My" (`SearchDonationHistoryController.search_donation_history`) — is still **deferred** as a minor name preference; identical behaviour. The `accountId: Integer` typo on the source diagram was **resolved 2026-05-16**. No "create donation" use case exists on any diagram — the three rows displayed at demo time come from `seed_demo_donations` ([data/seed.py](../data/seed.py)) using `Donation.create_donation`.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 finalises the "My" naming: controller class is now `SearchMyDonationHistoriesController` (plural Histories), method stays `searchMyDonationHistory` (singular). The previously-deferred "no My in code" divergence is now resolved. Boundary `ViewMyDonationHistoriesPage` is shared with US-33 (US-33 now also returns a list). No "create donation" use case exists on any diagram — the three rows displayed at demo time come from `seed_demo_donations` ([data/seed.py](../data/seed.py)) using `Donation.create_donation`.
 
-### US-33 — View my donation history ([diagram](../diagrams/sprint-3_diagrams/US-33.jpg))
+### US-33 — View my donation histories ([diagram](../diagrams/sprint-3_diagrams/US-33.jpg))
 
 **Actor:** Donee — *As a donee, I want to view donation history so that I can track the campaigns I supported.*
 
@@ -945,23 +945,23 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 
 | Layer | Class | Method |
 |---|---|---|
-| Boundary | `ViewMyDonationHistoryPage` | `displayMyDonationHistory(donation: Donation): void` |
-| Controller | `ViewMyDonationHistoryController` | `viewMyDonationHistory(accountId: String, donationId: String): Donation` |
-| Entity | `Donation (donationId, accountId, FRAId, amount, donationDate)` | `viewMyDonationHistory(accountId: String, donationId: String): Donation` |
+| Boundary | `ViewMyDonationHistoriesPage` *(shared with US-32)* | `displayMyDonationHistories(donationList: List<Donation>): void` |
+| Controller | `ViewMyDonationHistoriesController` | `viewMyDonationHistories(accountId: String): List<Donation>` |
+| Entity | `Donation (donationId, accountId, FRAId, amount, donationDate)` | `viewMyDonationHistories(accountId: String): List<Donation>` |
 
 **Code**
-- [boundary/view_my_donation_history_page.py:20](../boundary/view_my_donation_history_page.py#L20)
-- [controller/view_my_donation_history_controller.py:13](../controller/view_my_donation_history_controller.py#L13) (also hosts the Exception A `view_my_donations` picker)
-- [entity/donation.py:83](../entity/donation.py#L83) — `WHERE donation_id = ? AND account_id = ?`; returns `None` for missing rows or cross-donee access
+- [boundary/view_my_donation_histories_page.py](../boundary/view_my_donation_histories_page.py) — shared with US-32; default list when no search criteria
+- [controller/view_my_donation_histories_controller.py](../controller/view_my_donation_histories_controller.py)
+- [entity/donation.py:79](../entity/donation.py#L79) — `WHERE account_id = ? ORDER BY donation_id`; returns list
 
-**Sidebar wiring:** Surfaced via `MyDonationsPage` (clicking a search row opens the detail panel); donee only.
+**Sidebar wiring:** Surfaced via `MyDonationsPage` under **[Donee] My Donations**; donee only. The page shows a list — clicking a row reveals donation details inline (no separate detail page).
 
 **Tests**
-- [tests/test_donation.py](../tests/test_donation.py) — happy + missing-id + cross-account-isolation negatives
-- [tests/test_view_my_donation_history_controller.py](../tests/test_view_my_donation_history_controller.py) — delegation + `None` mirror; also covers `view_my_donations`
-- [tests/test_view_my_donation_history_page.py](../tests/test_view_my_donation_history_page.py) — page smoke
+- [tests/test_donation.py](../tests/test_donation.py) — list-for-donee happy + cross-account-excluded + empty-result negatives
+- [tests/test_view_my_donation_histories_controller.py](../tests/test_view_my_donation_histories_controller.py) — delegation + empty-list mirror
+- [tests/test_view_my_donation_histories_page.py](../tests/test_view_my_donation_histories_page.py) — page smoke (shared with US-32)
 
-**Notes / assumptions / deferred:** Exception A method `Donation.view_my_donations(account_id)` ([entity/donation.py:99](../entity/donation.py#L99)) added so the Boundary can list every donation owned by the signed-in donee before they pick one — logged in [docs/todo.md](todo.md). Diagram return type `Donation` (no failure branch) is implemented as `Optional[Donation]` under the same implicit-failure convention.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 reframes US-33 from per-id detail (`viewMyDonationHistory(accountId, donationId): Donation`) to a list method (`viewMyDonationHistories(accountId): List<Donation>`). Same shape of change as US-31. The previous Exception A `Donation.view_my_donations` is retired — its function is now diagram-defined. The consolidated `MyDonationsPage` filters the list client-side to find a clicked donation's details (no diagram-defined per-id lookup exists).
 
 ---
 
@@ -1085,13 +1085,13 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 | Layer | Class | Method |
 |---|---|---|
 | Boundary | `UpdateFundraisingActivityCategoryPage` | `displaySuccess(): void` |
-| Controller | `UpdateFundraisingActivityCategoryController` | `updateFundraisingActivityCategory(FRACatId: String, updatedFRACategory: FundraisingActivityCategory): Boolean` |
-| Entity | `FundraisingActivityCategory (attrs as US-34)` | `updateFundraisingActivityCategory(FRACatId: String, updatedFRACategory: FundraisingActivityCategory): Boolean` |
+| Controller | `UpdateFundraisingActivityCategoryController` | `updateFundraisingActivityCategory(FRACatId: String, categoryName: String, description: String): Boolean` |
+| Entity | `FundraisingActivityCategory (attrs as US-34)` | `updateFundraisingActivityCategory(FRACatId: String, categoryName: String, description: String): Boolean` |
 
 **Code**
 - [boundary/update_fundraising_activity_category_page.py](../boundary/update_fundraising_activity_category_page.py)
 - [controller/update_fundraising_activity_category_controller.py](../controller/update_fundraising_activity_category_controller.py)
-- [entity/fundraising_activity_category.py:63](../entity/fundraising_activity_category.py#L63) — returns `cursor.rowcount > 0`
+- [entity/fundraising_activity_category.py:65](../entity/fundraising_activity_category.py#L65) — `UPDATE … SET category_name=?, description=? WHERE fra_cat_id=?`; returns `cursor.rowcount > 0`
 
 **Sidebar wiring:** Surfaced as the "Update" button on the detail panel of `ManageFundraisingActivityCategoryPage`; platform manager only.
 
@@ -1100,7 +1100,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 - [tests/test_fundraising_activity_category_controllers.py](../tests/test_fundraising_activity_category_controllers.py)
 - [tests/test_fundraising_activity_category_pages.py](../tests/test_fundraising_activity_category_pages.py)
 
-**Notes / assumptions / deferred:** Both name and description are required by the Boundary before delegation. The `suspended` flag is included on the updated dataclass but the combined `Manage*` page keeps it pinned to the current value — the suspend toggle is exposed via separate buttons. No diagram divergences pending.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 flattens the signature from `(FRACatId, updatedFRACategory)` to `(FRACatId, categoryName, description)` — direct field params instead of a wrapping entity object. `suspended` is no longer settable via this method (US-38 handles suspend/unsuspend separately). Both name and description are required by the Boundary before delegation. Schema-level `UNIQUE` on `category_name` (per 2026-05-17) still applies — duplicate-name updates return `False`.
 
 ### US-37 — Search fundraising activity categories ([diagram](../diagrams/sprint-4_diagrams/US-37.jpg))
 
@@ -1259,7 +1259,6 @@ Methods added to entities (with pure-delegator controllers) so a Boundary can sh
 - `UserAccount.view_all_user_accounts()` — populates the account-picker on Manage user accounts (US-7 / US-8).
 - `FundraisingActivity.view_all_fundraising_activities()` — populates the donee browse list (US-21).
 - `FundraisingActivity.view_my_fundraising_activities(owner_account_id)` — owner-scoped picker on Manage my fundraising activities (US-14 / US-15).
-- `Donation.view_my_donations(account_id)` — picker on `MyDonationsPage` (US-33).
 - `FundraisingActivity.increment_view_count(fra_id)` and `increment_save_count(fra_id, delta)` — count writes triggered by US-21 (view), US-22 (save), US-23 (remove).
 - Four `unsuspend_*` methods on `UserProfile` / `UserAccount` / `FundraisingActivity` / `FundraisingActivityCategory` — mirror the diagram-defined suspends so the consolidated Manage pages can toggle.
 
@@ -1275,10 +1274,10 @@ The reworked diagrams define 27 per-US Boundary classes. The sidebar would be un
 |---|---|
 | `ManageUserProfilePage` | `CreateProfilePage`, `ViewUserProfilePage`, `UpdateUserProfilePage`, `ViewUserProfilesPage` (+ US-4 suspend button) |
 | `ManageUserAccountPage` | `CreateAccountPage`, `ViewUserAccountPage`, `UpdateUserAccountPage`, `ViewUserAccountsPage` (+ US-9 suspend button) |
-| `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage`, `ViewMyCompletedFundraisingActivitiesPage` |
-| `BrowseFundraisingActivityPage` | `ViewFundraisingActivityPage` (+ US-22 save), `ViewFundraisingActivitiesPage` (US-20 search) |
-| `MyFavouritesPage` | `ViewFavouriteListPage` (US-23 remove + US-24 list + US-25 search) |
-| `MyDonationsPage` | `ViewMyDonationHistoryPage`, `ViewMyDonationHistoriesPage` |
+| `ManageMyFundraisingActivityPage` | `CreateFundraisingActivityPage`, `ViewMyFundraisingActivityPage`, `UpdateMyFundraisingActivityPage`, `ViewMyFundraisingActivitiesPage` (US-17 search + US-30 search-completed + US-31 list-completed) |
+| `BrowseFundraisingActivityPage` | `ViewFundraisingActivityPage` (US-21 + US-22 save + US-23 remove + US-28/29 counts), `ViewFundraisingActivitiesPage` (US-20 search) |
+| `MyFavouritesPage` | `ViewFavouriteListPage` (US-24 list + US-25 search) |
+| `MyDonationsPage` | `ViewMyDonationHistoriesPage` (US-32 search + US-33 list) |
 | `ManageFundraisingActivityCategoryPage` | `CreateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoryPage`, `UpdateFundraisingActivityCategoryPage`, `ViewFundraisingActivityCategoriesPage` (+ US-38 suspend) |
 
 `GenerateReportPage` (US-41 / US-42 / US-43) is already shared on the diagrams — no Exception C needed there.
@@ -1296,9 +1295,11 @@ Items the lecturer has explicitly accepted; diagrams and code stay as-is. See [d
 
 Sprint 3 / Sprint 4 items where the diagram and code disagree but the team has chosen to live with the divergence. Each has an inline `Deferred 2026-05-16` note in [diagram_typos.md](diagram_typos.md). See [todo.md "Deferred typos"](todo.md) for the consolidated index.
 
-- **US-30 / US-31 shared boundary** — both diagrams name `ViewMyCompletedFundraisingActivitiesPage`; code consolidates into a single file `boundary/view_my_completed_fundraising_activities_page.py` (mirrors the US-14/17 pattern where two USes contribute methods to one Boundary class). Resolved 2026-05-17.
-- **US-32 "My" naming** — diagram `SearchMyDonationHistoryController` / `searchMyDonationHistory`; code drops "My" (`SearchDonationHistoryController` / `Donation.search_donation_history`).
 - **US-41 / US-42 / US-43 shared `GenerateReportPage`** — accepted as a deliberate consolidation; one boundary handles daily / weekly / monthly via a radio selector.
+
+*Previously deferred items resolved by the 2026-05-18 diagram set:*
+- ~~**US-30 / US-31 shared boundary**~~ — diagrams now place both on `ViewMyFundraisingActivitiesPage` (shared with US-17). Code follows; `ViewMyCompletedFundraisingActivitiesPage` retired.
+- ~~**US-32 "My" naming**~~ — diagram + code both `SearchMyDonationHistoriesController` / `searchMyDonationHistory` now.
 
 ## Open architectural items
 
