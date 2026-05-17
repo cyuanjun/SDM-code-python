@@ -614,6 +614,15 @@ def test_view_fundraising_activity_save_count_returns_zero_initially() -> None:
     ) == 0
 
 
+def test_view_fundraising_activity_save_count_returns_zero_for_missing_id() -> None:
+    """Negative path: missing row returns 0 rather than raising (so the
+    UI can always render a number)."""
+    assert (
+        FundraisingActivity.view_fundraising_activity_save_count("fra_999")
+        == 0
+    )
+
+
 def test_increment_view_count_bumps_by_one() -> None:
     owner = _seed_fundraiser_account()
     created = _seed_activity(owner)
@@ -658,3 +667,8 @@ def test_increment_save_count_floors_at_zero() -> None:
         FundraisingActivity.view_fundraising_activity_save_count(created.fra_id)
         == 0
     )
+
+
+def test_increment_save_count_returns_false_for_missing_id() -> None:
+    """Negative path: no row matches."""
+    assert FundraisingActivity.increment_save_count("fra_999", +1) is False

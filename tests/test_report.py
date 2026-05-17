@@ -73,6 +73,17 @@ def test_generate_weekly_report_records_correct_type() -> None:
     assert report.report_type == "weekly"
 
 
+def test_generate_weekly_report_zero_amount_when_no_donations() -> None:
+    """Negative path: empty week aggregates to zero, mirroring the daily case."""
+    pm = _seed_pm()
+    report = Report.generate_weekly_report(
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 7),
+        platform_manager_id=pm.account_id,
+    )
+    assert report.total_donation_amount == Decimal("0.00")
+    assert report.total_donation_count == 0
+
+
 def test_generate_monthly_report_records_correct_type() -> None:
     pm = _seed_pm()
     report = Report.generate_monthly_report(
@@ -80,6 +91,17 @@ def test_generate_monthly_report_records_correct_type() -> None:
         platform_manager_id=pm.account_id,
     )
     assert report.report_type == "monthly"
+
+
+def test_generate_monthly_report_zero_amount_when_no_donations() -> None:
+    """Negative path: empty month aggregates to zero, mirroring the daily case."""
+    pm = _seed_pm()
+    report = Report.generate_monthly_report(
+        start_date=date(2026, 1, 1), end_date=date(2026, 1, 31),
+        platform_manager_id=pm.account_id,
+    )
+    assert report.total_donation_amount == Decimal("0.00")
+    assert report.total_donation_count == 0
 
 
 def test_generate_report_aggregates_donations_in_window() -> None:

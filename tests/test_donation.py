@@ -169,3 +169,9 @@ def test_view_my_donation_history_returns_none_for_missing_id() -> None:
         )
         is None
     )
+
+
+def test_view_my_donations_returns_empty_list_for_no_donations() -> None:
+    """Negative path: donee with no donations gets []."""
+    donee, _ = _seed_donee_and_activity()
+    assert Donation.view_my_donations(account_id=donee.account_id) == []
