@@ -1,8 +1,12 @@
 """MyFavouritesPage <<Boundary>> — UX consolidation.
 
-NOT on any diagram. Combines US-24 (view) + US-23 (remove) + US-25
-(search) into one page. Search box at top filters the list; each row
-has a Remove button.
+NOT on any diagram. Combines US-24 (view) + US-25 (search) into one
+page. Search box at top filters the list.
+
+Remove-favourite (US-23) lives on `ViewFundraisingActivityPage` (the
+donee's activity detail page) — symmetric with US-22 Save. From this
+page the donee navigates to a favourite's activity via [Browse
+Fundraising Activities] and clicks Remove from the detail screen.
 
 Logged in docs/diagram_typos.md as a UX deviation.
 """
@@ -10,7 +14,6 @@ from __future__ import annotations
 
 import streamlit as st
 
-from controller.remove_favourite_controller import RemoveFavouriteController
 from controller.search_favourite_controller import SearchFavouriteController
 from controller.view_favourite_list_controller import ViewFavouriteListController
 
@@ -43,17 +46,12 @@ class MyFavouritesPage:
             )
             return
 
-        st.caption(f"{len(favourites)} favourite(s)")
-        for fav in favourites:
-            cols = st.columns([3, 3, 1])
-            cols[0].write(f"**Activity:** {fav.fra_id}")
-            cols[1].write(f"**Account:** {fav.account_id}")
-            if cols[2].button("Remove", key=f"remove-fav-{fav.fra_id}"):
-                ok = RemoveFavouriteController().remove_favourite(
-                    fra_id=fav.fra_id, account_id=account_id,
-                )
-                if ok:
-                    st.success("Removed from favourites.")
-                    st.rerun()
-                else:
-                    st.error("Could not remove favourite.")
+        st.caption(
+            f"{len(favourites)} favourite(s) — open one via "
+            f"[Browse Fundraising Activities] to remove it"
+        )
+        rows = [
+            {"Activity": fav.fra_id, "Account": fav.account_id}
+            for fav in favourites
+        ]
+        st.dataframe(rows, width="stretch", hide_index=True)
