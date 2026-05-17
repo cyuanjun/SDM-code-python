@@ -22,6 +22,7 @@ from decimal import Decimal
 
 from entity.donation import Donation
 from entity.fundraising_activity import FundraisingActivity
+from entity.fundraising_activity_category import FundraisingActivityCategory
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 from persistence.db import get_connection
@@ -166,6 +167,25 @@ def _any_donation_exists() -> bool:
     return row is not None
 
 
+def _ensure_demo_category() -> str:
+    """Idempotent: return the fra_cat_id of a 'Health' category, creating
+    it if missing. Activity creation now requires an existing category id
+    (per the 2026-05-18 US-13 attribute change)."""
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT fra_cat_id FROM fundraising_activity_category "
+            "WHERE category_name = 'Health' LIMIT 1"
+        ).fetchone()
+    if row is not None:
+        return row["fra_cat_id"]
+    category = FundraisingActivityCategory.create_category(
+        category_name="Health",
+        description="Medical / healthcare campaigns (demo seed)",
+    )
+    assert category is not None
+    return category.fra_cat_id
+
+
 def _ensure_demo_activity() -> FundraisingActivity:
     """Pick the default fundraiser's first activity, or create a demo one
     if they don't have any. The demo activity is what the seeded donations
@@ -186,11 +206,12 @@ def _ensure_demo_activity() -> FundraisingActivity:
     assert fundraiser is not None, (
         "default fundraiser must exist before seeding demo activity"
     )
+    fra_cat_id = _ensure_demo_category()
     return FundraisingActivity.create_fundraising_activity(
         title="Demo hospital fund",
         description="Demo donations seeded for US-32/US-33",
         target_amount=Decimal("1000.00"),
-        category="health",
+        fra_cat_id=fra_cat_id,
         start_date=date(2026, 1, 1),
         end_date=date(2026, 12, 31),
         owner_account_id=fundraiser.account_id,

@@ -1,12 +1,13 @@
 """CreateFundraisingActivityPage <<Boundary>> — Sprint 1 US-13.
 
-Diagram contract (US-13.jpg):
+Diagram contract (US-13.jpg, 2026-05-18 set):
     + displaySuccess(fundraisingActivity: FundraisingActivity): void
 
 The fundraiser fills the form; owner_account_id comes from
 st.session_state["user"].account_id (the logged-in fundraiser).
-Category is a free-text input per the project rule "diagram says String,
-Boundary uses text input" — no closed dropdown of categories in Sprint 1.
+Category is a `st.selectbox` populated from the PM-curated category
+list (FK, not a String enum) — per the 2026-05-18 US-13 diagram which
+types the attribute as `FRACatId: String`.
 """
 from __future__ import annotations
 
@@ -18,6 +19,9 @@ import streamlit as st
 from controller.create_fundraising_activity_controller import (
     CreateFundraisingActivityController,
 )
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
 
 
 class CreateFundraisingActivityPage:
@@ -28,11 +32,24 @@ class CreateFundraisingActivityPage:
             st.warning("Please log in first.")
             return
 
+        categories = (
+            ViewFundraisingActivityCategoryController().view_all_categories()
+        )
+        active_categories = [c for c in categories if not c.suspended]
+        if not active_categories:
+            st.warning(
+                "No active categories exist yet. Ask the platform manager "
+                "to create one before adding fundraising activities."
+            )
+            return
+
         with st.form("create_fra_form"):
             title = st.text_input("Title")
             description = st.text_area("Description")
             target_amount_str = st.text_input("Target amount", value="0.00")
-            category = st.text_input("Category")
+            cat_options = {c.category_name: c.fra_cat_id for c in active_categories}
+            category_name = st.selectbox("Category", list(cat_options.keys()))
+            fra_cat_id = cat_options[category_name]
             start_date = st.date_input("Start date", value=date.today())
             end_date = st.date_input("End date", value=date.today())
             submitted = st.form_submit_button("Create activity")
@@ -41,7 +58,7 @@ class CreateFundraisingActivityPage:
             return
 
         if not self.validate_activity(
-            title, description, target_amount_str, category, start_date, end_date
+            title, description, target_amount_str, fra_cat_id, start_date, end_date
         ):
             self.display_error()
             return
@@ -54,7 +71,7 @@ class CreateFundraisingActivityPage:
                 title=title.strip(),
                 description=description.strip(),
                 target_amount=target_amount,
-                category=category.strip(),
+                fra_cat_id=fra_cat_id,
                 start_date=start_date,
                 end_date=end_date,
                 owner_account_id=owner_account_id,
@@ -67,15 +84,16 @@ class CreateFundraisingActivityPage:
         title: str,
         description: str,
         target_amount_str: str,
-        category: str,
+        fra_cat_id: str,
         start_date: date,
         end_date: date,
+        today: date | None = None,
     ) -> bool:
         if not title.strip():
             return False
         if not description.strip():
             return False
-        if not category.strip():
+        if not fra_cat_id.strip():
             return False
         try:
             amount = Decimal(target_amount_str)
@@ -84,6 +102,8 @@ class CreateFundraisingActivityPage:
         if amount <= 0:
             return False
         if start_date > end_date:
+            return False
+        if start_date < (today or date.today()):
             return False
         return True
 
@@ -98,6 +118,6 @@ class CreateFundraisingActivityPage:
     def display_error() -> None:
         st.error(
             "Invalid fundraising activity. Title, description, category, and a "
-            "positive numeric target are required, and start date must not be "
-            "after end date."
+            "positive numeric target are required, start date must not be after "
+            "end date, and start date must not be in the past."
         )

@@ -218,8 +218,8 @@ Diagrams: [diagrams/sprint-1_diagrams/](../diagrams/sprint-1_diagrams/). Stories
 | Layer | Class | Method |
 |---|---|---|
 | Boundary | `CreateFundraisingActivityPage` | `displaySuccess(fundraisingActivity: FundraisingActivity): void` |
-| Controller | `CreateFundraisingActivityController` | `createFundraisingActivity(title, description, targetAmount: Decimal, category, startDate: Date, endDate: Date, ownerAccountId: String): FundraisingActivity` |
-| Entity | `FundraisingActivity (FRAId: String, title: String, description: String, targetAmount: Decimal, category: String, startDate: Date, endDate: Date, completed: Boolean, suspended: Boolean, ownerAccountId: String, viewCount: Integer, saveCount: Integer)` | `createFundraisingActivity(title, description, targetAmount: Decimal, category, startDate: Date, endDate: Date, ownerAccountId: String): FundraisingActivity` |
+| Controller | `CreateFundraisingActivityController` | `createFundraisingActivity(title, description, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date, ownerAccountId: String): FundraisingActivity` |
+| Entity | `FundraisingActivity (FRAId: String, title: String, description: String, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date, completed: Boolean, suspended: Boolean, ownerAccountId: String, viewCount: Integer, saveCount: Integer)` | `createFundraisingActivity(title, description, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date, ownerAccountId: String): FundraisingActivity` |
 
 **Code**
 - [boundary/create_fundraising_activity_page.py](../boundary/create_fundraising_activity_page.py)
@@ -233,7 +233,7 @@ Diagrams: [diagrams/sprint-1_diagrams/](../diagrams/sprint-1_diagrams/). Stories
 - [tests/test_create_fundraising_activity_controller.py](../tests/test_create_fundraising_activity_controller.py)
 - [tests/test_create_fundraising_activity_page.py](../tests/test_create_fundraising_activity_page.py)
 
-**Notes / assumptions / deferred:** Boundary requires non-empty title/description/category, a positive `Decimal` `target_amount` (parsed from text), and `start_date <= end_date`. `owner_account_id` is read from `st.session_state["user"].account_id` (the logged-in fundraiser). The original diagram omitted `ownerAccountId` from the method signature — **resolved 2026-05-16** in the re-exported diagram (now 7-param). `target_amount` is stored as TEXT to preserve Decimal precision; `view_count` and `save_count` default to 0 even though their read/increment methods land in later sprints.
+**Notes / assumptions / deferred:** Boundary requires non-empty title/description, a selected `fra_cat_id` (drawn from a `st.selectbox` populated by `FundraisingActivityCategory.view_all_categories()` — active categories only), a positive `Decimal` `target_amount` (parsed from text), `start_date <= end_date`, and `start_date >= today` (added 2026-05-18 — brand new activities can't start in the past). `owner_account_id` is read from `st.session_state["user"].account_id` (the logged-in fundraiser). The 2026-05-18 US-13 diagram replaced `category: String` with `FRACatId: String` (FK to `FundraisingActivityCategory`); schema enforces the FK at `fundraising_activity.fra_cat_id`. The original diagram omitted `ownerAccountId` from the method signature — **resolved 2026-05-16** in the re-exported diagram (now 7-param). `target_amount` is stored as TEXT to preserve Decimal precision; `view_count` and `save_count` default to 0 even though their read/increment methods land in later sprints.
 
 ### US-18 — Log in (Fundraiser) ([diagram](../diagrams/sprint-1_diagrams/US-18.jpg))
 
@@ -293,7 +293,7 @@ Diagrams: [diagrams/sprint-1_diagrams/](../diagrams/sprint-1_diagrams/). Stories
 |---|---|---|
 | Boundary | `ViewFundraisingActivityPage` | `displayFundraisingActivity(fundraisingActivity: FundraisingActivity): void` |
 | Controller | `ViewFundraisingActivityController` | `viewFundraisingActivity(activityId: String): FundraisingActivity` |
-| Entity | `FundraisingActivity (FRAId: String, title: String, description: String, targetAmount: Decimal, category: String, startDate: Date, endDate: Date, completed: Boolean, suspended: Boolean, ownerAccountId: String, viewCount: Integer, saveCount: Integer)` | `viewFundraisingActivity(activityId: String): FundraisingActivity` |
+| Entity | `FundraisingActivity (FRAId: String, title: String, description: String, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date, completed: Boolean, suspended: Boolean, ownerAccountId: String, viewCount: Integer, saveCount: Integer)` | `viewFundraisingActivity(activityId: String): FundraisingActivity` |
 
 **Code**
 - [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py) (also hosts US-22 save button + US-28/29 count metrics)
@@ -525,7 +525,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 |---|---|---|
 | Boundary | `ViewMyFundraisingActivityPage` | `displayMyFundraisingActivity(fundraisingActivity: FundraisingActivity): void` |
 | Controller | `ViewMyFundraisingActivityController` | `viewMyFundraisingActivity(ownerAccountId: String, FRAId: String): FundraisingActivity` |
-| Entity | `FundraisingActivity (FRAId, title, description, targetAmount: Decimal, category, startDate: Date, endDate: Date, completed: Boolean, suspended: Boolean, ownerAccountId, viewCount: Integer, saveCount: Integer)` | `viewMyFundraisingActivity(ownerAccountId: String, FRAId: String): FundraisingActivity` |
+| Entity | `FundraisingActivity (FRAId, title, description, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date, completed: Boolean, suspended: Boolean, ownerAccountId, viewCount: Integer, saveCount: Integer)` | `viewMyFundraisingActivity(ownerAccountId: String, FRAId: String): FundraisingActivity` |
 
 **Code**
 - [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py)
@@ -565,7 +565,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 - [tests/test_update_my_fundraising_activity_controller.py](../tests/test_update_my_fundraising_activity_controller.py) — delegation + `False` mirror
 - [tests/test_update_my_fundraising_activity_page.py](../tests/test_update_my_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Boundary validation requires non-empty `title/description/category`, a positive `Decimal` target, and `start_date <= end_date`. Entity refuses cross-owner writes via `WHERE fra_id = ? AND owner_account_id = ?` → `rowcount == 0` → `False`. Diagram originally omitted `ownerAccountId` from the class signature and used `FundraiserActivity` type names; re-exported 2026-05-16 fixed the 3-param signature + the type. Further refined 2026-05-17: method renamed `updateFundraisingActivity` → `updateMyFundraisingActivity` and parameter to `updatedMyFRA` for consistency with the per-US class names and to mark this as an owner-scoped operation — code uses `update_my_fundraising_activity` / `updated_my_fra` (per [docs/diagram_typos.md](diagram_typos.md)).
+**Notes / assumptions / deferred:** Boundary validation requires non-empty `title/description`, a selected `fra_cat_id` (selectbox over active categories, allowing the existing one even if now suspended so the activity can keep its category), a positive `Decimal` target, `start_date <= end_date`, and `end_date >= today` (added 2026-05-18 — an already-running activity may have a past `start_date`, but you can't move its end date into the past). Entity refuses cross-owner writes via `WHERE fra_id = ? AND owner_account_id = ?` → `rowcount == 0` → `False`. The 2026-05-18 FRA attribute change (`category: String` → `FRACatId: String`) flows through this method's parameter object too — `UpdateMyFundraisingActivityController` takes a `FundraisingActivity` whose `fra_cat_id` is a curated FK. Diagram originally omitted `ownerAccountId` from the class signature and used `FundraiserActivity` type names; re-exported 2026-05-16 fixed the 3-param signature + the type. Further refined 2026-05-17: method renamed `updateFundraisingActivity` → `updateMyFundraisingActivity` and parameter to `updatedMyFRA` for consistency with the per-US class names and to mark this as an owner-scoped operation — code uses `update_my_fundraising_activity` / `updated_my_fra` (per [docs/diagram_typos.md](diagram_typos.md)).
 
 ### US-20 — Search fundraising activities ([diagram](../diagrams/sprint-2_diagrams/US-20.jpg))
 
@@ -587,11 +587,11 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 **Sidebar wiring:** Folded into `BrowseFundraisingActivityPage` under **[Donee] Browse Fundraising Activities**. Donee role only.
 
 **Tests**
-- [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — substring match across title/description/category + no-match empty list
+- [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — substring match across title/description/category_name (JOIN'd) + no-match empty list
 - [tests/test_search_fundraising_activity_controller.py](../tests/test_search_fundraising_activity_controller.py) — delegation + empty-list mirror
 - [tests/test_view_fundraising_activities_page.py](../tests/test_view_fundraising_activities_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Boundary requires a non-empty search term (`validate_criteria`); empty input never reaches the controller. Entity does a case-insensitive `LIKE` on `title`, `description`, and `category` — no filter on `completed` or `suspended`. Original diagram named the boundary `ViewFundraisingActivities` (no `Page` suffix); **resolved 2026-05-16** to match the implementation (see [docs/diagram_typos.md](diagram_typos.md)).
+**Notes / assumptions / deferred:** Boundary requires a non-empty search term (`validate_criteria`); empty input never reaches the controller. Entity does a case-insensitive `LIKE` on `title`, `description`, and `category_name` (JOIN'd from `fundraising_activity_category` since the 2026-05-18 attribute change to `FRACatId`) — no filter on `completed` or `suspended`. Original diagram named the boundary `ViewFundraisingActivities` (no `Page` suffix); **resolved 2026-05-16** to match the implementation (see [docs/diagram_typos.md](diagram_typos.md)).
 
 ### US-22 — Save fundraising activity to favourites ([diagram](../diagrams/sprint-2_diagrams/US-22.jpg))
 
@@ -779,7 +779,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_suspend_my_fundraising_activity_controller.py](../tests/test_suspend_my_fundraising_activity_controller.py) — delegation + `False` mirror
 - [tests/test_view_my_fundraising_activity_page.py](../tests/test_view_my_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Two source-diagram typos (boundary previously `ViewFundraisingActivityPage`; `suspended: Bool`) **both resolved 2026-05-16**. Mirror `FundraisingActivity.unsuspend_my_fundraising_activity` ([entity/fundraising_activity.py:146](../entity/fundraising_activity.py#L146)) is an Exception A toggle, same owner-scoped `WHERE` clause.
+**Notes / assumptions / deferred:** Two source-diagram typos (boundary previously `ViewFundraisingActivityPage`; `suspended: Bool`) **both resolved 2026-05-16**. Mirror `FundraisingActivity.unsuspend_my_fundraising_activity` ([entity/fundraising_activity.py:146](../entity/fundraising_activity.py#L146)) is an Exception A toggle, same owner-scoped `WHERE` clause. **Suspended-visibility rule (2026-05-18):** once suspended, the activity drops off donee-facing reads — `view_all_fundraising_activities`, `search_fundraising_activity` (US-20), `Favourite.view_favourite_list` (US-24), `Favourite.search_favourite` (US-25) all add `AND suspended = 0`. The owner still sees it through owner-scoped reads so they can unsuspend. Donation history (US-32/33) keeps showing historical donations to suspended activities. Logged under "Resolved" in [docs/todo.md](todo.md).
 
 ### US-17 — Search my fundraising activities ([diagram](../diagrams/sprint-3_diagrams/US-17.jpg))
 
@@ -796,7 +796,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Code**
 - [boundary/view_my_fundraising_activities_page.py:20](../boundary/view_my_fundraising_activities_page.py#L20)
 - [controller/search_my_fundraising_activity_controller.py:10](../controller/search_my_fundraising_activity_controller.py#L10)
-- [entity/fundraising_activity.py:162](../entity/fundraising_activity.py#L162) — owner-scoped `LIKE` against `title / description / category`
+- [entity/fundraising_activity.py:162](../entity/fundraising_activity.py#L162) — owner-scoped `LIKE` against `title / description / category_name` (JOIN'd from `fundraising_activity_category`)
 
 **Sidebar wiring:** Surfaced via `ManageMyFundraisingActivityPage` (the "All" tab's search box); fundraiser only.
 
@@ -848,7 +848,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Code**
 - [boundary/view_favourite_list_page.py:21](../boundary/view_favourite_list_page.py#L21) *(shared with US-24)*
 - [controller/search_favourite_controller.py:11](../controller/search_favourite_controller.py#L11)
-- [entity/favourite.py:73](../entity/favourite.py#L73) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
+- [entity/favourite.py:73](../entity/favourite.py#L73) — JOINs `fundraising_activity` and matches `title / description / category_name` (JOIN'd from `fundraising_activity_category`) scoped to `account_id`
 
 **Sidebar wiring:** Surfaced via `MyFavouritesPage` (search box at top); donee only.
 
@@ -874,7 +874,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Code**
 - [boundary/view_my_fundraising_activities_page.py](../boundary/view_my_fundraising_activities_page.py) — search in the `[Completed]` tab
 - [controller/search_my_completed_fundraising_activity_controller.py:10](../controller/search_my_completed_fundraising_activity_controller.py#L10)
-- [entity/fundraising_activity.py:184](../entity/fundraising_activity.py#L184) — owner-scoped + `completed = 1` filter + `LIKE` against `title / description / category`
+- [entity/fundraising_activity.py:184](../entity/fundraising_activity.py#L184) — owner-scoped + `completed = 1` filter + `LIKE` against `title / description / category_name` (JOIN'd from `fundraising_activity_category`)
 
 **Sidebar wiring:** Surfaced via `ManageMyFundraisingActivityPage` (the "Completed" tab); fundraiser only.
 
@@ -926,7 +926,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 **Code**
 - [boundary/view_my_donation_histories_page.py](../boundary/view_my_donation_histories_page.py) — shared with US-33
 - [controller/search_my_donation_histories_controller.py](../controller/search_my_donation_histories_controller.py)
-- [entity/donation.py:55](../entity/donation.py#L55) — JOINs `fundraising_activity` and matches `title / description / category` scoped to `account_id`
+- [entity/donation.py:55](../entity/donation.py#L55) — JOINs `fundraising_activity` and matches `title / description / category_name` (JOIN'd from `fundraising_activity_category`) scoped to `account_id`
 
 **Sidebar wiring:** Surfaced via `MyDonationsPage` under **[Donee] My Donations**; donee only.
 
@@ -979,7 +979,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 |---|---|---|
 | Boundary | `ViewMyFundraisingActivityPage` | `displayFundraisingActivityViewCount(viewCount: Integer): void` |
 | Controller | `ViewFundraisingActivityViewCountController` | `viewFundraisingActivityViewCount(FRAId: String): Integer` |
-| Entity | `FundraisingActivity (FRAId, title, description, targetAmount, category, startDate, endDate, completed, suspended, ownerAccountId, viewCount: Integer, saveCount: Integer)` | `viewFundraisingActivityViewCount(FRAId: String): Integer` |
+| Entity | `FundraisingActivity (FRAId, title, description, targetAmount, FRACatId: String, startDate, endDate, completed, suspended, ownerAccountId, viewCount: Integer, saveCount: Integer)` | `viewFundraisingActivityViewCount(FRAId: String): Integer` |
 
 **Code**
 - [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py) — count rendered via `activity.view_count` on the dataclass

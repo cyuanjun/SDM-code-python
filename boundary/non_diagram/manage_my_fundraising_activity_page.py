@@ -31,10 +31,26 @@ from controller.non_diagram.unsuspend_my_fundraising_activity_controller import 
 from controller.update_my_fundraising_activity_controller import (
     UpdateMyFundraisingActivityController,
 )
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
 from entity.fundraising_activity import FundraisingActivity
+
+
+def _category_lookup() -> dict[str, str]:
+    """fra_cat_id -> category_name, for rendering readable category cells."""
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.fra_cat_id: c.category_name for c in cats}
+
+
+def _active_category_options() -> dict[str, str]:
+    """category_name -> fra_cat_id, only for non-suspended categories,
+    for selectbox options."""
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.category_name: c.fra_cat_id for c in cats if not c.suspended}
 
 SELECTED_KEY = "manage_my_fra_selected_id"
 EDIT_MODE_KEY = "manage_my_fra_edit_mode"
@@ -89,13 +105,14 @@ class ManageMyFundraisingActivityPage:
         # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
+            cat_lookup = _category_lookup()
             st.success(
                 "\n\n".join([
                     f"**Activity created: {created.fra_id}**",
                     f"**Title:** {created.title}",
                     f"**Description:** {created.description}",
                     f"**Target:** ${created.target_amount}",
-                    f"**Category:** {created.category}",
+                    f"**Category:** {cat_lookup.get(created.fra_cat_id, created.fra_cat_id)}",
                     f"**Runs:** {created.start_date.isoformat()} → "
                     f"{created.end_date.isoformat()}",
                     f"**Owner:** {created.owner_account_id}",
@@ -109,11 +126,23 @@ class ManageMyFundraisingActivityPage:
                 st.rerun()
             return
 
+        cat_options = _active_category_options()
+        if not cat_options:
+            st.warning(
+                "No active categories exist yet. Ask the platform manager "
+                "to create one before adding fundraising activities."
+            )
+            if st.button("← Back to my activities"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.rerun()
+            return
+
         with st.form("manage_my_fra_create_form"):
             title = st.text_input("Title")
             description = st.text_area("Description")
             target_amount_str = st.text_input("Target amount", value="0.00")
-            category = st.text_input("Category")
+            category_name = st.selectbox("Category", list(cat_options.keys()))
+            fra_cat_id = cat_options[category_name]
             start_date = st.date_input("Start date", value=date.today())
             end_date = st.date_input("End date", value=date.today())
             col_submit, col_cancel, _ = st.columns([1, 1, 4])
@@ -134,11 +163,11 @@ class ManageMyFundraisingActivityPage:
             return
         if not self._validate_create(
             title, description, target_amount_str,
-            category, start_date, end_date,
+            fra_cat_id, start_date, end_date,
         ):
             st.error(
                 "All fields required; target must be positive; "
-                "start date must be on/before end date."
+                "start date must be on/before end date and not in the past."
             )
             return
 
@@ -147,7 +176,7 @@ class ManageMyFundraisingActivityPage:
                 title=title.strip(),
                 description=description.strip(),
                 target_amount=Decimal(target_amount_str),
-                category=category.strip(),
+                fra_cat_id=fra_cat_id,
                 start_date=start_date,
                 end_date=end_date,
                 owner_account_id=owner_account_id,
@@ -214,11 +243,12 @@ class ManageMyFundraisingActivityPage:
             return
 
         st.caption(f"{len(activities)} activity(s) — click a row to view")
+        cat_lookup = _category_lookup()
         rows = [
             {
                 "ID": a.fra_id,
                 "Title": a.title,
-                "Category": a.category,
+                "Category": cat_lookup.get(a.fra_cat_id, a.fra_cat_id),
                 "Target": f"${a.target_amount}",
                 "Start": a.start_date.isoformat(),
                 "End": a.end_date.isoformat(),
@@ -309,8 +339,12 @@ class ManageMyFundraisingActivityPage:
 
     def _render_view(self, activity, owner_account_id: str) -> None:
         st.subheader(activity.title)
+        cat_lookup = _category_lookup()
         st.write(f"**FRAId:** {activity.fra_id}")
-        st.write(f"**Category:** {activity.category}")
+        st.write(
+            f"**Category:** "
+            f"{cat_lookup.get(activity.fra_cat_id, activity.fra_cat_id)}"
+        )
         st.write(f"**Target:** ${activity.target_amount}")
         st.write(
             f"**Runs:** {activity.start_date.isoformat()} → "
@@ -338,7 +372,7 @@ class ManageMyFundraisingActivityPage:
                 pass  # completed activities aren't suspendable
             elif activity.suspended:
                 if st.button(
-                    "✅ Unsuspend donations", use_container_width=True
+                    "✅ Unsuspend", use_container_width=True
                 ):
                     ok = (
                         UnsuspendMyFundraisingActivityController()
@@ -354,7 +388,7 @@ class ManageMyFundraisingActivityPage:
                         st.error("Could not unsuspend.")
             else:
                 if st.button(
-                    "🚫 Suspend donations", use_container_width=True
+                    "🚫 Suspend", use_container_width=True
                 ):
                     ok = (
                         SuspendMyFundraisingActivityController()
@@ -374,6 +408,17 @@ class ManageMyFundraisingActivityPage:
         st.caption(f"Editing {activity.fra_id}")
         is_completed_view = ACTION_MSG_KEY in st.session_state
 
+        cat_options = _active_category_options()
+        # Allow keeping the existing category even if it's now suspended.
+        cat_lookup = _category_lookup()
+        current_name = cat_lookup.get(activity.fra_cat_id)
+        if current_name and current_name not in cat_options:
+            cat_options = {current_name: activity.fra_cat_id, **cat_options}
+        ordered_names = list(cat_options.keys()) or ["(no categories)"]
+        default_index = (
+            ordered_names.index(current_name) if current_name in ordered_names else 0
+        )
+
         with st.form("manage_my_fra_edit_form"):
             title = st.text_input(
                 "Title", value=activity.title, disabled=is_completed_view
@@ -388,9 +433,13 @@ class ManageMyFundraisingActivityPage:
                 value=str(activity.target_amount),
                 disabled=is_completed_view,
             )
-            category = st.text_input(
-                "Category", value=activity.category, disabled=is_completed_view
+            category_name = st.selectbox(
+                "Category",
+                ordered_names,
+                index=default_index,
+                disabled=is_completed_view,
             )
+            fra_cat_id = cat_options.get(category_name, activity.fra_cat_id)
             start_date = st.date_input(
                 "Start date",
                 value=activity.start_date,
@@ -428,10 +477,14 @@ class ManageMyFundraisingActivityPage:
             return
         if not submitted:
             return
-        if not self._validate_create(
-            title, description, target_amount_str, category, start_date, end_date,
+        if not self._validate_update(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date,
         ):
-            st.error("Invalid input.")
+            st.error(
+                "Invalid input. Title, description, category, and a positive "
+                "numeric target are required, start date must be on/before end "
+                "date, and end date must not be in the past."
+            )
             return
 
         ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
@@ -441,7 +494,7 @@ class ManageMyFundraisingActivityPage:
                 title=title.strip(),
                 description=description.strip(),
                 target_amount=Decimal(target_amount_str),
-                category=category.strip(),
+                fra_cat_id=fra_cat_id,
                 start_date=start_date,
                 end_date=end_date,
                 owner_account_id=owner_account_id,
@@ -458,14 +511,41 @@ class ManageMyFundraisingActivityPage:
     # -------- Validators -----------------------------------------------------
 
     @staticmethod
-    def _validate_create(
+    def _validate_common(
         title: str, description: str, target_amount_str: str,
-        category: str, start_date: date, end_date: date,
+        fra_cat_id: str, start_date: date, end_date: date,
     ) -> bool:
-        if not title.strip() or not description.strip() or not category.strip():
+        if not title.strip() or not description.strip() or not fra_cat_id.strip():
             return False
         try:
             amount = Decimal(target_amount_str)
         except (InvalidOperation, ValueError):
             return False
         return amount > 0 and start_date <= end_date
+
+    @classmethod
+    def _validate_create(
+        cls,
+        title: str, description: str, target_amount_str: str,
+        fra_cat_id: str, start_date: date, end_date: date,
+    ) -> bool:
+        if not cls._validate_common(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date,
+        ):
+            return False
+        # Brand-new activities can't start in the past.
+        return start_date >= date.today()
+
+    @classmethod
+    def _validate_update(
+        cls,
+        title: str, description: str, target_amount_str: str,
+        fra_cat_id: str, start_date: date, end_date: date,
+    ) -> bool:
+        if not cls._validate_common(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date,
+        ):
+            return False
+        # Existing activities may have a past start_date (already running),
+        # but the end date can't be moved into the past.
+        return end_date >= date.today()

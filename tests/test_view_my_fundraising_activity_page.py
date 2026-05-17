@@ -60,7 +60,7 @@ account = UserAccount.create_account(
 )
 FundraisingActivity.create_fundraising_activity(
     title="A", description="d", target_amount=Decimal("100"),
-    category="x", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+    fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
     owner_account_id=account.account_id,
 )
 st.session_state["user"] = account

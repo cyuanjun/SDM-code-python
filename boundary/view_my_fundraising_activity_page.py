@@ -16,9 +16,17 @@ import streamlit as st
 from controller.suspend_my_fundraising_activity_controller import (
     SuspendMyFundraisingActivityController,
 )
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
+
+
+def _category_lookup() -> dict[str, str]:
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.fra_cat_id: c.category_name for c in cats}
 
 SELECTED_KEY = "view_my_fra_selected_id"
 
@@ -59,11 +67,12 @@ class ViewMyFundraisingActivityPage:
             return
 
         st.caption(f"{len(activities)} of your activities")
+        cat_lookup = _category_lookup()
         rows = [
             {
                 "ID": a.fra_id,
                 "Title": a.title,
-                "Category": a.category,
+                "Category": cat_lookup.get(a.fra_cat_id, a.fra_cat_id),
                 "Target": f"${a.target_amount}",
                 "Start": a.start_date.isoformat(),
                 "End": a.end_date.isoformat(),
@@ -86,8 +95,9 @@ class ViewMyFundraisingActivityPage:
 
     def display_my_fundraising_activity(self, activity) -> None:
         st.subheader(activity.title)
+        cat_name = _category_lookup().get(activity.fra_cat_id, activity.fra_cat_id)
         st.write(f"**FRAId:** {activity.fra_id}")
-        st.write(f"**Category:** {activity.category}")
+        st.write(f"**Category:** {cat_name}")
         st.write(f"**Target:** ${activity.target_amount}")
         st.write(
             f"**Runs:** {activity.start_date.isoformat()} → "
@@ -100,7 +110,7 @@ class ViewMyFundraisingActivityPage:
         # US-16: suspend my activity (only when not already suspended).
         if not activity.suspended:
             user = st.session_state.get("user")
-            if user is not None and st.button("🚫 Suspend donations"):
+            if user is not None and st.button("🚫 Suspend"):
                 ok = (
                     SuspendMyFundraisingActivityController()
                     .suspend_my_fundraising_activity(

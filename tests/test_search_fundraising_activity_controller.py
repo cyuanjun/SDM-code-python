@@ -22,7 +22,7 @@ def test_controller_returns_entity_list_unchanged() -> None:
     )
     FundraisingActivity.create_fundraising_activity(
         title="Hospital fund", description="d",
-        target_amount=Decimal("1"), category="health",
+        target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=account.account_id,
     )

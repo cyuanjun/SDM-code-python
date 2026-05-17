@@ -28,7 +28,7 @@ def test_controller_returns_the_fundraising_activity_entity_returns() -> None:
 
     activity = CreateFundraisingActivityController().create_fundraising_activity(
         title="A", description="d", target_amount=Decimal("100.00"),
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
         owner_account_id=owner_id,
     )
 
@@ -41,7 +41,7 @@ def test_controller_forwards_entity_return_value_unchanged(
 ) -> None:
     sentinel = FundraisingActivity(
         title="S", description="d", target_amount=Decimal("1.00"),
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id="acc_999", fra_id="fra_999",
     )
 
@@ -56,7 +56,7 @@ def test_controller_forwards_entity_return_value_unchanged(
 
     result = CreateFundraisingActivityController().create_fundraising_activity(
         title="x", description="x", target_amount=Decimal("0"),
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id="x",
     )
 

@@ -3,10 +3,11 @@
 NOT on any diagram. Combines US-24 (view) + US-25 (search) into one
 page. Search box at top filters the list.
 
-Remove-favourite (US-23) lives on `ViewFundraisingActivityPage` (the
-donee's activity detail page) — symmetric with US-22 Save. From this
-page the donee navigates to a favourite's activity via [Browse
-Fundraising Activities] and clicks Remove from the detail screen.
+Layout mirrors `BrowseFundraisingActivityPage`: rich activity rows
+(ID / Title / Category / Target / Start / End) and a clickable detail
+panel — the detail itself is rendered by the shared
+`render_activity_detail` helper, which is where US-22 Save / US-23
+Remove live (per the 2026-05-18 US-23 diagram).
 
 Logged in docs/diagram_typos.md as a UX deviation.
 """
@@ -14,8 +15,19 @@ from __future__ import annotations
 
 import streamlit as st
 
+from boundary.non_diagram.browse_fundraising_activity_page import (
+    _category_lookup,
+    render_activity_detail,
+)
 from controller.search_favourite_controller import SearchFavouriteController
 from controller.view_favourite_list_controller import ViewFavouriteListController
+from controller.view_fundraising_activity_controller import (
+    ViewFundraisingActivityController,
+)
+from entity.fundraising_activity import FundraisingActivity
+
+
+SELECTED_KEY = "my_favourites_selected_id"
 
 
 class MyFavouritesPage:
@@ -26,6 +38,13 @@ class MyFavouritesPage:
             st.warning("Please log in first.")
             return
 
+        if SELECTED_KEY in st.session_state:
+            render_activity_detail(SELECTED_KEY)
+            return
+
+        self._render_list()
+
+    def _render_list(self) -> None:
         account_id = st.session_state["user"].account_id
 
         search_term = st.text_input(
@@ -46,12 +65,39 @@ class MyFavouritesPage:
             )
             return
 
-        st.caption(
-            f"{len(favourites)} favourite(s) — open one via "
-            f"[Browse Fundraising Activities] to remove it"
-        )
-        rows = [
-            {"Activity": fav.fra_id, "Account": fav.account_id}
-            for fav in favourites
+        # Resolve each favourite's fra_id to its full activity record so
+        # the table can mirror Browse's column layout. None entries (which
+        # shouldn't happen given the FK, but defensively) get filtered.
+        activities = [
+            ViewFundraisingActivityController().view_fundraising_activity(f.fra_id)
+            for f in favourites
         ]
-        st.dataframe(rows, width="stretch", hide_index=True)
+        activities = [a for a in activities if a is not None]
+
+        st.caption(f"{len(activities)} favourite(s) — click a row to view details")
+        cat_lookup = _category_lookup()
+        rows = [
+            {
+                "ID": a.fra_id,
+                "Title": a.title,
+                "Category": cat_lookup.get(a.fra_cat_id, a.fra_cat_id),
+                "Target": f"${a.target_amount}",
+                "Start": a.start_date.isoformat(),
+                "End": a.end_date.isoformat(),
+            }
+            for a in activities
+        ]
+        event = st.dataframe(
+            rows,
+            width="stretch",
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+        )
+        selected = event.selection.rows
+        if selected:
+            chosen = activities[selected[0]].fra_id
+            # US-28: bump view count (same as Browse's list → detail jump).
+            FundraisingActivity.increment_view_count(chosen)
+            st.session_state[SELECTED_KEY] = chosen
+            st.rerun()

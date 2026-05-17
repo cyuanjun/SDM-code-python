@@ -1,16 +1,18 @@
 """FundraisingActivity <<Entity>> — Sprint 1 US-13, US-21.
 
-Diagram contracts:
+Diagram contracts (2026-05-18 set):
     US-13.jpg: + createFundraisingActivity(
         title: String, description: String, targetAmount: Decimal,
-        category: String, startDate: Date, endDate: Date,
+        FRACatId: String, startDate: Date, endDate: Date,
+        ownerAccountId: String,
       ): FundraisingActivity
     US-21.jpg: + viewFundraisingActivity(activityId: String): FundraisingActivity
 
-Implementation adds `owner_account_id` to create_fundraising_activity even
-though the diagram method signature omits it; the entity attribute
-`ownerAccountId` would otherwise have nowhere to come from. Logged in
-docs/todo.md as a Sprint 1 diagram typo.
+Per the 2026-05-18 US-13 diagram the entity attribute `category: String`
+was replaced with `FRACatId: String` — an FK to `FundraisingActivityCategory`
+rather than a free-text string. Search methods (US-17, US-20, US-30) now
+JOIN to `fundraising_activity_category` and match the criteria against
+the category name (in addition to title + description).
 
 `target_amount` is Decimal per the diagram (not Float). Stored as TEXT
 to preserve precision; converted back to Decimal on read.
@@ -30,12 +32,19 @@ from persistence.db import get_connection
 from persistence.ids import next_id
 
 
+_SELECT_COLUMNS = (
+    "fra_id, title, description, target_amount, fra_cat_id, "
+    "start_date, end_date, completed, suspended, owner_account_id, "
+    "view_count, save_count"
+)
+
+
 @dataclass
 class FundraisingActivity:
     title: str
     description: str
     target_amount: Decimal
-    category: str
+    fra_cat_id: str
     start_date: date
     end_date: date
     owner_account_id: str
@@ -51,7 +60,7 @@ class FundraisingActivity:
         title: str,
         description: str,
         target_amount: Decimal,
-        category: str,
+        fra_cat_id: str,
         start_date: date,
         end_date: date,
         owner_account_id: str,
@@ -60,7 +69,7 @@ class FundraisingActivity:
             new_id = next_id(conn, "fundraising_activity", "fra_id", "fra")
             conn.execute(
                 "INSERT INTO fundraising_activity "
-                "(fra_id, title, description, target_amount, category, start_date, "
+                "(fra_id, title, description, target_amount, fra_cat_id, start_date, "
                 " end_date, completed, suspended, owner_account_id, view_count, save_count) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 0, 0)",
                 (
@@ -68,7 +77,7 @@ class FundraisingActivity:
                     title,
                     description,
                     str(target_amount),
-                    category,
+                    fra_cat_id,
                     start_date.isoformat(),
                     end_date.isoformat(),
                     owner_account_id,
@@ -79,7 +88,7 @@ class FundraisingActivity:
             title=title,
             description=description,
             target_amount=target_amount,
-            category=category,
+            fra_cat_id=fra_cat_id,
             start_date=start_date,
             end_date=end_date,
             owner_account_id=owner_account_id,
@@ -97,9 +106,7 @@ class FundraisingActivity:
         Ownership scoped at the entity layer per the diagram signature."""
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
                 "WHERE fra_id = ? AND owner_account_id = ?",
                 (fra_id, owner_account_id),
             ).fetchone()
@@ -115,9 +122,7 @@ class FundraisingActivity:
         docs/todo.md."""
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
                 "WHERE owner_account_id = ? ORDER BY fra_id",
                 (owner_account_id,),
             ).fetchall()
@@ -156,18 +161,17 @@ class FundraisingActivity:
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:
         """US-17 — fundraiser searches their own activities. Case-insensitive
-        substring match against title / description / category, scoped to
-        owner_account_id."""
+        substring match against title / description / category_name
+        (JOIN'd from FundraisingActivityCategory), scoped to owner_account_id."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
-                "WHERE owner_account_id = ? AND ("
-                "  LOWER(title) LIKE ? OR LOWER(description) LIKE ? "
-                "  OR LOWER(category) LIKE ?"
-                ") ORDER BY fra_id",
+                f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE a.owner_account_id = ? AND ("
+                "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
+                "  OR LOWER(c.category_name) LIKE ?"
+                ") ORDER BY a.fra_id",
                 (owner_account_id, like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
@@ -177,17 +181,16 @@ class FundraisingActivity:
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:
         """US-30 — fundraiser searches their completed activities. Scoped
-        to owner + completed = 1."""
+        to owner + completed = 1; matches title / description / category_name."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
-                "WHERE owner_account_id = ? AND completed = 1 AND ("
-                "  LOWER(title) LIKE ? OR LOWER(description) LIKE ? "
-                "  OR LOWER(category) LIKE ?"
-                ") ORDER BY fra_id",
+                f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE a.owner_account_id = ? AND a.completed = 1 AND ("
+                "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
+                "  OR LOWER(c.category_name) LIKE ?"
+                ") ORDER BY a.fra_id",
                 (owner_account_id, like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
@@ -199,9 +202,7 @@ class FundraisingActivity:
         """US-31 — fundraiser views the list of their completed activities."""
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
                 "WHERE owner_account_id = ? AND completed = 1 "
                 "ORDER BY fra_id",
                 (owner_account_id,),
@@ -213,17 +214,19 @@ class FundraisingActivity:
         cls, search_criteria: str
     ) -> list["FundraisingActivity"]:
         """US-20 — donee searches activities by criteria. Case-insensitive
-        substring match against title, description, or category."""
+        substring match against title / description / category_name.
+        Suspended activities are hidden from donees: they only show up in
+        owner-scoped searches."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
-                "WHERE LOWER(title) LIKE ? "
-                "   OR LOWER(description) LIKE ? "
-                "   OR LOWER(category) LIKE ? "
-                "ORDER BY fra_id",
+                f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE a.suspended = 0 AND ("
+                "  LOWER(a.title) LIKE ? "
+                "   OR LOWER(a.description) LIKE ? "
+                "   OR LOWER(c.category_name) LIKE ? "
+                ") ORDER BY a.fra_id",
                 (like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
@@ -243,14 +246,14 @@ class FundraisingActivity:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
                 "SET title = ?, description = ?, target_amount = ?, "
-                "category = ?, start_date = ?, end_date = ?, "
+                "fra_cat_id = ?, start_date = ?, end_date = ?, "
                 "completed = ?, suspended = ? "
                 "WHERE fra_id = ? AND owner_account_id = ?",
                 (
                     updated_my_fra.title,
                     updated_my_fra.description,
                     str(updated_my_fra.target_amount),
-                    updated_my_fra.category,
+                    updated_my_fra.fra_cat_id,
                     updated_my_fra.start_date.isoformat(),
                     updated_my_fra.end_date.isoformat(),
                     1 if updated_my_fra.completed else 0,
@@ -267,9 +270,7 @@ class FundraisingActivity:
     ) -> Optional["FundraisingActivity"]:
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
                 "WHERE fra_id = ?",
                 (activity_id,),
             ).fetchone()
@@ -281,12 +282,12 @@ class FundraisingActivity:
     def view_all_fundraising_activities(cls) -> list["FundraisingActivity"]:
         """Exception A (CLAUDE.md): not on the US-21 diagram but needed so
         ViewFundraisingActivityPage can list activities for the donee to
-        click. Logged in docs/todo.md."""
+        click. Logged in docs/todo.md. Suspended activities are hidden —
+        only the owner sees them via view_my_fundraising_activities."""
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT fra_id, title, description, target_amount, category, "
-                "start_date, end_date, completed, suspended, owner_account_id, "
-                "view_count, save_count FROM fundraising_activity "
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
+                "WHERE suspended = 0 "
                 "ORDER BY fra_id"
             ).fetchall()
         return [cls._from_row(row) for row in rows]
@@ -346,7 +347,7 @@ class FundraisingActivity:
             title=row["title"],
             description=row["description"],
             target_amount=Decimal(row["target_amount"]),
-            category=row["category"],
+            fra_cat_id=row["fra_cat_id"],
             start_date=date.fromisoformat(row["start_date"]),
             end_date=date.fromisoformat(row["end_date"]),
             completed=bool(row["completed"]),
@@ -355,3 +356,8 @@ class FundraisingActivity:
             view_count=int(row["view_count"]),
             save_count=int(row["save_count"]),
         )
+
+
+def _alias_columns(alias: str) -> str:
+    """Prefix the SELECT columns with a table alias for JOIN queries."""
+    return ", ".join(f"{alias}.{col.strip()}" for col in _SELECT_COLUMNS.split(","))

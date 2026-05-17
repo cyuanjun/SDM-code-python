@@ -27,6 +27,9 @@ from controller.save_fundraising_activity_controller import (
     SaveFundraisingActivityController,
 )
 from controller.view_favourite_list_controller import ViewFavouriteListController
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
 from controller.view_fundraising_activity_controller import (
     ViewFundraisingActivityController,
 )
@@ -37,6 +40,11 @@ from controller.view_fundraising_activity_view_count_controller import (
     ViewFundraisingActivityViewCountController,
 )
 from entity.fundraising_activity import FundraisingActivity
+
+
+def _category_lookup() -> dict[str, str]:
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.fra_cat_id: c.category_name for c in cats}
 
 SELECTED_KEY = "selected_fra_id"
 
@@ -67,11 +75,12 @@ class ViewFundraisingActivityPage:
             return
 
         st.caption(f"{len(activities)} activities — click a row to view details")
+        cat_lookup = _category_lookup()
         rows = [
             {
                 "ID": a.fra_id,
                 "Title": a.title,
-                "Category": a.category,
+                "Category": cat_lookup.get(a.fra_cat_id, a.fra_cat_id),
                 "Target": f"${a.target_amount}",
                 "Start": a.start_date.isoformat(),
                 "End": a.end_date.isoformat(),
@@ -95,7 +104,8 @@ class ViewFundraisingActivityPage:
 
     def display_fundraising_activity(self, activity) -> None:
         st.subheader(activity.title)
-        st.write(f"**Category:** {activity.category}")
+        cat_name = _category_lookup().get(activity.fra_cat_id, activity.fra_cat_id)
+        st.write(f"**Category:** {cat_name}")
         st.write(f"**Target:** ${activity.target_amount}")
         st.write(
             f"**Runs:** {activity.start_date.isoformat()} → "

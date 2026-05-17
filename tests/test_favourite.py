@@ -48,7 +48,7 @@ def _seed_activity() -> FundraisingActivity:
     fr = _seed_fundraiser()
     return FundraisingActivity.create_fundraising_activity(
         title="A", description="d", target_amount=Decimal("100"),
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
         owner_account_id=fr.account_id,
     )
 
@@ -113,6 +113,37 @@ def test_view_favourite_list_returns_empty_list_when_donee_has_none() -> None:
     donee = _seed_donee()
 
     assert Favourite.view_favourite_list(donee.account_id) == []
+
+
+def test_view_favourite_list_hides_favourites_pointing_at_suspended_activities() -> None:
+    """Once the owner suspends an activity it disappears from the donee's
+    favourite list. The favourite row itself stays in place so the favourite
+    reappears if the owner unsuspends — only the JOIN-side filter changes
+    visibility."""
+    donee = _seed_donee()
+    visible = _seed_activity()
+    hidden = _seed_activity()
+    Favourite.save_fundraising_activity(
+        account_id=donee.account_id, fra_id=visible.fra_id
+    )
+    Favourite.save_fundraising_activity(
+        account_id=donee.account_id, fra_id=hidden.fra_id
+    )
+    FundraisingActivity.suspend_my_fundraising_activity(
+        owner_account_id=hidden.owner_account_id, fra_id=hidden.fra_id,
+    )
+
+    assert [f.fra_id for f in Favourite.view_favourite_list(donee.account_id)] == [
+        visible.fra_id
+    ]
+
+    # And it comes back when the owner unsuspends.
+    FundraisingActivity.unsuspend_my_fundraising_activity(
+        owner_account_id=hidden.owner_account_id, fra_id=hidden.fra_id,
+    )
+    assert {f.fra_id for f in Favourite.view_favourite_list(donee.account_id)} == {
+        visible.fra_id, hidden.fra_id,
+    }
 
 
 def test_view_favourite_list_scopes_to_the_account() -> None:
@@ -198,19 +229,19 @@ def test_search_favourite_matches_activity_fields_for_the_donee() -> None:
     fr = _seed_fundraiser()
     a1 = FundraisingActivity.create_fundraising_activity(
         title="Hospital fund", description="d",
-        target_amount=Decimal("1"), category="health",
+        target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=fr.account_id,
     )
     a2 = FundraisingActivity.create_fundraising_activity(
         title="School fundraiser", description="d",
-        target_amount=Decimal("1"), category="education",
+        target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=fr.account_id,
     )
     a3 = FundraisingActivity.create_fundraising_activity(
         title="Animal rescue", description="d",
-        target_amount=Decimal("1"), category="animals",
+        target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=fr.account_id,
     )
@@ -246,6 +277,26 @@ def test_search_favourite_returns_empty_for_no_favourites() -> None:
     assert (
         Favourite.search_favourite(
             account_id=donee.account_id, search_criteria="anything"
+        )
+        == []
+    )
+
+
+def test_search_favourite_hides_favourites_pointing_at_suspended_activities() -> None:
+    """Negative path of the donee-visible rule: favourites whose target
+    activity is suspended don't surface in search results either."""
+    donee = _seed_donee()
+    activity = _seed_activity()  # title="A"
+    Favourite.save_fundraising_activity(
+        account_id=donee.account_id, fra_id=activity.fra_id,
+    )
+    FundraisingActivity.suspend_my_fundraising_activity(
+        owner_account_id=activity.owner_account_id, fra_id=activity.fra_id,
+    )
+
+    assert (
+        Favourite.search_favourite(
+            account_id=donee.account_id, search_criteria="a"
         )
         == []
     )

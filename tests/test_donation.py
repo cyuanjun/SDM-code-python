@@ -32,7 +32,7 @@ def _seed_donee_and_activity() -> tuple[UserAccount, FundraisingActivity]:
     )
     activity = FundraisingActivity.create_fundraising_activity(
         title="Hospital fund", description="medical aid",
-        target_amount=Decimal("1000"), category="health",
+        target_amount=Decimal("1000"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 6, 1),
         owner_account_id=fr.account_id,
     )
@@ -93,7 +93,7 @@ def test_search_my_donation_history_matches_activity_fields_for_the_donee() -> N
     # fundraiser (the singleton fundraiser profile rules out a second one).
     school = FundraisingActivity.create_fundraising_activity(
         title="School fund", description="education",
-        target_amount=Decimal("100"), category="education",
+        target_amount=Decimal("100"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=hospital.owner_account_id,
     )

@@ -60,7 +60,8 @@ class Donation:
         cls, account_id: str, search_criteria: str
     ) -> list["Donation"]:
         """US-32 — donee searches donation history. Joins to
-        fundraising_activity and matches title / description / category."""
+        fundraising_activity (and from there to fundraising_activity_category)
+        and matches title / description / category_name."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -68,9 +69,10 @@ class Donation:
                 "d.donation_date "
                 "FROM donation d "
                 "JOIN fundraising_activity a ON a.fra_id = d.fra_id "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
                 "WHERE d.account_id = ? AND ("
                 "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
-                "  OR LOWER(a.category) LIKE ?"
+                "  OR LOWER(c.category_name) LIKE ?"
                 ") ORDER BY d.donation_id",
                 (account_id, like, like, like),
             ).fetchall()

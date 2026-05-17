@@ -50,7 +50,7 @@ pm = UserAccount.create_account(
 )
 activity = FundraisingActivity.create_fundraising_activity(
     title='A', description='d', target_amount=Decimal('100'),
-    category='x', start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+    fra_cat_id='cat_001', start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
     owner_account_id=fr.account_id,
 )
 Favourite.save_fundraising_activity(account_id=donee.account_id, fra_id=activity.fra_id)

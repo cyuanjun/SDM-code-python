@@ -1,16 +1,17 @@
 """Tests for the FundraisingActivity entity (US-13).
 
-Diagram contract (US-13.jpg):
+Diagram contract (US-13.jpg, 2026-05-18 set):
     + createFundraisingActivity(
         title: String, description: String, targetAmount: Decimal,
-        category: String, startDate: Date, endDate: Date,
+        FRACatId: String, startDate: Date, endDate: Date,
+        ownerAccountId: String,
       ): FundraisingActivity
 
-Implementation adds `owner_account_id` (the logged-in fundraiser's id) as
-an additional parameter — the diagram lists ownerAccountId as an entity
-attribute but the createFundraisingActivity signature does not include
-it, which would leave the column unset. Logged in docs/todo.md as a
-Sprint 1 typo: createFundraisingActivity needs ownerAccountId.
+The 2026-05-18 diagram replaced `category: String` with `FRACatId: String`
+(an FK to `FundraisingActivityCategory`). Search methods JOIN against the
+category table and match against `category_name`. A default "Test"
+category (id `cat_001`) is seeded by `tests/conftest.py` so most tests
+that don't care about the category can pass `fra_cat_id="cat_001"`.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ from decimal import Decimal
 import pytest
 
 from entity.fundraising_activity import FundraisingActivity
+from entity.fundraising_activity_category import FundraisingActivityCategory
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 
@@ -39,7 +41,7 @@ def test_create_fundraising_activity_persists_and_returns_with_prefixed_id() -> 
         title="Hospital fund",
         description="Save the local clinic",
         target_amount=Decimal("5000.00"),
-        category="health",
+        fra_cat_id="cat_001",
         start_date=date(2026, 6, 1),
         end_date=date(2026, 12, 31),
         owner_account_id=owner.account_id,
@@ -49,7 +51,7 @@ def test_create_fundraising_activity_persists_and_returns_with_prefixed_id() -> 
     assert activity.title == "Hospital fund"
     assert activity.description == "Save the local clinic"
     assert activity.target_amount == Decimal("5000.00")
-    assert activity.category == "health"
+    assert activity.fra_cat_id == "cat_001"
     assert activity.start_date == date(2026, 6, 1)
     assert activity.end_date == date(2026, 12, 31)
     assert activity.owner_account_id == owner.account_id
@@ -64,12 +66,12 @@ def test_create_fundraising_activity_assigns_sequential_ids() -> None:
 
     first = FundraisingActivity.create_fundraising_activity(
         title="A", description="a", target_amount=Decimal("1.00"),
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=owner.account_id,
     )
     second = FundraisingActivity.create_fundraising_activity(
         title="B", description="b", target_amount=Decimal("2.00"),
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=owner.account_id,
     )
 
@@ -85,7 +87,7 @@ def test_create_fundraising_activity_raises_on_nonexistent_owner_account_id() ->
     with pytest.raises(sqlite3.IntegrityError):
         FundraisingActivity.create_fundraising_activity(
             title="Ghost campaign", description="d",
-            target_amount=Decimal("1.00"), category="x",
+            target_amount=Decimal("1.00"), fra_cat_id="cat_001",
             start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
             owner_account_id="acc_999",
         )
@@ -98,7 +100,7 @@ def test_create_fundraising_activity_preserves_decimal_precision() -> None:
 
     activity = FundraisingActivity.create_fundraising_activity(
         title="Precise fund", description="d",
-        target_amount=Decimal("12345.67"), category="x",
+        target_amount=Decimal("12345.67"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=owner.account_id,
     )
@@ -110,7 +112,7 @@ def test_create_fundraising_activity_preserves_decimal_precision() -> None:
 def _seed_activity(owner: UserAccount, title: str = "A") -> FundraisingActivity:
     return FundraisingActivity.create_fundraising_activity(
         title=title, description=f"{title} desc",
-        target_amount=Decimal("100.00"), category="x",
+        target_amount=Decimal("100.00"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
         owner_account_id=owner.account_id,
     )
@@ -149,6 +151,28 @@ def test_view_all_fundraising_activities_returns_all_in_insertion_order() -> Non
 
     assert [a.fra_id for a in activities] == ["fra_001", "fra_002", "fra_003"]
     assert [a.title for a in activities] == ["A", "B", "C"]
+
+
+def test_view_all_fundraising_activities_hides_suspended_from_donees() -> None:
+    """Negative path of the donee-visible rule: a suspended activity is
+    hidden from the browse list. Only the owner sees it (via
+    view_my_fundraising_activities)."""
+    owner = _seed_fundraiser_account()
+    visible = _seed_activity(owner, title="Visible")
+    hidden = _seed_activity(owner, title="Hidden")
+    FundraisingActivity.suspend_my_fundraising_activity(
+        owner_account_id=owner.account_id, fra_id=hidden.fra_id,
+    )
+
+    activities = FundraisingActivity.view_all_fundraising_activities()
+
+    assert [a.fra_id for a in activities] == [visible.fra_id]
+    # Owner-scoped view still shows both — confirms suspended activities
+    # remain visible to their owner.
+    mine = FundraisingActivity.view_my_fundraising_activities(
+        owner_account_id=owner.account_id
+    )
+    assert {a.fra_id for a in mine} == {visible.fra_id, hidden.fra_id}
 
 
 def test_view_my_fundraising_activity_returns_activity_for_correct_owner() -> None:
@@ -235,7 +259,7 @@ def test_update_my_fundraising_activity_returns_true_for_correct_owner() -> None
 
     updated = FundraisingActivity(
         title="New title", description="New desc",
-        target_amount=Decimal("999.99"), category="renamed",
+        target_amount=Decimal("999.99"), fra_cat_id="cat_001",
         start_date=date(2027, 1, 1), end_date=date(2027, 12, 31),
         owner_account_id=owner.account_id,
         completed=True, suspended=False,
@@ -269,7 +293,7 @@ def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
 
     updated = FundraisingActivity(
         title="Hijack", description="x", target_amount=Decimal("1"),
-        category="x", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
         owner_account_id=other.account_id,
     )
     ok = FundraisingActivity.update_my_fundraising_activity(
@@ -288,7 +312,7 @@ def test_update_my_fundraising_activity_returns_false_for_missing_fra_id() -> No
     owner = _seed_fundraiser_account()
     updated = FundraisingActivity(
         title="x", description="x", target_amount=Decimal("1"),
-        category="x", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
         owner_account_id=owner.account_id,
     )
     assert (
@@ -314,21 +338,24 @@ def test_search_fundraising_activity_matches_title_substring() -> None:
 
 def test_search_fundraising_activity_matches_description_or_category() -> None:
     owner = _seed_fundraiser_account()
+    medical_cat = FundraisingActivityCategory.create_category(
+        category_name="Medical equipment", description="surgical supplies",
+    )
     FundraisingActivity.create_fundraising_activity(
         title="A", description="medical aid for children",
-        target_amount=Decimal("1"), category="health",
+        target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=owner.account_id,
     )
     FundraisingActivity.create_fundraising_activity(
         title="B", description="d", target_amount=Decimal("1"),
-        category="medical-equipment",
+        fra_cat_id=medical_cat.fra_cat_id,
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=owner.account_id,
     )
     FundraisingActivity.create_fundraising_activity(
         title="C", description="d", target_amount=Decimal("1"),
-        category="education",
+        fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=owner.account_id,
     )
@@ -360,6 +387,26 @@ def test_search_fundraising_activity_returns_empty_list_for_no_match() -> None:
 def test_search_fundraising_activity_returns_empty_list_for_empty_db() -> None:
     """Negative path: empty DB → []."""
     assert FundraisingActivity.search_fundraising_activity("anything") == []
+
+
+def test_search_fundraising_activity_hides_suspended_from_donees() -> None:
+    """Negative path of the donee-visible rule: search results skip
+    suspended activities even when the title matches."""
+    owner = _seed_fundraiser_account()
+    visible = _seed_activity(owner, title="School fund")
+    hidden = _seed_activity(owner, title="Hidden school fund")
+    FundraisingActivity.suspend_my_fundraising_activity(
+        owner_account_id=owner.account_id, fra_id=hidden.fra_id,
+    )
+
+    results = FundraisingActivity.search_fundraising_activity("school")
+
+    assert [a.fra_id for a in results] == [visible.fra_id]
+    # Owner-scoped search still returns the suspended one.
+    mine = FundraisingActivity.search_my_fundraising_activity(
+        owner_account_id=owner.account_id, search_criteria="school",
+    )
+    assert {a.fra_id for a in mine} == {visible.fra_id, hidden.fra_id}
 
 
 def test_suspend_my_fundraising_activity_returns_true_for_correct_owner() -> None:
@@ -451,14 +498,14 @@ def _seed_completed_activity(
 ) -> FundraisingActivity:
     activity = FundraisingActivity.create_fundraising_activity(
         title=title, description=f"{title} desc",
-        target_amount=Decimal("100"), category="x",
+        target_amount=Decimal("100"), fra_cat_id="cat_001",
         start_date=date(2025, 1, 1), end_date=date(2025, 6, 1),
         owner_account_id=owner.account_id,
     )
     # Mark it completed via direct update — no "complete" use case exists.
     updated = FundraisingActivity(
         title=activity.title, description=activity.description,
-        target_amount=activity.target_amount, category=activity.category,
+        target_amount=activity.target_amount, fra_cat_id=activity.fra_cat_id,
         start_date=activity.start_date, end_date=activity.end_date,
         owner_account_id=owner.account_id,
         completed=True, suspended=False,

@@ -14,38 +14,49 @@ def test_page_class_is_importable_and_has_render() -> None:
     assert callable(CreateFundraisingActivityPage().render)
 
 
+# A fixed "today" anchor lets these tests pick dates that are unambiguously
+# in the future or the past relative to it, without depending on the wall
+# clock.
+_TODAY = date(2026, 1, 1)
+
+
 def test_validate_activity_accepts_well_formed_input() -> None:
     assert CreateFundraisingActivityPage.validate_activity(
         title="A", description="d", target_amount_str="100.00",
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        today=_TODAY,
     ) is True
 
 
 def test_validate_activity_rejects_blank_title() -> None:
     assert CreateFundraisingActivityPage.validate_activity(
         title="   ", description="d", target_amount_str="100.00",
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        today=_TODAY,
     ) is False
 
 
 def test_validate_activity_rejects_blank_description() -> None:
     assert CreateFundraisingActivityPage.validate_activity(
         title="A", description="", target_amount_str="100.00",
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        today=_TODAY,
     ) is False
 
 
 def test_validate_activity_rejects_blank_category() -> None:
     assert CreateFundraisingActivityPage.validate_activity(
         title="A", description="d", target_amount_str="100.00",
-        category="", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        today=_TODAY,
     ) is False
 
 
 def test_validate_activity_rejects_non_numeric_target_amount() -> None:
     assert CreateFundraisingActivityPage.validate_activity(
         title="A", description="d", target_amount_str="abc",
-        category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+        today=_TODAY,
     ) is False
 
 
@@ -53,15 +64,37 @@ def test_validate_activity_rejects_zero_or_negative_target_amount() -> None:
     for bad in ("0", "0.00", "-1", "-100.50"):
         assert CreateFundraisingActivityPage.validate_activity(
             title="A", description="d", target_amount_str=bad,
-            category="x", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+            fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
+            today=_TODAY,
         ) is False
 
 
 def test_validate_activity_rejects_start_after_end() -> None:
     assert CreateFundraisingActivityPage.validate_activity(
         title="A", description="d", target_amount_str="100",
-        category="x", start_date=date(2026, 12, 31), end_date=date(2026, 1, 1),
+        fra_cat_id="cat_001", start_date=date(2026, 12, 31), end_date=date(2026, 6, 1),
+        today=_TODAY,
     ) is False
+
+
+def test_validate_activity_rejects_start_date_in_the_past() -> None:
+    """Brand new activities can't start in the past — fundraiser must pick a
+    start date that is today or later relative to wall-clock 'today'."""
+    assert CreateFundraisingActivityPage.validate_activity(
+        title="A", description="d", target_amount_str="100",
+        fra_cat_id="cat_001",
+        start_date=date(2025, 12, 31), end_date=date(2026, 6, 1),
+        today=_TODAY,
+    ) is False
+
+
+def test_validate_activity_accepts_start_date_equal_to_today() -> None:
+    assert CreateFundraisingActivityPage.validate_activity(
+        title="A", description="d", target_amount_str="100",
+        fra_cat_id="cat_001",
+        start_date=_TODAY, end_date=date(2026, 6, 1),
+        today=_TODAY,
+    ) is True
 
 
 def test_render_warns_when_no_user_in_session() -> None:

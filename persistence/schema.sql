@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS fundraising_activity (
     title            TEXT NOT NULL,
     description      TEXT NOT NULL,
     target_amount    TEXT NOT NULL,
-    category         TEXT NOT NULL,
+    fra_cat_id       TEXT NOT NULL REFERENCES fundraising_activity_category(fra_cat_id),
     start_date       TEXT NOT NULL,
     end_date         TEXT NOT NULL,
     completed        INTEGER NOT NULL DEFAULT 0,

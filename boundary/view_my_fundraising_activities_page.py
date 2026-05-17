@@ -20,9 +20,18 @@ from controller.search_my_completed_fundraising_activity_controller import (
 from controller.search_my_fundraising_activity_controller import (
     SearchMyFundraisingActivityController,
 )
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
 from controller.view_my_completed_fundraising_activities_controller import (
     ViewMyCompletedFundraisingActivitiesController,
 )
+
+
+def _category_lookup() -> dict[str, str]:
+    """fra_cat_id -> category_name, for rendering readable category cells."""
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.fra_cat_id: c.category_name for c in cats}
 
 
 class ViewMyFundraisingActivitiesPage:
@@ -136,7 +145,7 @@ class ViewMyFundraisingActivitiesPage:
             {
                 "ID": a.fra_id,
                 "Title": a.title,
-                "Category": a.category,
+                "Category": _category_lookup().get(a.fra_cat_id, a.fra_cat_id),
                 "Target": f"${a.target_amount}",
                 "Start": a.start_date.isoformat(),
                 "End": a.end_date.isoformat(),

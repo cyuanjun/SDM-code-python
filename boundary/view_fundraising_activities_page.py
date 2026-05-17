@@ -15,6 +15,14 @@ import streamlit as st
 from controller.search_fundraising_activity_controller import (
     SearchFundraisingActivityController,
 )
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
+
+
+def _category_lookup() -> dict[str, str]:
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.fra_cat_id: c.category_name for c in cats}
 
 
 class ViewFundraisingActivitiesPage:
@@ -52,11 +60,12 @@ class ViewFundraisingActivitiesPage:
             st.info("No activities match.")
             return
         st.caption(f"{len(activities)} match")
+        cat_lookup = _category_lookup()
         rows = [
             {
                 "ID": a.fra_id,
                 "Title": a.title,
-                "Category": a.category,
+                "Category": cat_lookup.get(a.fra_cat_id, a.fra_cat_id),
                 "Target": f"${a.target_amount}",
                 "Start": a.start_date.isoformat(),
                 "End": a.end_date.isoformat(),

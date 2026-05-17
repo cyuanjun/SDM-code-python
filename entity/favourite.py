@@ -76,7 +76,9 @@ class Favourite:
     ) -> list["Favourite"]:
         """US-25 — donee searches their favourites. Joins to
         fundraising_activity and matches title / description / category
-        against the criteria, scoped to the caller's account_id.
+        against the criteria, scoped to the caller's account_id. Favourites
+        pointing at suspended activities are hidden — once the owner
+        suspends, the activity stops being donee-visible everywhere.
         """
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
@@ -84,9 +86,10 @@ class Favourite:
                 "SELECT f.account_id, f.fra_id "
                 "FROM favourite f "
                 "JOIN fundraising_activity a ON a.fra_id = f.fra_id "
-                "WHERE f.account_id = ? AND ("
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE f.account_id = ? AND a.suspended = 0 AND ("
                 "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
-                "  OR LOWER(a.category) LIKE ?"
+                "  OR LOWER(c.category_name) LIKE ?"
                 ") ORDER BY f.fra_id",
                 (account_id, like, like, like),
             ).fetchall()
@@ -100,10 +103,16 @@ class Favourite:
 
     @classmethod
     def view_favourite_list(cls, account_id: str) -> list["Favourite"]:
+        """US-24 — donee views their favourites. Favourites pointing at
+        suspended activities are hidden via JOIN; the row stays in the
+        favourite table so it reappears if the owner unsuspends."""
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT account_id, fra_id FROM favourite "
-                "WHERE account_id = ? ORDER BY fra_id",
+                "SELECT f.account_id, f.fra_id "
+                "FROM favourite f "
+                "JOIN fundraising_activity a ON a.fra_id = f.fra_id "
+                "WHERE f.account_id = ? AND a.suspended = 0 "
+                "ORDER BY f.fra_id",
                 (account_id,),
             ).fetchall()
         return [
