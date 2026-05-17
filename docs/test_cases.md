@@ -16,16 +16,23 @@ The bold sentence at the start of each "Test Data" cell describes what the case 
 | TC-11.1 | **Verifies a valid login returns the account and updates session/sidebar.** `email="a001@a.com"`, `password="123"` (seeded admin) | `login` returns the `UserAccount`; sidebar gains admin pages; caption shows the user's name | Matches expected | Pass |
 | TC-11.2 | **Verifies a wrong password fails closed (no session change).** `email="a001@a.com"`, `password="wrong"` | `login` returns `None`; Boundary shows "Invalid credentials"; session unchanged | Matches expected | Pass |
 | TC-12.1 | **Verifies logout clears the session and restores the logged-out sidebar.** Click "Log Out" while signed in as admin | `st.session_state["user"]` cleared; sidebar reverts to logged-out allow-list (`Log In` + `.info (debug)`) | Matches expected | Pass |
+| TC-12.2 | **Verifies a logout when no user is in session is a graceful no-op.** Trigger `logout()` with `"user"` absent from session state | `st.session_state.pop("user", None)` does not raise; sidebar already in the logged-out state, no change | Matches expected | Pass |
 | TC-13.1 | **Verifies a fundraising activity is persisted with sensible defaults.** `title="Hospital fund"`, `description="…"`, `targetAmount=Decimal("1000")`, `category="health"`, `startDate=2026-01-01`, `endDate=2026-12-31`, `ownerAccountId="acc_002"` | New `FundraisingActivity` persisted with `fra_id="fra_001"`, `completed=False`, `suspended=False`, `view_count=0`, `save_count=0` | Matches expected | Pass |
 | TC-13.2 | **Verifies the boundary rejects a non-positive target amount.** `targetAmount=Decimal("-1")` (negative) | Boundary rejects with format-validation error; no controller call | Matches expected | Pass |
 | TC-18.1 | **Verifies a fundraiser logs in and gains fundraiser-only sidebar entries.** `email="fr001@a.com"`, `password="123"` | `login` returns the `UserAccount`; sidebar shows fundraiser pages | Matches expected | Pass |
+| TC-18.2 | **Verifies a fundraiser login with a wrong password fails closed.** `email="fr001@a.com"`, `password="wrong"` | `login` returns `None`; Boundary shows "Invalid credentials"; session unchanged | Matches expected | Pass |
 | TC-19.1 | **Verifies a fundraiser logout restores the logged-out sidebar.** Click "Log Out" while signed in as fundraiser | Session cleared; sidebar back to logged-out | Matches expected | Pass |
+| TC-19.2 | **Verifies a fundraiser logout when no user is in session is a graceful no-op.** Trigger `logout()` with `"user"` absent from session state | `pop` does not raise; sidebar unchanged | Matches expected | Pass |
 | TC-21.1 | **Verifies a donee can view an existing activity's details (and view_count is bumped).** `activityId="fra_001"` (existing) | `view_fundraising_activity` returns the matching `FundraisingActivity`; view_count incremented by Exception A side-effect | Matches expected | Pass |
 | TC-21.2 | **Verifies viewing a missing activity returns None rather than raising.** `activityId="fra_999"` (missing) | Returns `None`; boundary shows "Activity not found" | Matches expected | Pass |
 | TC-26.1 | **Verifies a donee logs in and gains donee-only sidebar entries.** `email="d001@a.com"`, `password="123"` | `login` returns the `UserAccount`; sidebar shows donee pages | Matches expected | Pass |
+| TC-26.2 | **Verifies a donee login with a wrong password fails closed.** `email="d001@a.com"`, `password="wrong"` | `login` returns `None`; Boundary shows "Invalid credentials"; session unchanged | Matches expected | Pass |
 | TC-27.1 | **Verifies a donee logout restores the logged-out sidebar.** Click "Log Out" while signed in as donee | Session cleared; sidebar back to logged-out | Matches expected | Pass |
+| TC-27.2 | **Verifies a donee logout when no user is in session is a graceful no-op.** Trigger `logout()` with `"user"` absent from session state | `pop` does not raise; sidebar unchanged | Matches expected | Pass |
 | TC-39.1 | **Verifies a platform manager logs in and gains PM-only sidebar entries.** `email="pm001@a.com"`, `password="123"` | `login` returns the `UserAccount`; sidebar shows PM pages | Matches expected | Pass |
+| TC-39.2 | **Verifies a PM login with a wrong password fails closed.** `email="pm001@a.com"`, `password="wrong"` | `login` returns `None`; Boundary shows "Invalid credentials"; session unchanged | Matches expected | Pass |
 | TC-40.1 | **Verifies a PM logout restores the logged-out sidebar.** Click "Log Out" while signed in as PM | Session cleared; sidebar back to logged-out | Matches expected | Pass |
+| TC-40.2 | **Verifies a PM logout when no user is in session is a graceful no-op.** Trigger `logout()` with `"user"` absent from session state | `pop` does not raise; sidebar unchanged | Matches expected | Pass |
 
 ## Sprint 2 — View / update / search profiles + accounts, view-my-activity, update-my-activity, donee search, favourites
 
@@ -114,12 +121,12 @@ The bold sentence at the start of each "Test Data" cell describes what the case 
 
 | Sprint | USes covered | Test cases |
 |---|---|---|
-| Sprint 1 | 12 | 18 |
+| Sprint 1 | 12 | 25 |
 | Sprint 2 | 9 | 20 |
 | Sprint 3 | 12 | 24 |
 | Sprint 4 | 10 | 22 |
-| **Total** | **43** | **84** |
+| **Total** | **43** | **91** |
 
-All 43 diagram-defined user stories have at least one happy-path test case. Negative-path cases cover the failure branches the diagrams imply: missing row → `None`/`False`/`[]`, cross-owner access refused, blank inputs rejected by Boundary, and the three UNIQUE constraints (`user_account.email`, `user_profile.role`, `fundraising_activity_category.category_name`) rejecting duplicates.
+**Every user story has at least one positive and one negative test case.** Negative-path cases cover the failure branches the diagrams imply: missing row → `None`/`False`/`[]`, cross-owner access refused, blank inputs rejected by Boundary, the three UNIQUE constraints (`user_account.email`, `user_profile.role`, `fundraising_activity_category.category_name`) rejecting duplicates, and graceful no-op behaviour for logout-when-not-signed-in.
 
 For each diagram-defined Entity method, the corresponding pytest happy + negative tests live in `tests/test_<entity>.py`. Controller delegation tests live in `tests/test_<controller>_controller.py`. Per-US Boundary smoke tests live in `tests/test_<page>_page.py`. The pytest suite passes (373 tests) — that's the underlying evidence behind every "Pass" entry above.
