@@ -113,6 +113,7 @@ SDM-code/
 ├── boundary/              # <<Boundary>> pages — 27 per-US diagram-derived classes
 │   └── non_diagram/       # 7 UX-consolidated Manage/Browse/My pages + 1 debug page (not on any diagram)
 ├── controller/            # <<Controller>> classes — pure delegators, one method per use case
+│   └── non_diagram/       # 5 Exception A controllers (4 unsuspend + view_profiles, not on any diagram)
 ├── entity/                # <<Entity>> classes — UserProfile, UserAccount, FundraisingActivity, Favourite, Donation, FundraisingActivityCategory, Report
 ├── persistence/
 │   ├── db.py              # get_connection() + init_db() — sqlite3 plumbing
@@ -120,6 +121,7 @@ SDM-code/
 │   └── schema.sql         # CREATE TABLE statements, one per Entity
 ├── data/seed.py           # Idempotent bootstrap: one account per role + 3 demo donations
 ├── tests/                 # pytest tests + conftest.py (autouse tmp_path DB fixture)
+│   └── non_diagram/       # smoke tests for the 8 non-diagram boundaries + delegation tests for the 5 non-diagram controllers
 ├── docs/
 │   ├── implementation_2026-05-16.md  # Per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items) — primary per-story doc
 │   ├── diagram_typos.md   # Per-sprint catalogue of every diagram divergence (resolved + outstanding + deferred)

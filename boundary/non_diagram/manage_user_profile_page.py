@@ -20,13 +20,13 @@ from controller.search_user_profile_controller import (
 from controller.suspend_user_profile_controller import (
     SuspendUserProfileController,
 )
-from controller.unsuspend_user_profile_controller import (
+from controller.non_diagram.unsuspend_user_profile_controller import (
     UnsuspendUserProfileController,
 )
 from controller.update_user_profile_controller import (
     UpdateUserProfileController,
 )
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_profile_controller import ViewUserProfileController
 from entity.user_profile import UserProfile
 

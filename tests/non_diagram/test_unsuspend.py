@@ -9,16 +9,16 @@ from decimal import Decimal
 
 import pytest
 
-from controller.unsuspend_fundraising_activity_category_controller import (
+from controller.non_diagram.unsuspend_fundraising_activity_category_controller import (
     UnsuspendFundraisingActivityCategoryController,
 )
-from controller.unsuspend_my_fundraising_activity_controller import (
+from controller.non_diagram.unsuspend_my_fundraising_activity_controller import (
     UnsuspendMyFundraisingActivityController,
 )
-from controller.unsuspend_user_account_controller import (
+from controller.non_diagram.unsuspend_user_account_controller import (
     UnsuspendUserAccountController,
 )
-from controller.unsuspend_user_profile_controller import (
+from controller.non_diagram.unsuspend_user_profile_controller import (
     UnsuspendUserProfileController,
 )
 from entity.fundraising_activity import FundraisingActivity

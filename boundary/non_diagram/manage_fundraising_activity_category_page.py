@@ -19,7 +19,7 @@ from controller.search_fundraising_activity_category_controller import (
 from controller.suspend_fundraising_activity_category_controller import (
     SuspendFundraisingActivityCategoryController,
 )
-from controller.unsuspend_fundraising_activity_category_controller import (
+from controller.non_diagram.unsuspend_fundraising_activity_category_controller import (
     UnsuspendFundraisingActivityCategoryController,
 )
 from controller.update_fundraising_activity_category_controller import (

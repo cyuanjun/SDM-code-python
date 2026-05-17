@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from entity.user_profile import UserProfile
 
 

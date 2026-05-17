@@ -25,7 +25,7 @@ from controller.search_my_fundraising_activity_controller import (
 from controller.suspend_my_fundraising_activity_controller import (
     SuspendMyFundraisingActivityController,
 )
-from controller.unsuspend_my_fundraising_activity_controller import (
+from controller.non_diagram.unsuspend_my_fundraising_activity_controller import (
     UnsuspendMyFundraisingActivityController,
 )
 from controller.update_my_fundraising_activity_controller import (

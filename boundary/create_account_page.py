@@ -14,7 +14,7 @@ from datetime import date
 import streamlit as st
 
 from controller.create_account_controller import CreateAccountController
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 
 
 class CreateAccountPage:

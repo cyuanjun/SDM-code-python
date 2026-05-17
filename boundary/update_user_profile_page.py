@@ -14,7 +14,7 @@ import streamlit as st
 from controller.update_user_profile_controller import (
     UpdateUserProfileController,
 )
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_profile_controller import ViewUserProfileController
 from entity.user_profile import UserProfile
 

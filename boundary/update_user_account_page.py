@@ -12,7 +12,7 @@ import streamlit as st
 from controller.update_user_account_controller import (
     UpdateUserAccountController,
 )
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_account_controller import ViewUserAccountController
 from entity.user_account import UserAccount
 

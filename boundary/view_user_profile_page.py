@@ -14,7 +14,7 @@ import streamlit as st
 from controller.suspend_user_profile_controller import (
     SuspendUserProfileController,
 )
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_profile_controller import ViewUserProfileController
 
 SELECTED_KEY = "selected_profile_id"

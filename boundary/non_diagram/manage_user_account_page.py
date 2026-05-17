@@ -19,13 +19,13 @@ from controller.search_user_account_controller import (
 from controller.suspend_user_account_controller import (
     SuspendUserAccountController,
 )
-from controller.unsuspend_user_account_controller import (
+from controller.non_diagram.unsuspend_user_account_controller import (
     UnsuspendUserAccountController,
 )
 from controller.update_user_account_controller import (
     UpdateUserAccountController,
 )
-from controller.view_profiles_controller import ViewProfilesController
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_account_controller import ViewUserAccountController
 from entity.user_account import UserAccount
 
