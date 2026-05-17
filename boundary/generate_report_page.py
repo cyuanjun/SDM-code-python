@@ -4,12 +4,20 @@ All three diagrams name the boundary class `GenerateReportPage`.
 Implementation hosts one page with an internal radio for daily / weekly
 / monthly; each routes to the diagram-defined controller.
 
+The PM picks one date; the boundary derives the (start, end) window
+from the chosen report type — daily = the date itself; weekly =
+Monday→Sunday of that ISO week; monthly = 1st→last day of that month.
+The diagram-defined controllers + entity methods still take
+`(startDate, endDate, platformManagerId)` so the contract is unchanged
+— this is a boundary-only UX simplification.
+
 `platform_manager_id` is sourced from the logged-in user — the diagram
 method signatures omit it but the entity declares it as an attribute,
 logged in docs/diagram_typos.md as a Sprint 4 typo.
 """
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date, timedelta
 
 import streamlit as st
@@ -41,18 +49,13 @@ class GenerateReportPage:
                 ("daily", "weekly", "monthly"),
                 horizontal=True,
             )
-            start_date = st.date_input(
-                "Start date", value=date.today() - timedelta(days=7)
-            )
-            end_date = st.date_input("End date", value=date.today())
+            picked = st.date_input("Report date", value=date.today())
             submitted = st.form_submit_button("Generate")
 
         if not submitted:
             return
 
-        if not self.validate_range(start_date, end_date):
-            self.display_error()
-            return
+        start_date, end_date = self.window_for(report_type, picked)
 
         if report_type == "daily":
             report = (
@@ -82,8 +85,26 @@ class GenerateReportPage:
         self.display_report(report)
 
     @staticmethod
-    def validate_range(start_date: date, end_date: date) -> bool:
-        return start_date <= end_date
+    def window_for(report_type: str, picked: date) -> tuple[date, date]:
+        """Derive (start_date, end_date) from the PM's single picked date.
+
+        - daily: same day
+        - weekly: Monday→Sunday of the ISO week containing `picked`
+        - monthly: 1st→last day of the month containing `picked`
+        """
+        if report_type == "daily":
+            return picked, picked
+        if report_type == "weekly":
+            # `weekday()` returns 0=Mon … 6=Sun.
+            monday = picked - timedelta(days=picked.weekday())
+            sunday = monday + timedelta(days=6)
+            return monday, sunday
+        if report_type == "monthly":
+            first = picked.replace(day=1)
+            last_day = monthrange(picked.year, picked.month)[1]
+            last = picked.replace(day=last_day)
+            return first, last
+        raise ValueError(f"Unknown report_type: {report_type!r}")
 
     @staticmethod
     def display_report(report) -> None:
@@ -104,7 +125,3 @@ class GenerateReportPage:
         cols2 = st.columns(2)
         cols2[0].metric("Fundraisers", report.total_fundraiser_count)
         cols2[1].metric("Donees", report.total_donee_count)
-
-    @staticmethod
-    def display_error() -> None:
-        st.error("Start date must not be after end date.")

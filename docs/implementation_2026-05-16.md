@@ -6,7 +6,7 @@ If a fact about wiring or naming isn't in here, the truth is in the source files
 
 ## Overview
 
-CSIT314 group project — online fundraising platform (Python + Streamlit + SQLite, B-C-E architecture). All **43 user stories** across **4 sprints** implemented; **373 tests passing**; **10 sidebar entries** routed by role. Per-US detail starts at [Sprint 1](#sprint-1) below — this Overview is the bird's-eye view.
+CSIT314 group project — online fundraising platform (Python + Streamlit + SQLite, B-C-E architecture). All **43 user stories** across **4 sprints** implemented; **377 tests passing**; **10 sidebar entries** routed by role. Per-US detail starts at [Sprint 1](#sprint-1) below — this Overview is the bird's-eye view.
 
 ### Coverage matrix (all 43 stories)
 
@@ -99,7 +99,7 @@ Numbers below are summaries — the detail tables further down hold the full tex
 
 - **Stack:** Python 3 + Streamlit + SQLite via stdlib `sqlite3` + pytest (incl. `streamlit.testing.v1.AppTest` for boundary smoke tests). CI on GitHub Actions (Python 3.11). No ORM, no linter / formatter.
 - **Architecture:** B-C-E (Boundary-Controller-Entity). One Streamlit page per Boundary, one pure delegator per Controller, all DB access through an Entity.
-- **Coverage:** all 43 user stories across 4 sprints implemented. **373 tests passing** locally and in CI.
+- **Coverage:** all 43 user stories across 4 sprints implemented. **377 tests passing** locally and in CI.
 - **Sidebar:** 10 entries via 7 combined `Manage*` / `Browse*` / `My*` pages + `Log In` / `Log Out` + the debug `.info` page. Each role sees its own actor's allow-list (RBAC via `PAGES_BY_ROLE` in [app.py](../app.py)).
 - **Entities (7):** `UserProfile`, `UserAccount`, `FundraisingActivity`, `FundraisingActivityCategory`, `Favourite`, `Donation`, `Report`.
 
@@ -1181,7 +1181,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 - [tests/test_report_controllers.py](../tests/test_report_controllers.py) — three pure-delegator tests
 - [tests/test_generate_report_page.py](../tests/test_generate_report_page.py)
 
-**Notes / assumptions / deferred:** The `platformManagerId` 3rd parameter and `generatedAt: datetime` typing were **resolved 2026-05-16** ([docs/diagram_typos.md](diagram_typos.md)). Boundary enforces `start_date <= end_date` before delegating. Aggregates donations within the window and counts all activities / fundraiser / donee accounts (snapshot, not windowed).
+**Notes / assumptions / deferred:** The `platformManagerId` 3rd parameter and `generatedAt: datetime` typing were **resolved 2026-05-16** ([docs/diagram_typos.md](diagram_typos.md)). **Single-date UX (2026-05-18):** the PM picks one date; the boundary derives the `(start_date, end_date)` window from the chosen report type via `GenerateReportPage.window_for(report_type, picked)` — daily = same day; weekly = Monday→Sunday of the ISO week containing the date; monthly = 1st→last day of the month. The diagram-defined controllers + entity methods still take `(startDate, endDate, platformManagerId)` so the contract is unchanged — boundary-only UX simplification, no diagram impact. Aggregates donations within the window and counts all activities / fundraiser / donee accounts (snapshot, not windowed).
 
 ### US-42 — Generate weekly report ([diagram](../diagrams/sprint-4_diagrams/US-42.jpg))
 
@@ -1340,7 +1340,7 @@ Plus a demo `FundraisingActivity` ("Demo hospital fund") owned by the seeded fun
 
 - **TDD expectations:** every entity method ships with a happy-path test **and** at least one negative-path test (missing row, FK violation, uniqueness violation, cross-tenant access where ownership applies). Controllers have a delegation test + a negative-path delegation mirror. Boundary smoke tests use `streamlit.testing.v1.AppTest`.
 - **Test isolation:** [tests/conftest.py](../tests/conftest.py) defines an `autouse` fixture that monkey-patches `persistence.db.DB_PATH` to a `tmp_path` file and re-initialises the schema before every test. Never write tests that assume `app.db`.
-- **Run:** `pytest` (full suite, 373 tests) or `pytest -v` (matches CI). Single test: `pytest tests/test_user_account.py::test_login_succeeds`. By keyword: `pytest -k favourite`.
+- **Run:** `pytest` (full suite, 377 tests) or `pytest -v` (matches CI). Single test: `pytest tests/test_user_account.py::test_login_succeeds`. By keyword: `pytest -k favourite`.
 - **CI:** [.github/workflows/ci.yml](../.github/workflows/ci.yml) pins Python 3.11 and runs `pytest -v` on every push.
 
 ## Cross-references

@@ -12,19 +12,52 @@ def test_page_class_is_importable_and_has_render() -> None:
     assert callable(GenerateReportPage().render)
 
 
-def test_validate_range_accepts_well_formed() -> None:
-    assert GenerateReportPage.validate_range(
-        date(2026, 1, 1), date(2026, 1, 7)
-    ) is True
-    assert GenerateReportPage.validate_range(
-        date(2026, 1, 1), date(2026, 1, 1)
-    ) is True
+def test_window_for_daily_returns_same_day_twice() -> None:
+    picked = date(2026, 5, 14)  # Thursday
+    assert GenerateReportPage.window_for("daily", picked) == (picked, picked)
 
 
-def test_validate_range_rejects_start_after_end() -> None:
-    assert GenerateReportPage.validate_range(
-        date(2026, 12, 31), date(2026, 1, 1)
-    ) is False
+def test_window_for_weekly_returns_monday_to_sunday_of_iso_week() -> None:
+    """ISO week containing 2026-05-14 (Thu) is 2026-05-11 (Mon) → 2026-05-17 (Sun)."""
+    picked = date(2026, 5, 14)
+    assert GenerateReportPage.window_for("weekly", picked) == (
+        date(2026, 5, 11), date(2026, 5, 17),
+    )
+
+
+def test_window_for_weekly_when_picked_is_monday() -> None:
+    """Boundary case: picking the Monday itself returns (Monday, Sunday)."""
+    monday = date(2026, 5, 11)
+    assert GenerateReportPage.window_for("weekly", monday) == (
+        monday, date(2026, 5, 17),
+    )
+
+
+def test_window_for_weekly_when_picked_is_sunday() -> None:
+    """Boundary case: Sunday is the last day of its ISO week — the
+    window walks back six days to the previous Monday, not forward."""
+    sunday = date(2026, 5, 17)
+    assert GenerateReportPage.window_for("weekly", sunday) == (
+        date(2026, 5, 11), sunday,
+    )
+
+
+def test_window_for_monthly_returns_first_to_last_day_of_month() -> None:
+    assert GenerateReportPage.window_for("monthly", date(2026, 5, 14)) == (
+        date(2026, 5, 1), date(2026, 5, 31),
+    )
+
+
+def test_window_for_monthly_february_in_leap_year() -> None:
+    """Negative-shape: end-of-month math handles variable month lengths."""
+    # 2024 is a leap year → February has 29 days.
+    assert GenerateReportPage.window_for("monthly", date(2024, 2, 14)) == (
+        date(2024, 2, 1), date(2024, 2, 29),
+    )
+    # 2025 is not → February has 28 days.
+    assert GenerateReportPage.window_for("monthly", date(2025, 2, 14)) == (
+        date(2025, 2, 1), date(2025, 2, 28),
+    )
 
 
 def test_render_does_not_raise_when_not_logged_in() -> None:

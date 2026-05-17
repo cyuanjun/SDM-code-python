@@ -176,7 +176,7 @@ When handed new sprint diagrams:
 
 ## Coverage and what's deferred
 
-All **43 user stories** are implemented on this branch (`revamp`). **373 tests pass.**
+All **43 user stories** are implemented on this branch (`revamp`). **377 tests pass.**
 
 | Sprint | Stories | Status |
 |---|---|---|
