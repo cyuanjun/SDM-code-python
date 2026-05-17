@@ -66,23 +66,25 @@ class FundraisingActivityCategory:
     def update_fundraising_activity_category(
         cls,
         fra_cat_id: str,
-        updated_category: "FundraisingActivityCategory",
+        category_name: str,
+        description: str,
     ) -> bool:
-        """US-36 — PM updates a category. Returns True on success, False
-        when no row matches fra_cat_id OR the new category_name collides
-        with the UNIQUE constraint."""
+        """US-36 — PM updates a category's name and description. Returns
+        True on success, False when no row matches fra_cat_id OR the new
+        category_name collides with the UNIQUE constraint.
+
+        Signature flattened 2026-05-18 per the new US-36 diagram: takes
+        the two updatable fields directly rather than a wrapping entity
+        object. `suspended` is no longer updatable here — US-38 handles
+        suspend/unsuspend separately.
+        """
         try:
             with get_connection() as conn:
                 cursor = conn.execute(
                     "UPDATE fundraising_activity_category "
-                    "SET category_name = ?, description = ?, suspended = ? "
+                    "SET category_name = ?, description = ? "
                     "WHERE fra_cat_id = ?",
-                    (
-                        updated_category.category_name,
-                        updated_category.description,
-                        1 if updated_category.suspended else 0,
-                        fra_cat_id,
-                    ),
+                    (category_name, description, fra_cat_id),
                 )
         except sqlite3.IntegrityError:
             return False

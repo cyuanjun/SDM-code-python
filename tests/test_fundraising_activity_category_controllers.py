@@ -74,13 +74,14 @@ def test_update_category_forwards_true_and_false(
     monkeypatch.setattr(
         FundraisingActivityCategory,
         "update_fundraising_activity_category",
-        classmethod(lambda cls, fra_cat_id, updated_category: False),
+        classmethod(lambda cls, fra_cat_id, category_name, description: False),
     )
     assert (
         UpdateFundraisingActivityCategoryController()
         .update_fundraising_activity_category(
             fra_cat_id="cat_001",
-            updated_category=FundraisingActivityCategory("x", "y"),
+            category_name="x",
+            description="y",
         )
         is False
     )

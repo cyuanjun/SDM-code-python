@@ -9,7 +9,6 @@ from controller.update_fundraising_activity_category_controller import (
 from controller.view_fundraising_activity_category_controller import (
     ViewFundraisingActivityCategoryController,
 )
-from entity.fundraising_activity_category import FundraisingActivityCategory
 
 SELECTED_KEY = "update_fra_cat_selected_id"
 
@@ -35,7 +34,6 @@ class UpdateFundraisingActivityCategoryPage:
             st.write(f"**Editing:** {current.fra_cat_id}")
             name = st.text_input("Category name", value=current.category_name)
             description = st.text_area("Description", value=current.description)
-            suspended = st.checkbox("Suspended", value=current.suspended)
             col_a, col_b = st.columns(2)
             with col_a:
                 submitted = st.form_submit_button("Save changes")
@@ -58,11 +56,8 @@ class UpdateFundraisingActivityCategoryPage:
             UpdateFundraisingActivityCategoryController()
             .update_fundraising_activity_category(
                 fra_cat_id=st.session_state[SELECTED_KEY],
-                updated_category=FundraisingActivityCategory(
-                    category_name=name.strip(),
-                    description=description.strip(),
-                    suspended=suspended,
-                ),
+                category_name=name.strip(),
+                description=description.strip(),
             )
         )
         if ok:

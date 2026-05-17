@@ -71,9 +71,8 @@ def test_update_fra_category_returns_false_for_duplicate_name() -> None:
 
     ok = FundraisingActivityCategory.update_fundraising_activity_category(
         education.fra_cat_id,
-        FundraisingActivityCategory(
-            category_name="Health", description="b", suspended=False,
-        ),
+        category_name="Health",
+        description="b",
     )
     assert ok is False
     fetched = FundraisingActivityCategory.view_fundraising_activity_category(
@@ -109,13 +108,10 @@ def test_update_fra_category_returns_true_and_persists_changes() -> None:
         category_name="Health", description="initial"
     )
 
-    updated = FundraisingActivityCategory(
+    ok = FundraisingActivityCategory.update_fundraising_activity_category(
+        fra_cat_id=created.fra_cat_id,
         category_name="Healthcare",
         description="revised description",
-        suspended=True,
-    )
-    ok = FundraisingActivityCategory.update_fundraising_activity_category(
-        fra_cat_id=created.fra_cat_id, updated_category=updated,
     )
     assert ok is True
 
@@ -125,16 +121,17 @@ def test_update_fra_category_returns_true_and_persists_changes() -> None:
     assert fetched is not None
     assert fetched.category_name == "Healthcare"
     assert fetched.description == "revised description"
-    assert fetched.suspended is True
+    # suspended is not updatable via this method any more (per the flattened
+    # 2026-05-18 signature) — defaults from create stay in place.
+    assert fetched.suspended is False
 
 
 def test_update_fra_category_returns_false_for_missing_id() -> None:
-    updated = FundraisingActivityCategory(
-        category_name="x", description="y", suspended=False
-    )
     assert (
         FundraisingActivityCategory.update_fundraising_activity_category(
-            fra_cat_id="cat_999", updated_category=updated,
+            fra_cat_id="cat_999",
+            category_name="x",
+            description="y",
         )
         is False
     )

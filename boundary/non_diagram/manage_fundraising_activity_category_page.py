@@ -312,11 +312,8 @@ class ManageFundraisingActivityCategoryPage:
             UpdateFundraisingActivityCategoryController()
             .update_fundraising_activity_category(
                 fra_cat_id=category.fra_cat_id,
-                updated_category=FundraisingActivityCategory(
-                    category_name=name.strip(),
-                    description=description.strip(),
-                    suspended=category.suspended,
-                ),
+                category_name=name.strip(),
+                description=description.strip(),
             )
         )
         if ok:
