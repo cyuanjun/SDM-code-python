@@ -152,13 +152,10 @@ def test_unsuspend_my_fra_returns_false_for_wrong_owner() -> None:
         owner_account_id=owner.account_id, fra_id=activity.fra_id
     )
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
 
     ok = FundraisingActivity.unsuspend_my_fundraising_activity(

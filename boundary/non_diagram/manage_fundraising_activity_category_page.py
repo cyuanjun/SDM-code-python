@@ -116,6 +116,9 @@ class ManageFundraisingActivityCategoryPage:
                 description=description.strip(),
             )
         )
+        if new_category is None:
+            st.error("A category with that name already exists.")
+            return
         st.session_state[JUST_CREATED_KEY] = new_category
         st.rerun()
 

@@ -18,7 +18,7 @@
 
 CREATE TABLE IF NOT EXISTS user_profile (
     profile_id  TEXT PRIMARY KEY,
-    role        TEXT NOT NULL,
+    role        TEXT NOT NULL UNIQUE,
     description TEXT,
     suspended   INTEGER NOT NULL DEFAULT 0
 );
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS donation (
 
 CREATE TABLE IF NOT EXISTS fundraising_activity_category (
     fra_cat_id    TEXT PRIMARY KEY,
-    category_name TEXT NOT NULL,
+    category_name TEXT NOT NULL UNIQUE,
     description   TEXT,
     suspended     INTEGER NOT NULL DEFAULT 0
 );

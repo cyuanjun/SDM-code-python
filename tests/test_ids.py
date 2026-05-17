@@ -36,12 +36,16 @@ def test_next_id_increments_after_existing_rows() -> None:
 
 def test_next_id_uses_lexicographic_max_so_zero_padding_matters() -> None:
     """With 3-digit zero-padding, lexicographic ORDER BY ... DESC LIMIT 1
-    matches numeric ORDER BY ... DESC LIMIT 1 up to 999 rows."""
+    matches numeric ORDER BY ... DESC LIMIT 1 up to 999 rows.
+
+    Inserts 4 rows with distinct roles (UNIQUE constraint) but explicit
+    profile_id values so the ordering — not the next_id minted by the
+    helper — is what's exercised."""
     with get_connection() as conn:
-        for n in (1, 2, 9, 10):
+        for n, role in zip((1, 2, 9, 10), ("a", "b", "c", "d")):
             conn.execute(
                 "INSERT INTO user_profile (profile_id, role, description) "
                 "VALUES (?, ?, ?)",
-                (format_id("prof", n), "r", ""),
+                (format_id("prof", n), role, ""),
             )
         assert next_id(conn, "user_profile", "profile_id", "prof") == "prof_011"

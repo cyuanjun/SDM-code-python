@@ -133,7 +133,7 @@ Diagrams: [diagrams/sprint-1_diagrams/](../diagrams/sprint-1_diagrams/). Stories
 - [tests/test_create_profile_controller.py](../tests/test_create_profile_controller.py)
 - [tests/test_create_profile_page.py](../tests/test_create_profile_page.py)
 
-**Notes / assumptions / deferred:** Boundary enforces non-empty `role` and `description` via `validate_profile`. The diagram's `suspended: String` was a typo — code uses `Boolean`, **resolved 2026-05-14** in the re-exported diagram. `displayError` is not on the diagram (lecturer-deferred 2026-05-16 — error display is treated as implicit). The Exception A method [`UserProfile.view_all_profiles`](../entity/user_profile.py#L130) sits alongside `create_profile` to power the dropdown on US-6's `CreateAccountPage`.
+**Notes / assumptions / deferred:** Boundary enforces non-empty `role` and `description` via `validate_profile`. The diagram's `suspended: String` was a typo — code uses `Boolean`, **resolved 2026-05-14** in the re-exported diagram. `displayError` is not on the diagram (lecturer-deferred 2026-05-16 — error display is treated as implicit). The Exception A method [`UserProfile.view_all_profiles`](../entity/user_profile.py#L130) sits alongside `create_profile` to power the dropdown on US-6's `CreateAccountPage`. **Schema-level `UNIQUE` on `role` (2026-05-17):** `user_profile.role` is `TEXT NOT NULL UNIQUE`; `create_profile` returns `Optional[UserProfile]` (`None` on conflict); boundary surfaces "A profile with that role already exists." Diagram still types `role: String` — the constraint mirrors how `UserAccount.email` was made UNIQUE in Sprint 1, no diagram change needed.
 
 ### US-6 — Create user account ([diagram](../diagrams/sprint-1_diagrams/US-06.jpg))
 
@@ -1047,7 +1047,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 - [tests/test_fundraising_activity_category_controllers.py](../tests/test_fundraising_activity_category_controllers.py)
 - [tests/test_fundraising_activity_category_pages.py](../tests/test_fundraising_activity_category_pages.py)
 
-**Notes / assumptions / deferred:** Empty-field validation lives in the boundary per the architecture rule. No uniqueness constraint on `category_name` — the diagram does not declare one. The Boundary surfaces the created category id + name in the success message.
+**Notes / assumptions / deferred:** Empty-field validation lives in the boundary per the architecture rule. **Schema-level `UNIQUE` on `category_name` (2026-05-17):** `fundraising_activity_category.category_name` is `TEXT NOT NULL UNIQUE`; `create_category` returns `Optional[...]` (`None` on conflict); boundary surfaces "A category with that name already exists." Diagram still types `categoryName: String` — same shape as the role-unique decision on US-1. The Boundary surfaces the created category id + name in the success message.
 
 ### US-35 — View fundraising activity category ([diagram](../diagrams/sprint-4_diagrams/US-35.jpg))
 

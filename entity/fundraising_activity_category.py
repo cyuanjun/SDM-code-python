@@ -13,6 +13,7 @@ Attributes: FRACatId, categoryName, description, suspended (Boolean).
 """
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from typing import Optional
 
@@ -30,15 +31,18 @@ class FundraisingActivityCategory:
     @classmethod
     def create_category(
         cls, category_name: str, description: str
-    ) -> "FundraisingActivityCategory":
-        with get_connection() as conn:
-            new_id = next_id(conn, "fundraising_activity_category", "fra_cat_id", "cat")
-            conn.execute(
-                "INSERT INTO fundraising_activity_category "
-                "(fra_cat_id, category_name, description, suspended) "
-                "VALUES (?, ?, ?, 0)",
-                (new_id, category_name, description),
-            )
+    ) -> Optional["FundraisingActivityCategory"]:
+        try:
+            with get_connection() as conn:
+                new_id = next_id(conn, "fundraising_activity_category", "fra_cat_id", "cat")
+                conn.execute(
+                    "INSERT INTO fundraising_activity_category "
+                    "(fra_cat_id, category_name, description, suspended) "
+                    "VALUES (?, ?, ?, 0)",
+                    (new_id, category_name, description),
+                )
+        except sqlite3.IntegrityError:
+            return None
         return cls(
             fra_cat_id=new_id,
             category_name=category_name,
@@ -64,18 +68,24 @@ class FundraisingActivityCategory:
         fra_cat_id: str,
         updated_category: "FundraisingActivityCategory",
     ) -> bool:
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE fundraising_activity_category "
-                "SET category_name = ?, description = ?, suspended = ? "
-                "WHERE fra_cat_id = ?",
-                (
-                    updated_category.category_name,
-                    updated_category.description,
-                    1 if updated_category.suspended else 0,
-                    fra_cat_id,
-                ),
-            )
+        """US-36 — PM updates a category. Returns True on success, False
+        when no row matches fra_cat_id OR the new category_name collides
+        with the UNIQUE constraint."""
+        try:
+            with get_connection() as conn:
+                cursor = conn.execute(
+                    "UPDATE fundraising_activity_category "
+                    "SET category_name = ?, description = ?, suspended = ? "
+                    "WHERE fra_cat_id = ?",
+                    (
+                        updated_category.category_name,
+                        updated_category.description,
+                        1 if updated_category.suspended else 0,
+                        fra_cat_id,
+                    ),
+                )
+        except sqlite3.IntegrityError:
+            return False
         return cursor.rowcount > 0
 
     @classmethod

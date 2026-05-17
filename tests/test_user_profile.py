@@ -27,15 +27,31 @@ def test_create_profile_assigns_sequential_ids() -> None:
     assert third.profile_id == "prof_003"
 
 
-def test_create_profile_allows_multiple_profiles_with_same_role() -> None:
-    """Negative path: no implicit uniqueness on role. The diagram doesn't
-    declare role as a unique key, so duplicate roles must both persist with
-    distinct IDs."""
+def test_create_profile_returns_none_for_duplicate_role() -> None:
+    """Negative path: role is UNIQUE per the schema. A second profile
+    with the same role must return None rather than persist a duplicate."""
     first = UserProfile.create_profile(role="admin", description="primary")
     second = UserProfile.create_profile(role="admin", description="backup")
 
-    assert first.profile_id != second.profile_id
-    assert first.role == second.role == "admin"
+    assert first is not None
+    assert second is None
+
+
+def test_update_user_profile_returns_false_for_duplicate_role() -> None:
+    """Negative path: updating one profile to a role already taken by
+    another profile must return False (UNIQUE constraint)."""
+    admin = UserProfile.create_profile(role="admin", description="a")
+    donee = UserProfile.create_profile(role="donee", description="b")
+    assert admin is not None and donee is not None
+
+    ok = UserProfile.update_user_profile(
+        donee.profile_id,
+        UserProfile(role="admin", description="b", suspended=False),
+    )
+    assert ok is False
+    # Original role unchanged
+    fetched = UserProfile.view_user_profile(donee.profile_id)
+    assert fetched is not None and fetched.role == "donee"
 
 
 def test_create_profile_defaults_suspended_to_false() -> None:

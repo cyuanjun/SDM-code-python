@@ -113,6 +113,9 @@ class ManageUserProfilePage:
         new_profile = CreateProfileController().create_profile(
             role=role.strip(), description=description.strip()
         )
+        if new_profile is None:
+            st.error("A profile with that role already exists.")
+            return
         st.session_state[JUST_CREATED_KEY] = new_profile
         st.rerun()
 

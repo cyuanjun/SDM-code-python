@@ -9,6 +9,7 @@ shows String).
 """
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from typing import Optional
 
@@ -24,14 +25,19 @@ class UserProfile:
     profile_id: Optional[str] = None
 
     @classmethod
-    def create_profile(cls, role: str, description: str) -> "UserProfile":
-        with get_connection() as conn:
-            new_id = next_id(conn, "user_profile", "profile_id", "prof")
-            conn.execute(
-                "INSERT INTO user_profile (profile_id, role, description, suspended) "
-                "VALUES (?, ?, ?, 0)",
-                (new_id, role, description),
-            )
+    def create_profile(
+        cls, role: str, description: str
+    ) -> Optional["UserProfile"]:
+        try:
+            with get_connection() as conn:
+                new_id = next_id(conn, "user_profile", "profile_id", "prof")
+                conn.execute(
+                    "INSERT INTO user_profile (profile_id, role, description, suspended) "
+                    "VALUES (?, ?, ?, 0)",
+                    (new_id, role, description),
+                )
+        except sqlite3.IntegrityError:
+            return None
         return cls(
             profile_id=new_id,
             role=role,
@@ -63,18 +69,22 @@ class UserProfile:
         cls, profile_id: str, updated_profile: "UserProfile"
     ) -> bool:
         """US-3 — admin updates a profile. Returns True on success, False
-        when no row matches profile_id."""
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE user_profile SET role = ?, description = ?, suspended = ? "
-                "WHERE profile_id = ?",
-                (
-                    updated_profile.role,
-                    updated_profile.description,
-                    1 if updated_profile.suspended else 0,
-                    profile_id,
-                ),
-            )
+        when no row matches profile_id OR the new role collides with the
+        UNIQUE constraint."""
+        try:
+            with get_connection() as conn:
+                cursor = conn.execute(
+                    "UPDATE user_profile SET role = ?, description = ?, suspended = ? "
+                    "WHERE profile_id = ?",
+                    (
+                        updated_profile.role,
+                        updated_profile.description,
+                        1 if updated_profile.suspended else 0,
+                        profile_id,
+                    ),
+                )
+        except sqlite3.IntegrityError:
+            return False
         return cursor.rowcount > 0
 
     @classmethod

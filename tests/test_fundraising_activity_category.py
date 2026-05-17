@@ -43,6 +43,45 @@ def test_create_category_defaults_suspended_to_false() -> None:
     assert cat.suspended is False
 
 
+def test_create_category_returns_none_for_duplicate_name() -> None:
+    """Negative path: category_name is UNIQUE per the schema. A second
+    create with the same name must return None rather than persist a
+    duplicate."""
+    first = FundraisingActivityCategory.create_category(
+        category_name="Health", description="primary"
+    )
+    second = FundraisingActivityCategory.create_category(
+        category_name="Health", description="duplicate"
+    )
+
+    assert first is not None
+    assert second is None
+
+
+def test_update_fra_category_returns_false_for_duplicate_name() -> None:
+    """Negative path: updating one category's name to a name already
+    taken by another category must return False (UNIQUE constraint)."""
+    health = FundraisingActivityCategory.create_category(
+        category_name="Health", description="a"
+    )
+    education = FundraisingActivityCategory.create_category(
+        category_name="Education", description="b"
+    )
+    assert health is not None and education is not None
+
+    ok = FundraisingActivityCategory.update_fundraising_activity_category(
+        education.fra_cat_id,
+        FundraisingActivityCategory(
+            category_name="Health", description="b", suspended=False,
+        ),
+    )
+    assert ok is False
+    fetched = FundraisingActivityCategory.view_fundraising_activity_category(
+        education.fra_cat_id
+    )
+    assert fetched is not None and fetched.category_name == "Education"
+
+
 def test_view_fundraising_activity_category_returns_for_existing_id() -> None:
     created = FundraisingActivityCategory.create_category(
         category_name="Health", description="medical"

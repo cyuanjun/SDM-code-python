@@ -28,14 +28,24 @@ def _seed_donee() -> UserAccount:
 _activity_counter = [0]
 
 
-def _seed_activity() -> FundraisingActivity:
+def _seed_fundraiser() -> UserAccount:
+    """Idempotent: reuses the singleton fundraiser profile on subsequent
+    calls (role is UNIQUE per the schema). Returns a new account each call
+    via a different email."""
     _activity_counter[0] += 1
     n = _activity_counter[0]
-    profile = UserProfile.create_profile(role="fundraiser", description="r")
-    fr = UserAccount.create_account(
+    profiles = UserProfile.search_user_profile("fundraiser")
+    profile = profiles[0] if profiles else UserProfile.create_profile(
+        role="fundraiser", description="r",
+    )
+    return UserAccount.create_account(
         email=f"f{n}@x.com", password="p", name="F", dob=date(1990, 1, 1),
         phone_num="0", profile_id=profile.profile_id,
     )
+
+
+def _seed_activity() -> FundraisingActivity:
+    fr = _seed_fundraiser()
     return FundraisingActivity.create_fundraising_activity(
         title="A", description="d", target_amount=Decimal("100"),
         category="x", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
@@ -185,11 +195,7 @@ def test_search_favourite_matches_activity_fields_for_the_donee() -> None:
     matches the criteria (title / description / category)."""
     donee = _seed_donee()
     # Seed three activities and favourite two of them.
-    fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
-    fr = UserAccount.create_account(
-        email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=fr_profile.profile_id,
-    )
+    fr = _seed_fundraiser()
     a1 = FundraisingActivity.create_fundraising_activity(
         title="Hospital fund", description="d",
         target_amount=Decimal("1"), category="health",

@@ -89,17 +89,13 @@ def test_create_donation_raises_on_unknown_fra_id() -> None:
 
 def test_search_donation_history_matches_activity_fields_for_the_donee() -> None:
     donee, hospital = _seed_donee_and_activity()
-    # Create a second activity with a different title.
-    fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
-    fr2 = UserAccount.create_account(
-        email="f2@x.com", password="p", name="F2", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=fr_profile.profile_id,
-    )
+    # Create a second activity with a different title, owned by the same
+    # fundraiser (the singleton fundraiser profile rules out a second one).
     school = FundraisingActivity.create_fundraising_activity(
         title="School fund", description="education",
         target_amount=Decimal("100"), category="education",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
-        owner_account_id=fr2.account_id,
+        owner_account_id=hospital.owner_account_id,
     )
     _seed_donation(donee, hospital, amount="50")
     _seed_donation(donee, school, amount="20")

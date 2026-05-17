@@ -29,6 +29,9 @@ class CreateFundraisingActivityCategoryPage:
                 category_name=name.strip(), description=description.strip()
             )
         )
+        if cat is None:
+            self.display_duplicate_name_error()
+            return
         self.display_success(cat)
 
     @staticmethod
@@ -44,3 +47,7 @@ class CreateFundraisingActivityCategoryPage:
     @staticmethod
     def display_error() -> None:
         st.error("Both category name and description are required.")
+
+    @staticmethod
+    def display_duplicate_name_error() -> None:
+        st.error("A category with that name already exists.")

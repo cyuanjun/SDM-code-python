@@ -171,13 +171,10 @@ def test_view_my_fundraising_activity_returns_none_for_wrong_owner() -> None:
     created = _seed_activity(owner)
 
     # Seed a second fundraiser who doesn't own the activity.
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
 
     fetched = FundraisingActivity.view_my_fundraising_activity(
@@ -206,13 +203,10 @@ def test_view_my_fundraising_activities_returns_only_owners_rows() -> None:
     _seed_activity(owner, title="MineA")
     _seed_activity(owner, title="MineB")
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
     _seed_activity(other, title="Theirs")
 
@@ -225,14 +219,7 @@ def test_view_my_fundraising_activities_returns_only_owners_rows() -> None:
 
 def test_view_my_fundraising_activities_returns_empty_list_for_no_owner_rows() -> None:
     """Negative path: a fundraiser with no activities gets [] back."""
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
-    other = UserAccount.create_account(
-        email="other@x.com", password="p", name="Other",
-        dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
-    )
+    other = _seed_fundraiser_account()
 
     assert (
         FundraisingActivity.view_my_fundraising_activities(
@@ -274,13 +261,10 @@ def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
     owner = _seed_fundraiser_account()
     created = _seed_activity(owner)
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
 
     updated = FundraisingActivity(
@@ -398,13 +382,10 @@ def test_suspend_my_fundraising_activity_returns_false_for_wrong_owner() -> None
     owner = _seed_fundraiser_account()
     created = _seed_activity(owner)
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
 
     ok = FundraisingActivity.suspend_my_fundraising_activity(
@@ -432,13 +413,10 @@ def test_search_my_fundraising_activity_scopes_to_owner_and_matches_criteria() -
     _seed_activity(owner, title="Hospital fund")
     _seed_activity(owner, title="School fundraiser")
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
     _seed_activity(other, title="Hospital research")
 
@@ -511,13 +489,10 @@ def test_search_my_completed_fundraising_activity_excludes_other_owners_complete
     owner = _seed_fundraiser_account()
     _seed_completed_activity(owner, title="Mine done")
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
     _seed_completed_activity(other, title="Theirs done")
 
@@ -560,13 +535,10 @@ def test_view_my_completed_fundraising_activities_excludes_other_owners() -> Non
     owner = _seed_fundraiser_account()
     _seed_completed_activity(owner, title="Mine")
 
-    other_profile = UserProfile.create_profile(
-        role="fundraiser", description="Other"
-    )
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
         dob=date(1990, 1, 1), phone_num="0",
-        profile_id=other_profile.profile_id,
+        profile_id=owner.profile_id,
     )
     _seed_completed_activity(other, title="Theirs")
 

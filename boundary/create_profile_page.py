@@ -31,6 +31,9 @@ class CreateProfilePage:
         profile = CreateProfileController().create_profile(
             role=role.strip(), description=description.strip()
         )
+        if profile is None:
+            self.display_duplicate_role_error()
+            return
         self.display_success(profile)
 
     @staticmethod
@@ -46,3 +49,7 @@ class CreateProfilePage:
     @staticmethod
     def display_error() -> None:
         st.error("Role and description are both required.")
+
+    @staticmethod
+    def display_duplicate_role_error() -> None:
+        st.error("A profile with that role already exists.")
