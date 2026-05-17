@@ -77,23 +77,14 @@ class Donation:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    def view_my_donation_history(
-        cls, account_id: str, donation_id: str
-    ) -> Optional["Donation"]:
-        """US-33 — donee views one of their donations. Returns None when
-        the row is missing or belongs to another donee."""
-        with get_connection() as conn:
-            row = conn.execute(
-                "SELECT donation_id, account_id, fra_id, amount, donation_date "
-                "FROM donation WHERE donation_id = ? AND account_id = ?",
-                (donation_id, account_id),
-            ).fetchone()
-        return None if row is None else cls._from_row(row)
+    def view_my_donation_histories(cls, account_id: str) -> list["Donation"]:
+        """US-33 — donee views the list of their donation histories.
 
-    @classmethod
-    def view_my_donations(cls, account_id: str) -> list["Donation"]:
-        """Exception A: list-by-owner so ViewMyDonationHistoryPage can show
-        a picker. Logged in docs/todo.md."""
+        Re-shaped 2026-05-18 from a per-id 'view one' to a 'view list' per
+        the updated US-33 diagram (boundary shared with US-32). The previous
+        Exception A `view_my_donations` is retired — this is its diagram-
+        defined replacement.
+        """
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT donation_id, account_id, fra_id, amount, donation_date "

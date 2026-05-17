@@ -12,8 +12,8 @@ import streamlit as st
 from controller.search_my_donation_histories_controller import (
     SearchMyDonationHistoriesController,
 )
-from controller.view_my_donation_history_controller import (
-    ViewMyDonationHistoryController,
+from controller.view_my_donation_histories_controller import (
+    ViewMyDonationHistoriesController,
 )
 
 SELECTED_KEY = "my_donations_selected_id"
@@ -45,7 +45,8 @@ class MyDonationsPage:
             )
         else:
             donations = (
-                ViewMyDonationHistoryController().view_my_donations(account_id)
+                ViewMyDonationHistoriesController()
+                .view_my_donation_histories(account_id=account_id)
             )
 
         if not donations:
@@ -78,11 +79,16 @@ class MyDonationsPage:
             st.rerun()
 
     def _render_detail(self, account_id: str) -> None:
-        donation = (
-            ViewMyDonationHistoryController().view_my_donation_history(
-                account_id=account_id,
-                donation_id=st.session_state[SELECTED_KEY],
-            )
+        # No diagram-defined per-id donation lookup any more — the new
+        # US-33 method is list-only. We fetch the donee's list and filter
+        # client-side to find the row they clicked.
+        all_mine = (
+            ViewMyDonationHistoriesController()
+            .view_my_donation_histories(account_id=account_id)
+        )
+        target_id = st.session_state[SELECTED_KEY]
+        donation = next(
+            (d for d in all_mine if d.donation_id == target_id), None
         )
         if donation is None:
             st.error("Donation is not yours or no longer exists.")

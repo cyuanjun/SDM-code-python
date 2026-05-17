@@ -128,46 +128,36 @@ def test_search_my_donation_history_returns_empty_for_no_donations() -> None:
     )
 
 
-def test_view_my_donation_history_returns_donation_for_correct_owner() -> None:
+def test_view_my_donation_histories_returns_list_for_the_donee() -> None:
     donee, activity = _seed_donee_and_activity()
-    created = _seed_donation(donee, activity, amount="75.50")
+    a = _seed_donation(donee, activity, amount="75.50")
+    b = _seed_donation(donee, activity, amount="20.00")
 
-    fetched = Donation.view_my_donation_history(
-        account_id=donee.account_id, donation_id=created.donation_id,
-    )
+    results = Donation.view_my_donation_histories(account_id=donee.account_id)
 
-    assert fetched is not None
-    assert fetched.donation_id == created.donation_id
-    assert fetched.amount == Decimal("75.50")
+    assert {d.donation_id for d in results} == {a.donation_id, b.donation_id}
 
 
-def test_view_my_donation_history_returns_none_for_wrong_owner() -> None:
-    """Negative path: donee A's donation can't be fetched via donee B's id."""
+def test_view_my_donation_histories_excludes_other_donees() -> None:
+    """Negative path: donee A's donations don't appear in donee B's list."""
     donee_a, activity = _seed_donee_and_activity()
-    created = _seed_donation(donee_a, activity)
+    _seed_donation(donee_a, activity)
 
     donee_b = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
         phone_num="0", profile_id=donee_a.profile_id,
     )
 
-    fetched = Donation.view_my_donation_history(
-        account_id=donee_b.account_id, donation_id=created.donation_id,
-    )
-    assert fetched is None
-
-
-def test_view_my_donation_history_returns_none_for_missing_id() -> None:
-    donee, _ = _seed_donee_and_activity()
     assert (
-        Donation.view_my_donation_history(
-            account_id=donee.account_id, donation_id="don_999"
-        )
-        is None
+        Donation.view_my_donation_histories(account_id=donee_b.account_id)
+        == []
     )
 
 
-def test_view_my_donations_returns_empty_list_for_no_donations() -> None:
+def test_view_my_donation_histories_returns_empty_list_for_no_donations() -> None:
     """Negative path: donee with no donations gets []."""
     donee, _ = _seed_donee_and_activity()
-    assert Donation.view_my_donations(account_id=donee.account_id) == []
+    assert (
+        Donation.view_my_donation_histories(account_id=donee.account_id)
+        == []
+    )
