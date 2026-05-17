@@ -1,8 +1,20 @@
--- Revamp schema. Tables land here as their entities are rebuilt from the
--- reworked diagrams. Each table mirrors one Entity class.
+-- Revamp schema. Each table mirrors one Entity class.
+--
 -- PKs are TEXT in the form "{prefix}_{NNN}" (e.g. "prof_001"); see
 -- persistence/ids.py for the next_id helper that mints them on INSERT.
 -- FKs are TEXT too, holding the same prefixed string the parent stores.
+--
+-- Type proxies for diagram types SQLite can't represent natively:
+--   diagram Decimal  -> SQLite TEXT     (preserves precision; entity
+--                                        wraps with Decimal() on read,
+--                                        str() on write)
+--   diagram Date     -> SQLite TEXT     (ISO-8601; entity wraps with
+--                                        date.fromisoformat() on read,
+--                                        .isoformat() on write)
+--   diagram Boolean  -> SQLite INTEGER  (0/1; entity wraps with bool()
+--                                        on read, 1 if x else 0 on write)
+-- Entity public APIs still expose the diagram types (Decimal / date /
+-- bool); the proxies are storage detail.
 
 CREATE TABLE IF NOT EXISTS user_profile (
     profile_id  TEXT PRIMARY KEY,
