@@ -307,7 +307,7 @@ Diagrams: [diagrams/sprint-1_diagrams/](../diagrams/sprint-1_diagrams/). Stories
 - [tests/test_view_fundraising_activity_controller.py](../tests/test_view_fundraising_activity_controller.py)
 - [tests/test_view_fundraising_activity_page.py](../tests/test_view_fundraising_activity_page.py)
 
-**Notes / assumptions / deferred:** Entity returns `None` for a missing row so the Boundary can call `st.error`. Exception A method [`view_all_fundraising_activities`](../entity/fundraising_activity.py#L298) populates the list view the donee picks from (logged in [docs/todo.md](todo.md)). Opening the detail also fires the Exception A [`increment_view_count`](../entity/fundraising_activity.py#L337) (per US-28). The same boundary class also wires US-22's save button and US-28/29 count metrics; counts are owner-gated so a donee never sees the fundraiser's analytics.
+**Notes / assumptions / deferred:** Entity returns `None` for a missing row so the Boundary can call `st.error`. Exception A method [`view_all_fundraising_activities`](../entity/fundraising_activity.py#L298) populates the list view the donee picks from (logged in [docs/todo.md](todo.md)); on 2026-05-18 it gained `WHERE suspended = 0` so a donee never sees suspended activities in the list (see the suspended-visibility note on US-16). Opening the detail also fires the Exception A [`increment_view_count`](../entity/fundraising_activity.py#L337) (per US-28). The same boundary class also wires US-22's save button and US-28/29 count metrics; counts are owner-gated so a donee never sees the fundraiser's analytics. **Shared detail panel (2026-05-18):** the donee-side detail rendering (title / metadata / Save+Remove buttons / Back) was extracted to `render_activity_detail(selected_key)` in [boundary/non_diagram/browse_fundraising_activity_page.py](../boundary/non_diagram/browse_fundraising_activity_page.py) so the consolidated `BrowseFundraisingActivityPage` and `MyFavouritesPage` (Exception C) render an identical detail view from either list.
 
 ### US-26 — Log in (Donee) ([diagram](../diagrams/sprint-1_diagrams/US-26.jpg))
 
@@ -591,7 +591,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 - [tests/test_search_fundraising_activity_controller.py](../tests/test_search_fundraising_activity_controller.py) — delegation + empty-list mirror
 - [tests/test_view_fundraising_activities_page.py](../tests/test_view_fundraising_activities_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Boundary requires a non-empty search term (`validate_criteria`); empty input never reaches the controller. Entity does a case-insensitive `LIKE` on `title`, `description`, and `category_name` (JOIN'd from `fundraising_activity_category` since the 2026-05-18 attribute change to `FRACatId`) — no filter on `completed` or `suspended`. Original diagram named the boundary `ViewFundraisingActivities` (no `Page` suffix); **resolved 2026-05-16** to match the implementation (see [docs/diagram_typos.md](diagram_typos.md)).
+**Notes / assumptions / deferred:** Boundary requires a non-empty search term (`validate_criteria`); empty input never reaches the controller. Entity does a case-insensitive `LIKE` on `title`, `description`, and `category_name` (JOIN'd from `fundraising_activity_category` since the 2026-05-18 attribute change to `FRACatId`); no filter on `completed`. **Suspended-hidden filter (2026-05-18):** the query also has `WHERE a.suspended = 0`, so a donee never sees suspended activities in search results — see the suspended-visibility note on US-16. Original diagram named the boundary `ViewFundraisingActivities` (no `Page` suffix); **resolved 2026-05-16** to match the implementation (see [docs/diagram_typos.md](diagram_typos.md)).
 
 ### US-22 — Save fundraising activity to favourites ([diagram](../diagrams/sprint-2_diagrams/US-22.jpg))
 
@@ -617,7 +617,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 - [tests/test_save_fundraising_activity_controller.py](../tests/test_save_fundraising_activity_controller.py) — delegation + `False` mirror
 - [tests/test_view_fundraising_activity_page.py](../tests/test_view_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Shares its boundary class with US-21 (donee detail view) and US-28/29 (owner-gated counts). The entity pre-checks for the `(account_id, fra_id)` pair to distinguish a genuine duplicate (`False`) from an FK violation on a missing account/activity (raises `IntegrityError`). On success the entity also fires Exception A `FundraisingActivity.increment_save_count(fra_id, +1)` so US-29 counts stay current.
+**Notes / assumptions / deferred:** Shares its boundary class with US-21 (donee detail view) and US-28/29 (owner-gated counts). The entity pre-checks for the `(account_id, fra_id)` pair to distinguish a genuine duplicate (`False`) from an FK violation on a missing account/activity (raises `IntegrityError`). On success the entity also fires Exception A `FundraisingActivity.increment_save_count(fra_id, +1)` so US-29 counts stay current. **Browse parity fix (2026-05-18):** the consolidated `BrowseFundraisingActivityPage` (Exception C) was previously only rendering the Save branch on its detail view, leaving no way to remove a favourite from there. Both Save (US-22) and Remove (US-23) are now rendered mutually-exclusively via the shared `render_activity_detail` helper, matching the per-US `ViewFundraisingActivityPage` behaviour.
 
 ### US-24 — View favourite list ([diagram](../diagrams/sprint-2_diagrams/US-24.jpg))
 
@@ -643,7 +643,7 @@ Diagrams: [diagrams/sprint-2_diagrams/](../diagrams/sprint-2_diagrams/). Stories
 - [tests/test_view_favourite_list_controller.py](../tests/test_view_favourite_list_controller.py) — delegation + empty-list mirror
 - [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke
 
-**Notes / assumptions / deferred:** The original diagram named the boundary `ViewFavouritePage`, controller `ViewFavouriteController`, and entity method `viewFavourite(accountId): Favourite` (singular). **Resolved 2026-05-16** by re-exporting with the `List` suffix throughout — code was renamed to match. Same page is reused for US-23 remove-favourite (Sprint 3); US-23's re-exported diagram 2026-05-17 now also names the boundary `ViewFavouriteListPage`, so the previously-deferred mismatch is resolved.
+**Notes / assumptions / deferred:** The original diagram named the boundary `ViewFavouritePage`, controller `ViewFavouriteController`, and entity method `viewFavourite(accountId): Favourite` (singular). **Resolved 2026-05-16** by re-exporting with the `List` suffix throughout — code was renamed to match. Same page is reused for US-23 remove-favourite (Sprint 3); US-23's re-exported diagram 2026-05-17 now also names the boundary `ViewFavouriteListPage`, so the previously-deferred mismatch is resolved. **Suspended-hidden filter (2026-05-18):** the entity query now JOINs `fundraising_activity` and requires `a.suspended = 0`, so a favourite pointing at a now-suspended activity disappears from the donee's list. The favourite row itself stays in place; it reappears when the owner unsuspends. See the suspended-visibility note on US-16. **MyFavouritesPage rich UX (2026-05-18):** the consolidated `MyFavouritesPage` (Exception C) was rewritten to mirror `BrowseFundraisingActivityPage`'s layout — rich activity rows (ID/Title/Category/Target/Start/End) + clickable detail panel that calls the shared `render_activity_detail` helper. The donee can now reach the Save/Remove buttons (US-22/23) from either list without sidebar-jumping.
 
 ---
 
@@ -831,7 +831,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_remove_favourite_controller.py](../tests/test_remove_favourite_controller.py) — delegation + `False` mirror
 - [tests/test_view_fundraising_activity_page.py](../tests/test_view_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 moves the boundary from `ViewFavouriteListPage` to `ViewFundraisingActivityPage` — symmetric with US-22 Save-to-favourites on the same detail screen, and parallel to how US-15 Update + US-16 Suspend live on the fundraiser's `ViewMyFundraisingActivityPage`. `ViewFavouriteListPage` no longer renders per-row Remove buttons. The save-count decrement is an Exception A side effect that keeps US-29's `view_fundraising_activity_save_count` in sync.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 moves the boundary from `ViewFavouriteListPage` to `ViewFundraisingActivityPage` — symmetric with US-22 Save-to-favourites on the same detail screen, and parallel to how US-15 Update + US-16 Suspend live on the fundraiser's `ViewMyFundraisingActivityPage`. `ViewFavouriteListPage` no longer renders per-row Remove buttons. The save-count decrement is an Exception A side effect that keeps US-29's `view_fundraising_activity_save_count` in sync. **Browse + My Favourites parity (2026-05-18):** the consolidated `BrowseFundraisingActivityPage` and `MyFavouritesPage` (both Exception C) render the Save/Remove pair via the shared `render_activity_detail` helper so the donee can reach Remove from either list surface.
 
 ### US-25 — Search my favourites list ([diagram](../diagrams/sprint-3_diagrams/US-25.jpg))
 
@@ -857,7 +857,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_search_favourite_controller.py](../tests/test_search_favourite_controller.py) — delegation + empty-list mirror
 - [tests/test_view_favourite_list_page.py](../tests/test_view_favourite_list_page.py) — page smoke (shared with US-24)
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 drops the `viewMode` param (class + sequence both 2-param now) and names the boundary `ViewFavouriteListPage` shared with US-23/24. Code's per-US `SearchFavouritePage` retired and merged into `view_favourite_list_page.py` (mirrors US-14/17 + US-30/31 patterns). Param order also flipped to `(accountId, searchCriteria)` — owner first, consistent with other owner-scoped methods. Both previously-deferred US-25 typos are now resolved.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-17 drops the `viewMode` param (class + sequence both 2-param now) and names the boundary `ViewFavouriteListPage` shared with US-23/24. Code's per-US `SearchFavouritePage` retired and merged into `view_favourite_list_page.py` (mirrors US-14/17 + US-30/31 patterns). Param order also flipped to `(accountId, searchCriteria)` — owner first, consistent with other owner-scoped methods. Both previously-deferred US-25 typos are now resolved. **Suspended-hidden filter (2026-05-18):** the JOIN-side `WHERE a.suspended = 0` applies here too, so a search inside My Favourites won't surface favourites pointing at suspended activities. See the suspended-visibility note on US-16.
 
 ### US-30 — Search my completed fundraising activities ([diagram](../diagrams/sprint-3_diagrams/US-30.jpg))
 
@@ -935,7 +935,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_search_my_donation_histories_controller.py](../tests/test_search_my_donation_histories_controller.py) — delegation + empty-list mirror
 - [tests/test_view_my_donation_histories_page.py](../tests/test_view_my_donation_histories_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 finalises the "My" naming: controller class is now `SearchMyDonationHistoriesController` (plural Histories), method stays `searchMyDonationHistory` (singular). The previously-deferred "no My in code" divergence is now resolved. Boundary `ViewMyDonationHistoriesPage` is shared with US-33 (US-33 now also returns a list). No "create donation" use case exists on any diagram — the three rows displayed at demo time come from `seed_demo_donations` ([data/seed.py](../data/seed.py)) using `Donation.create_donation`.
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 finalises the "My" naming: controller class is now `SearchMyDonationHistoriesController` (plural Histories), method stays `searchMyDonationHistory` (singular). The previously-deferred "no My in code" divergence is now resolved. Boundary `ViewMyDonationHistoriesPage` is shared with US-33 (US-33 now also returns a list). No "create donation" use case exists on any diagram — the three rows displayed at demo time come from `seed_demo_donations` ([data/seed.py](../data/seed.py)) using `Donation.create_donation`. **Donation history is unaffected by the 2026-05-18 suspended-visibility rule** — donations to a now-suspended activity stay searchable in the donee's history (historical record); only the donee-facing browse/favourite surfaces hide suspended activities (see US-16).
 
 ### US-33 — View my donation histories ([diagram](../diagrams/sprint-3_diagrams/US-33.jpg))
 
@@ -961,7 +961,7 @@ Diagrams: [diagrams/sprint-3_diagrams/](../diagrams/sprint-3_diagrams/). Stories
 - [tests/test_view_my_donation_histories_controller.py](../tests/test_view_my_donation_histories_controller.py) — delegation + empty-list mirror
 - [tests/test_view_my_donation_histories_page.py](../tests/test_view_my_donation_histories_page.py) — page smoke (shared with US-32)
 
-**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 reframes US-33 from per-id detail (`viewMyDonationHistory(accountId, donationId): Donation`) to a list method (`viewMyDonationHistories(accountId): List<Donation>`). Same shape of change as US-31. The previous Exception A `Donation.view_my_donations` is retired — its function is now diagram-defined. The consolidated `MyDonationsPage` filters the list client-side to find a clicked donation's details (no diagram-defined per-id lookup exists).
+**Notes / assumptions / deferred:** Re-exported diagram 2026-05-18 reframes US-33 from per-id detail (`viewMyDonationHistory(accountId, donationId): Donation`) to a list method (`viewMyDonationHistories(accountId): List<Donation>`). Same shape of change as US-31. The previous Exception A `Donation.view_my_donations` is retired — its function is now diagram-defined. The consolidated `MyDonationsPage` filters the list client-side to find a clicked donation's details (no diagram-defined per-id lookup exists). **Donation history is unaffected by the 2026-05-18 suspended-visibility rule** — see US-32.
 
 ---
 
@@ -1181,7 +1181,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 - [tests/test_report_controllers.py](../tests/test_report_controllers.py) — three pure-delegator tests
 - [tests/test_generate_report_page.py](../tests/test_generate_report_page.py)
 
-**Notes / assumptions / deferred:** The `platformManagerId` 3rd parameter and `generatedAt: datetime` typing were **resolved 2026-05-16** ([docs/diagram_typos.md](diagram_typos.md)). **Single-date UX (2026-05-18):** the PM picks one date; the boundary derives the `(start_date, end_date)` window from the chosen report type via `GenerateReportPage.window_for(report_type, picked)` — daily = same day; weekly = Monday→Sunday of the ISO week containing the date; monthly = 1st→last day of the month. The diagram-defined controllers + entity methods still take `(startDate, endDate, platformManagerId)` so the contract is unchanged — boundary-only UX simplification, no diagram impact. Aggregates donations within the window and counts all activities / fundraiser / donee accounts (snapshot, not windowed).
+**Notes / assumptions / deferred:** The `platformManagerId` 3rd parameter and `generatedAt: datetime` typing were **resolved 2026-05-16** ([docs/diagram_typos.md](diagram_typos.md)). **Single-date UX (2026-05-18):** the PM picks one date; the boundary derives the `(start_date, end_date)` window from the chosen report type via `GenerateReportPage.window_for(report_type, picked)` — daily = same day; weekly = Monday→Sunday of the ISO week containing the date; monthly = 1st→last day of the month. The diagram-defined controllers + entity methods still take `(startDate, endDate, platformManagerId)` so the contract is unchanged — boundary-only UX simplification, no diagram impact. **Success-panel display (2026-05-18):** `displayReport` renders the result as a single `st.success(...)` green panel with bolded labels (Window / Generated at / Generated by / Donations / Activities / Fundraisers / Donees), matching the post-create panel pattern used elsewhere (e.g. `ManageFundraisingActivityCategoryPage`). Aggregates donations within the window and counts all activities / fundraiser / donee accounts (snapshot, not windowed).
 
 ### US-42 — Generate weekly report ([diagram](../diagrams/sprint-4_diagrams/US-42.jpg))
 
@@ -1207,7 +1207,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 - [tests/test_report_controllers.py](../tests/test_report_controllers.py)
 - [tests/test_generate_report_page.py](../tests/test_generate_report_page.py)
 
-**Notes / assumptions / deferred:** `report_type` discriminator is the only behavioural difference from US-41/43 — the `_generate` helper handles the actual aggregation. The shared `GenerateReportPage` consolidation is **deferred** (accepted as deliberate). Same diagram fixes as US-41.
+**Notes / assumptions / deferred:** `report_type` discriminator is the only behavioural difference from US-41/43 — the `_generate` helper handles the actual aggregation. The shared `GenerateReportPage` consolidation is **deferred** (accepted as deliberate). Same diagram fixes as US-41, and same 2026-05-18 single-date UX + success-panel display rendering (see US-41 notes). Weekly window = Monday→Sunday of the ISO week containing the picked date.
 
 ### US-43 — Generate monthly report ([diagram](../diagrams/sprint-4_diagrams/US-43.jpg))
 
@@ -1233,7 +1233,7 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 - [tests/test_report_controllers.py](../tests/test_report_controllers.py)
 - [tests/test_generate_report_page.py](../tests/test_generate_report_page.py)
 
-**Notes / assumptions / deferred:** Same shared-boundary consolidation as US-41/42 — listed under "Deferred typos" in [docs/todo.md](todo.md). The window is not enforced to match the report cadence (a "monthly" report over a 2-day window still aggregates correctly) — the cadence label is informational metadata only.
+**Notes / assumptions / deferred:** Same shared-boundary consolidation as US-41/42 — listed under "Deferred typos" in [docs/todo.md](todo.md). Same 2026-05-18 single-date UX + success-panel display rendering (see US-41 notes). Monthly window = 1st to last day of the month containing the picked date (handles variable month lengths and leap-year February — locked by tests). The window is not enforced to match the report cadence (a "monthly" report over a 2-day window still aggregates correctly) — the cadence label is informational metadata only.
 
 ---
 
