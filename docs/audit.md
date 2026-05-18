@@ -4,7 +4,7 @@ Transcription of the Boundary / Controller / Entity surface for every user story
 
 Each layer lists what the **diagram** says, then the matching `Code →` identifier + file path showing what's actually implemented (in `snake_case`). Where a `Code →` line shows a different class or method name than the diagram, that's a drift — collected at the bottom of this file.
 
-*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, US-28/US-29 boundary-placement rewire, US-28/US-29 diagram re-export (`category: String` → `FRACatId: String`), US-31 diagram re-export (`myCompletedFRAList: List<FundraisingActivity>` wrapper restored), and the US-37 boundary method rename (`display_matching_fra_category` → `display_matching_fundraising_activity_category`) all landed.*
+*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, US-28/US-29 boundary-placement rewire, US-28/US-29 diagram re-export (`category: String` → `FRACatId: String`), US-31 diagram re-export (`myCompletedFRAList: List<FundraisingActivity>` wrapper restored), US-37 boundary method rename (`display_matching_fra_category` → `display_matching_fundraising_activity_category`), and the final diagram sweep (six `Search*sController` → singular form + US-23 `displaySuccess()` → `displayRemoveSuccess()`) all landed. **Zero open drifts.***
 
 Conventions:
 - Class names are taken verbatim from the diagrams (so `category` vs `FRACatId` reflects the diagram as drawn).
@@ -63,9 +63,9 @@ Conventions:
 - **Boundary:** `ViewUserProfilesPage`
   - `displayMatchingUserProfile(profileList: List<UserProfile>): void`
   - Code → `ViewUserProfilesPage.display_matching_user_profile(profiles)` in [boundary/view_user_profiles_page.py](../boundary/view_user_profiles_page.py)
-- **Controller:** `SearchUserProfilesController`
+- **Controller:** `SearchUserProfileController`
   - `searchUserProfile(searchCriteria: String): List<UserProfile>`
-  - Code → `SearchUserProfileController.search_user_profile(search_criteria)` in [controller/search_user_profile_controller.py](../controller/search_user_profile_controller.py) ⚠️ class name singular in code, plural in diagram
+  - Code → `SearchUserProfileController.search_user_profile(search_criteria)` in [controller/search_user_profile_controller.py](../controller/search_user_profile_controller.py)
 - **Entity:** `UserProfile` *(attrs as US-1)*
   - `searchUserProfile(searchCriteria: String): List<UserProfile>`
   - Code → `UserProfile.search_user_profile(search_criteria)` in [entity/user_profile.py](../entity/user_profile.py)
@@ -118,9 +118,9 @@ Conventions:
 - **Boundary:** `ViewUserAccountsPage`
   - `displayMatchingUserAccount(accountList: List<UserAccount>): void`
   - Code → `ViewUserAccountsPage.display_matching_user_account(accounts)` in [boundary/view_user_accounts_page.py](../boundary/view_user_accounts_page.py)
-- **Controller:** `SearchUserAccountsController`
+- **Controller:** `SearchUserAccountController`
   - `searchUserAccount(searchCriteria: String): List<UserAccount>`
-  - Code → `SearchUserAccountController.search_user_account(search_criteria)` in [controller/search_user_account_controller.py](../controller/search_user_account_controller.py) ⚠️ class name singular in code, plural in diagram
+  - Code → `SearchUserAccountController.search_user_account(search_criteria)` in [controller/search_user_account_controller.py](../controller/search_user_account_controller.py)
 - **Entity:** `UserAccount` *(attrs as US-6)*
   - `searchUserAccount(searchCriteria: String): List<UserAccount>`
   - Code → `UserAccount.search_user_account(search_criteria)` in [entity/user_account.py](../entity/user_account.py)
@@ -191,9 +191,9 @@ Conventions:
 - **Boundary:** `ViewMyFundraisingActivitiesPage`
   - `displayMatchingMyFundraisingActivity(myFRAList: List<FundraisingActivity>): void`
   - Code → `ViewMyFundraisingActivitiesPage.display_matching_my_fundraising_activity(activities)` in [boundary/view_my_fundraising_activities_page.py](../boundary/view_my_fundraising_activities_page.py)
-- **Controller:** `SearchMyFundraisingActivitiesController`
+- **Controller:** `SearchMyFundraisingActivityController`
   - `searchMyFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>`
-  - Code → `SearchMyFundraisingActivityController.search_my_fundraising_activity(owner_account_id, search_criteria)` in [controller/search_my_fundraising_activity_controller.py](../controller/search_my_fundraising_activity_controller.py) ⚠️ class name singular in code, plural in diagram
+  - Code → `SearchMyFundraisingActivityController.search_my_fundraising_activity(owner_account_id, search_criteria)` in [controller/search_my_fundraising_activity_controller.py](../controller/search_my_fundraising_activity_controller.py)
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `searchMyFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>`
   - Code → `FundraisingActivity.search_my_fundraising_activity(owner_account_id, search_criteria)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py)
@@ -220,9 +220,9 @@ Conventions:
 - **Boundary:** `ViewFundraisingActivitiesPage`
   - `displayMatchingFundraisingActivities(FRAList: List<FundraisingActivity>): void`
   - Code → `ViewFundraisingActivitiesPage.display_matching_fundraising_activities(activities)` in [boundary/view_fundraising_activities_page.py](../boundary/view_fundraising_activities_page.py)
-- **Controller:** `SearchFundraisingActivitiesController`
+- **Controller:** `SearchFundraisingActivityController`
   - `searchFundraisingActivity(searchCriteria: String): List<FundraisingActivity>`
-  - Code → `SearchFundraisingActivityController.search_fundraising_activity(search_criteria)` in [controller/search_fundraising_activity_controller.py](../controller/search_fundraising_activity_controller.py) ⚠️ class name singular in code, plural in diagram
+  - Code → `SearchFundraisingActivityController.search_fundraising_activity(search_criteria)` in [controller/search_fundraising_activity_controller.py](../controller/search_fundraising_activity_controller.py)
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `searchFundraisingActivity(searchCriteria: String): List<FundraisingActivity>`
   - Code → `FundraisingActivity.search_fundraising_activity(search_criteria)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py)
@@ -251,8 +251,8 @@ Conventions:
 
 ## US-23 — Remove from favourite list *(Donee)*
 - **Boundary:** `ViewFundraisingActivityPage`
-  - `displaySuccess(): void`
-  - Code → `ViewFundraisingActivityPage.display_remove_success()` in [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py) ⚠️ code uses `display_remove_success` to distinguish from US-22's `display_success`
+  - `displayRemoveSuccess(): void`
+  - Code → `ViewFundraisingActivityPage.display_remove_success()` in [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py)
 - **Controller:** `RemoveFavouriteController`
   - `removeFavourite(FRAId: String, accountId: String): Boolean`
   - Code → `RemoveFavouriteController.remove_favourite(fra_id, account_id)` in [controller/remove_favourite_controller.py](../controller/remove_favourite_controller.py)
@@ -326,9 +326,9 @@ Conventions:
 - **Boundary:** `ViewMyFundraisingActivitiesPage`
   - `displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void`
   - Code → `ViewMyFundraisingActivitiesPage.display_matching_my_completed_fundraising_activity(activities)` in [boundary/view_my_fundraising_activities_page.py](../boundary/view_my_fundraising_activities_page.py)
-- **Controller:** `SearchMyCompletedFundraisingActivitiesController`
+- **Controller:** `SearchMyCompletedFundraisingActivityController`
   - `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>`
-  - Code → `SearchMyCompletedFundraisingActivityController.search_my_completed_fundraising_activity(owner_account_id, search_criteria)` in [controller/search_my_completed_fundraising_activity_controller.py](../controller/search_my_completed_fundraising_activity_controller.py) ⚠️ class name singular in code, plural in diagram
+  - Code → `SearchMyCompletedFundraisingActivityController.search_my_completed_fundraising_activity(owner_account_id, search_criteria)` in [controller/search_my_completed_fundraising_activity_controller.py](../controller/search_my_completed_fundraising_activity_controller.py)
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>`
   - Code → `FundraisingActivity.search_my_completed_fundraising_activity(owner_account_id, search_criteria)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py) — filter is `WHERE a.end_date < ?` (today), not a stored `completed` flag (post-2026-05-18 refactor)
@@ -403,9 +403,9 @@ Conventions:
 - **Boundary:** `ViewFundraisingActivityCategoriesPage`
   - `displayMatchingFundraisingActivityCategory(FRACategoryList: List<FundraisingActivityCategory>): void`
   - Code → `ViewFundraisingActivityCategoriesPage.display_matching_fundraising_activity_category(categories)` in [boundary/view_fundraising_activity_categories_page.py](../boundary/view_fundraising_activity_categories_page.py)
-- **Controller:** `SearchFundraisingActivityCategoriesController`
+- **Controller:** `SearchFundraisingActivityCategoryController`
   - `searchFundraisingActivityCategory(searchCriteria: String): List<FundraisingActivityCategory>`
-  - Code → `SearchFundraisingActivityCategoryController.search_fundraising_activity_category(search_criteria)` in [controller/search_fundraising_activity_category_controller.py](../controller/search_fundraising_activity_category_controller.py) ⚠️ class name singular in code, plural in diagram
+  - Code → `SearchFundraisingActivityCategoryController.search_fundraising_activity_category(search_criteria)` in [controller/search_fundraising_activity_category_controller.py](../controller/search_fundraising_activity_category_controller.py)
 - **Entity:** `FundraisingActivityCategory` *(attrs as US-34)*
   - `searchFundraisingActivityCategory(searchCriteria: String): List<FundraisingActivityCategory>`
   - Code → `FundraisingActivityCategory.search_fundraising_activity_category(search_criteria)` in [entity/fundraising_activity_category.py](../entity/fundraising_activity_category.py)
@@ -476,26 +476,15 @@ Conventions:
 
 ## Observed drifts (worth a [diagram_typos.md](diagram_typos.md) entry)
 
-### Pure diagram typos / gaps
-*(All known diagram typos are now resolved — see "Resolved during this audit" below.)*
-
-### Code-side singular/plural class-name drifts (controller stays a pure delegator, no behaviour change)
-Diagram uses the plural form of the entity in the controller class name, code uses the singular. Either rename the code or correct the diagrams — picking one direction would unify the convention.
-- **US-5:** diagram `SearchUserProfilesController` → code `SearchUserProfileController`
-- **US-10:** diagram `SearchUserAccountsController` → code `SearchUserAccountController`
-- **US-17:** diagram `SearchMyFundraisingActivitiesController` → code `SearchMyFundraisingActivityController`
-- **US-20:** diagram `SearchFundraisingActivitiesController` → code `SearchFundraisingActivityController`
-- **US-30:** diagram `SearchMyCompletedFundraisingActivitiesController` → code `SearchMyCompletedFundraisingActivityController`
-- **US-37:** diagram `SearchFundraisingActivityCategoriesController` → code `SearchFundraisingActivityCategoryController`
+All drifts identified during this audit are now resolved — see "Resolved during this audit" below.
 
 ### Resolved during this audit
+- ~~**Six Search\*Controller class names: diagram plural vs code singular**~~ **Resolved 2026-05-18.** Re-exported diagrams flipped the controller class names from the `Search*sController` plural form to the singular form the code uses: US-5 `SearchUserProfileController`, US-10 `SearchUserAccountController`, US-17 `SearchMyFundraisingActivityController`, US-20 `SearchFundraisingActivityController`, US-30 `SearchMyCompletedFundraisingActivityController`, US-37 `SearchFundraisingActivityCategoryController`. No code change.
+- ~~**US-23 boundary method `displaySuccess()` collided with US-22's `displaySuccess()` on the same `ViewFundraisingActivityPage` class**~~ **Resolved 2026-05-18.** Re-exported US-23 diagram now types the boundary method as `displayRemoveSuccess(): void` on both the class diagram and sequence diagram, matching the code's `display_remove_success()`. US-22 keeps `displaySuccess()` for Save. No code change.
 - ~~**US-37 boundary method name abbreviation (`display_matching_fra_category`)**~~ **Resolved 2026-05-18.** Code renamed to `display_matching_fundraising_activity_category`, matching the diagram's `displayMatchingFundraisingActivityCategory` exactly (modulo snake_case). Single-method rename in [boundary/view_fundraising_activity_categories_page.py](../boundary/view_fundraising_activity_categories_page.py); no other call sites or tests referenced the abbreviated form. No behaviour change.
 - ~~**US-31 boundary method param type missing the `List<…>` wrapper**~~ **Resolved 2026-05-18.** Re-exported diagram now types the param as `myCompletedFRAList: List<FundraisingActivity>` on both the class and sequence diagrams, matching the controller return type. Code was already passing a list — no code change needed.
 - ~~**US-28 / US-29 entity attribute drift (`category: String` instead of `FRACatId: String`)**~~ **Resolved 2026-05-18.** Re-exported diagrams now type the entity attribute as `FRACatId: String`, matching the rest of the post-2026-05-18 FRA class diagrams (US-13/14/15/17/20/21/30/31). Code was already on `fra_cat_id` — no code change needed.
 - ~~**US-15 signature-shape drift**~~ **Resolved 2026-05-18.** Code now takes the 6 unpacked fields exactly as the diagram defines: `update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)`. The previous `updated_my_fra: FundraisingActivity` parameter is gone. As a side effect, `completed` and `suspended` are no longer settable through update — `completed` is now a derived `@property` on the entity (`end_date < today`), and `suspended` is owned by US-16 / Exception A unsuspend. The `completed` column was dropped from the schema.
 - ~~**US-28 / US-29 boundary placement**~~ **Resolved 2026-05-18.** Diagram puts both count-display methods on `ViewMyFundraisingActivityPage` (fundraiser-only); code had them on `ViewFundraisingActivityPage` (donee detail) with a code-only owner-gate, and the consolidated `ManageMyFundraisingActivityPage` was reading `activity.view_count` / `activity.save_count` directly off the dataclass — bypassing the diagram-defined controllers entirely. After the rewire: the per-US `ViewMyFundraisingActivityPage` renders the metrics via `ViewFundraisingActivityViewCountController` + `ViewFundraisingActivitySaveCountController`; the donee-side detail (`ViewFundraisingActivityPage` + shared `render_activity_detail` helper) no longer renders the counts at all; the consolidated `ManageMyFundraisingActivityPage` now calls the same controllers (Exception C: same call chain as the per-US page).
-
-### Cosmetic
-- **US-23 boundary method** — diagram says `displaySuccess()`, code uses `display_remove_success()` to keep it distinct from US-22's `display_success()` on the same `ViewFundraisingActivityPage`. Either the diagram should name it `displayRemoveSuccess()` or accept that one Boundary class has two `displaySuccess()` paths.
 
 Other naming choices that look like deviations but are deliberate consolidations (Exception C) — combined `Manage*` / `Browse*` / `My*` pages, the shared `GenerateReportPage` for daily/weekly/monthly — are catalogued in [diagram_typos.md](diagram_typos.md) under "UX consolidation".
