@@ -6,7 +6,7 @@ If a fact about wiring or naming isn't in here, the truth is in the source files
 
 ## Overview
 
-CSIT314 group project — online fundraising platform (Python + Streamlit + SQLite, B-C-E architecture). All **43 user stories** across **4 sprints** implemented; **398 tests passing**; **10 sidebar entries** routed by role. Per-US detail starts at [Sprint 1](#sprint-1) below — this Overview is the bird's-eye view.
+CSIT314 group project — online fundraising platform (Python + Streamlit + SQLite, B-C-E architecture). All **43 user stories** across **4 sprints** implemented; **404 tests passing**; **10 sidebar entries** routed by role. Per-US detail starts at [Sprint 1](#sprint-1) below — this Overview is the bird's-eye view.
 
 ### Coverage matrix (all 43 stories)
 
@@ -99,7 +99,7 @@ Numbers below are summaries — the detail tables further down hold the full tex
 
 - **Stack:** Python 3 + Streamlit + SQLite via stdlib `sqlite3` + pytest (incl. `streamlit.testing.v1.AppTest` for boundary smoke tests). CI on GitHub Actions (Python 3.11). No ORM, no linter / formatter.
 - **Architecture:** B-C-E (Boundary-Controller-Entity). One Streamlit page per Boundary, one pure delegator per Controller, all DB access through an Entity.
-- **Coverage:** all 43 user stories across 4 sprints implemented. **398 tests passing** locally and in CI.
+- **Coverage:** all 43 user stories across 4 sprints implemented. **404 tests passing** locally and in CI.
 - **Sidebar:** 10 entries via 7 combined `Manage*` / `Browse*` / `My*` pages + `Log In` / `Log Out` + the debug `.info` page. Each role sees its own actor's allow-list (RBAC via `PAGES_BY_ROLE` in [app.py](../app.py)).
 - **Entities (7):** `UserProfile`, `UserAccount`, `FundraisingActivity`, `FundraisingActivityCategory`, `Favourite`, `Donation`, `Report`.
 
@@ -1340,7 +1340,7 @@ Plus a demo `FundraisingActivity` ("Demo hospital fund") owned by the seeded fun
 
 - **TDD expectations:** every entity method ships with a happy-path test **and** at least one negative-path test (missing row, FK violation, uniqueness violation, cross-tenant access where ownership applies). Controllers have a delegation test + a negative-path delegation mirror. Boundary smoke tests use `streamlit.testing.v1.AppTest`.
 - **Test isolation:** [tests/conftest.py](../tests/conftest.py) defines an `autouse` fixture that monkey-patches `persistence.db.DB_PATH` to a `tmp_path` file and re-initialises the schema before every test. Never write tests that assume `app.db`.
-- **Run:** `pytest` (full suite, 398 tests) or `pytest -v` (matches CI). Single test: `pytest tests/test_user_account.py::test_login_succeeds`. By keyword: `pytest -k favourite`.
+- **Run:** `pytest` (full suite, 404 tests) or `pytest -v` (matches CI). Single test: `pytest tests/test_user_account.py::test_login_succeeds`. By keyword: `pytest -k favourite`.
 - **CI:** [.github/workflows/ci.yml](../.github/workflows/ci.yml) pins Python 3.11 and runs `pytest -v` on every push.
 
 ## Cross-references

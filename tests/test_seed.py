@@ -9,8 +9,10 @@ from data.seed import (
     BULK_CATEGORY_COUNT,
     BULK_DONATION_COUNT,
     BULK_DONEE_COUNT,
+    BULK_FAVOURITE_COUNT,
     BULK_FUNDRAISER_COUNT,
     BULK_PM_COUNT,
+    BULK_REPORT_COUNT,
     DEFAULT_ADMIN_EMAIL,
     DEFAULT_ADMIN_PASSWORD,
     DEFAULT_DONEE_EMAIL,
@@ -24,6 +26,8 @@ from data.seed import (
     seed_bulk_all,
     seed_bulk_categories,
     seed_bulk_donations,
+    seed_bulk_favourites,
+    seed_bulk_reports,
     seed_default_admin,
     seed_default_donee,
     seed_default_fundraiser,
@@ -271,14 +275,67 @@ def test_seed_bulk_donations_is_idempotent() -> None:
     assert _count_table("donation") == BULK_DONATION_COUNT
 
 
+def test_seed_bulk_favourites_fills_to_100() -> None:
+    seed_bulk_favourites()
+    assert _count_table("favourite") == BULK_FAVOURITE_COUNT
+
+
+def test_seed_bulk_favourites_is_idempotent() -> None:
+    seed_bulk_favourites()
+    seed_bulk_favourites()
+    assert _count_table("favourite") == BULK_FAVOURITE_COUNT
+
+
+def test_seed_bulk_favourites_pairs_are_unique() -> None:
+    """Negative path of the composite PK (account_id, fra_id): every
+    seeded favourite must be a distinct pair, even though donees cycle."""
+    seed_bulk_favourites()
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT account_id, fra_id FROM favourite"
+        ).fetchall()
+    pairs = [(r["account_id"], r["fra_id"]) for r in rows]
+    assert len(pairs) == 100
+    assert len(set(pairs)) == 100
+
+
+def test_seed_bulk_reports_fills_to_100() -> None:
+    seed_bulk_reports()
+    assert _count_table("report") == BULK_REPORT_COUNT
+
+
+def test_seed_bulk_reports_is_idempotent() -> None:
+    seed_bulk_reports()
+    seed_bulk_reports()
+    assert _count_table("report") == BULK_REPORT_COUNT
+
+
+def test_seed_bulk_reports_covers_all_three_types() -> None:
+    """100 reports cycle through daily/weekly/monthly — each report_type
+    must appear at least once so US-41/42/43 demos have data to show."""
+    seed_bulk_reports()
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT report_type, COUNT(*) AS n FROM report "
+            "GROUP BY report_type"
+        ).fetchall()
+    by_type = {r["report_type"]: r["n"] for r in rows}
+    assert by_type.get("daily", 0) >= 1
+    assert by_type.get("weekly", 0) >= 1
+    assert by_type.get("monthly", 0) >= 1
+    assert sum(by_type.values()) == 100
+
+
 def test_seed_bulk_all_brings_every_table_to_100() -> None:
-    """Top-level bulk seed entry point — fresh DB → all four scalable
+    """Top-level bulk seed entry point — fresh DB → all six scalable
     tables at 100 rows."""
     seed_bulk_all()
     assert _count_table("user_account") == 100
     assert _count_table("fundraising_activity_category") == BULK_CATEGORY_COUNT
     assert _count_table("fundraising_activity") == BULK_ACTIVITY_COUNT
     assert _count_table("donation") == BULK_DONATION_COUNT
+    assert _count_table("favourite") == BULK_FAVOURITE_COUNT
+    assert _count_table("report") == BULK_REPORT_COUNT
 
 
 def test_seed_bulk_all_is_idempotent() -> None:
@@ -288,3 +345,5 @@ def test_seed_bulk_all_is_idempotent() -> None:
     assert _count_table("fundraising_activity_category") == BULK_CATEGORY_COUNT
     assert _count_table("fundraising_activity") == BULK_ACTIVITY_COUNT
     assert _count_table("donation") == BULK_DONATION_COUNT
+    assert _count_table("favourite") == BULK_FAVOURITE_COUNT
+    assert _count_table("report") == BULK_REPORT_COUNT

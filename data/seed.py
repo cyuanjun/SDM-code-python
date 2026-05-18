@@ -29,9 +29,13 @@ from __future__ import annotations
 from datetime import date, timedelta
 from decimal import Decimal
 
+from calendar import monthrange
+
 from entity.donation import Donation
+from entity.favourite import Favourite
 from entity.fundraising_activity import FundraisingActivity
 from entity.fundraising_activity_category import FundraisingActivityCategory
+from entity.report import Report
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 from persistence.db import get_connection
@@ -54,6 +58,8 @@ BULK_PM_COUNT = 4               # pm001..pm004
 BULK_CATEGORY_COUNT = 100       # cat_001..cat_100
 BULK_ACTIVITY_COUNT = 100       # fra_001..fra_100
 BULK_DONATION_COUNT = 100       # don_001..don_100
+BULK_FAVOURITE_COUNT = 100      # 100 (donee × activity) pairs
+BULK_REPORT_COUNT = 100         # rep_001..rep_100 (mix of daily/weekly/monthly)
 
 _DEFAULT_DOB = date(2000, 1, 1)
 
@@ -363,6 +369,72 @@ def seed_bulk_donations() -> None:
         )
 
 
+def seed_bulk_favourites() -> None:
+    """Top up the favourite table to 100 rows. Each favourite is a
+    (donee, activity) pair — composite PK in the schema, so duplicates
+    fail loudly. The cycling walk-through here picks a fresh
+    activity_id every step (i % 100 with i in 1..N), so the 100 pairs
+    are guaranteed distinct even though donees repeat (i % 70).
+    Idempotent."""
+    seed_bulk_activities()
+
+    donee_ids = _account_ids_for_role("donee")
+    activity_ids = _all_activity_ids()
+    if not donee_ids or not activity_ids:
+        return
+
+    n = _count("favourite")
+    for i in range(n + 1, BULK_FAVOURITE_COUNT + 1):
+        donee = donee_ids[(i - 1) % len(donee_ids)]
+        activity = activity_ids[(i - 1) % len(activity_ids)]
+        # `save_fundraising_activity` returns False on a duplicate pair,
+        # which we just skip — keeps the helper safely idempotent.
+        Favourite.save_fundraising_activity(
+            account_id=donee, fra_id=activity,
+        )
+
+
+def seed_bulk_reports() -> None:
+    """Top up the report table to 100 rows. Cycle through the 4 PMs and
+    the three report types (daily/weekly/monthly) with deterministic
+    dates so the seed is reproducible. Each call hits the diagram-defined
+    `Report.generate_*` aggregators, which read the live donation totals
+    — so the bulk donations need to be seeded first. Idempotent."""
+    seed_bulk_donations()
+
+    pm_ids = _account_ids_for_role("platform_manager")
+    if not pm_ids:
+        return
+
+    n = _count("report")
+    for i in range(n + 1, BULK_REPORT_COUNT + 1):
+        pm = pm_ids[(i - 1) % len(pm_ids)]
+        kind = (i - 1) % 3
+        if kind == 0:
+            # daily — same day twice
+            day = date(2026, 1, 1) + timedelta(days=(i % 60))
+            Report.generate_daily_report(
+                start_date=day, end_date=day, platform_manager_id=pm,
+            )
+        elif kind == 1:
+            # weekly — Monday→Sunday window from a deterministic anchor
+            monday = date(2026, 1, 5) + timedelta(weeks=(i % 20))
+            Report.generate_weekly_report(
+                start_date=monday,
+                end_date=monday + timedelta(days=6),
+                platform_manager_id=pm,
+            )
+        else:
+            # monthly — 1st to last day of a deterministic month
+            month = ((i - 1) // 3) % 12 + 1
+            last_day = monthrange(2026, month)[1]
+            Report.generate_monthly_report(
+                start_date=date(2026, month, 1),
+                end_date=date(2026, month, last_day),
+                platform_manager_id=pm,
+            )
+
+
 def seed_bulk_all() -> None:
     """Run every bulk helper in the right order. Idempotent.
 
@@ -377,6 +449,8 @@ def seed_bulk_all() -> None:
     seed_demo_donations()      # 1 activity + 3 donations
     seed_bulk_activities()     # tops up to 100 activities (creates 99 more)
     seed_bulk_donations()      # tops up to 100 donations (creates 97 more)
+    seed_bulk_favourites()     # tops up to 100 favourites
+    seed_bulk_reports()        # tops up to 100 reports (daily/weekly/monthly mix)
 
 
 # ----------------------------------------------------------------------------
@@ -500,5 +574,7 @@ if __name__ == "__main__":
         f"  bulk    : {_count('user_account')} accounts, "
         f"{_count('fundraising_activity_category')} categories, "
         f"{_count('fundraising_activity')} activities, "
-        f"{_count('donation')} donations"
+        f"{_count('donation')} donations, "
+        f"{_count('favourite')} favourites, "
+        f"{_count('report')} reports"
     )
