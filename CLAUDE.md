@@ -180,7 +180,9 @@ When handed new sprint diagrams:
 
 ## Coverage and what's deferred
 
-All **43 user stories** are implemented on this branch (`revamp-final-diagrams`). **377 tests pass.** **Zero open diagram drifts** — see [docs/audit.md](docs/audit.md) for the diagram-by-diagram Boundary / Controller / Entity surface + matching `Code →` Python identifier.
+All **43 user stories** are implemented on this branch (`revamp-final-diagrams`). **389 tests pass.** **Zero open diagram drifts** — see [docs/audit.md](docs/audit.md) for the diagram-by-diagram Boundary / Controller / Entity surface + matching `Code →` Python identifier.
+
+The seed bulks up to **100 accounts / 100 categories / 100 activities / 100 donations** on startup (idempotent — `seed_bulk_all()` in [data/seed.py](data/seed.py)). Profiles stay schema-locked at 1 per role. Account split: 1 admin / 25 fundraisers / 70 donees / 4 PMs. The four default-credentials accounts (a001/fr001/d001/pm001) are still the first row in each role.
 
 | Sprint | Stories | Status |
 |---|---|---|

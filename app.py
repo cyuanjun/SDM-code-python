@@ -33,6 +33,7 @@ from boundary.non_diagram.my_donations_page import MyDonationsPage
 from boundary.non_diagram.my_favourites_page import MyFavouritesPage
 from controller.view_user_profile_controller import ViewUserProfileController
 from data.seed import (
+    seed_bulk_all,
     seed_default_admin,
     seed_default_donee,
     seed_default_fundraiser,
@@ -105,6 +106,7 @@ def main() -> None:
     seed_default_donee()
     seed_default_platform_manager()
     seed_demo_donations()
+    seed_bulk_all()  # tops up to 100 accounts / categories / activities / donations
 
     role = _current_role()
     allowed_labels = PAGES_BY_ROLE.get(role, PAGES_BY_ROLE[None])

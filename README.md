@@ -42,13 +42,15 @@ App startup also runs [data/seed.py](data/seed.py) — anything the seed produce
 
 Three sample donations are also seeded against a demo activity owned by the default fundraiser so US-32 / US-33 have data to display. Lecturer-approved (2026-05-15) as an acceptable bootstrap convention — logged in [docs/todo.md](docs/todo.md) under "Lecturer decisions".
 
+On top of the four default credentials, `seed_bulk_all()` runs on startup and tops up to **100 accounts / 100 categories / 100 activities / 100 donations** so the admin/PM browse + search pages have realistic data to scroll. Account split: 1 admin / 25 fundraisers (`fr001`..`fr025`) / 70 donees (`d001`..`d070`) / 4 PMs (`pm001`..`pm004`). Idempotent — re-running `streamlit run app.py` or `python -m data.seed` does nothing once the targets are met.
+
 ## Run tests
 
 ```bash
 pytest
 ```
 
-377 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+389 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -74,6 +76,6 @@ pytest
 | Sprint 3 | US-4, 5, 9, 10, 16, 17, 23, 25, 30, 31, 32, 33 | ✓ Complete |
 | Sprint 4 | US-28, 29, 34, 35, 36, 37, 38, 41, 42, 43 | ✓ Complete |
 
-All 43 user stories implemented. 377 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/audit.md](docs/audit.md) for the diagram-by-diagram surface and `Code →` mapping, plus [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
+All 43 user stories implemented. 389 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/audit.md](docs/audit.md) for the diagram-by-diagram surface and `Code →` mapping, plus [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
 
 The sidebar is consolidated into 10 entries via per-actor `Manage*` / `Browse*` / `My*` pages (Exception C in [CLAUDE.md](CLAUDE.md)). Role-based gating filters pages by the logged-in user's role.
