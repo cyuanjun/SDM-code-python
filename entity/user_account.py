@@ -1,11 +1,14 @@
-"""UserAccount <<Entity>> — Sprint 1 (US-6, login) + Sprint 2 (US-7 view, US-8 update)
-+ Sprint 3 (US-9 suspend, US-10 search)."""
+"""UserAccount <<Entity>>."""
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
+from datetime import date
 from typing import Optional
 
+
 from persistence.db import get_connection
+from persistence.ids import next_id
 
 
 @dataclass
@@ -13,23 +16,11 @@ class UserAccount:
     email: str
     password: str
     name: str
-    dob: str
+    dob: date
     phone_num: str
-    profile_id: int
-    account_id: Optional[int] = None
+    profile_id: str
     suspended: bool = False
-
-    @classmethod
-    def login(cls, email: str, password: str) -> Optional["UserAccount"]:
-        with get_connection() as conn:
-            row = conn.execute(
-                "SELECT account_id, email, password, name, dob, phone_num, profile_id, suspended "
-                "FROM user_account WHERE email = ? AND password = ? AND suspended = 0",
-                (email, password),
-            ).fetchone()
-        if row is None:
-            return None
-        return cls._from_row(row)
+    account_id: Optional[str] = None
 
     @classmethod
     def create_account(
@@ -37,50 +28,48 @@ class UserAccount:
         email: str,
         password: str,
         name: str,
-        dob: str,
+        dob: date,
         phone_num: str,
-        profile_id: int,
+        profile_id: str,
     ) -> Optional["UserAccount"]:
-        with get_connection() as conn:
-            existing = conn.execute(
-                "SELECT 1 FROM user_account WHERE email = ?", (email,)
-            ).fetchone()
-            if existing is not None:
-                return None
-            cursor = conn.execute(
-                "INSERT INTO user_account (email, password, name, dob, phone_num, profile_id) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (email, password, name, dob, phone_num, profile_id),
-            )
-            account_id = cursor.lastrowid
+        try:
+            with get_connection() as conn:
+                new_id = next_id(conn, "user_account", "account_id", "acc")
+                conn.execute(
+                    "INSERT INTO user_account "
+                    "(account_id, email, password, name, dob, phone_num, profile_id, suspended) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+                    (new_id, email, password, name, dob.isoformat(), phone_num, profile_id),
+                )
+        except sqlite3.IntegrityError:
+            return None
         return cls(
+            account_id=new_id,
             email=email,
             password=password,
             name=name,
             dob=dob,
             phone_num=phone_num,
             profile_id=profile_id,
-            account_id=account_id,
+            suspended=False,
         )
 
     @classmethod
     def view_user_account(cls, account_id: str) -> Optional["UserAccount"]:
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT account_id, email, password, name, dob, phone_num, profile_id, suspended "
-                "FROM user_account WHERE account_id = ?",
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account WHERE account_id = ?",
                 (account_id,),
             ).fetchone()
-        if row is None:
-            return None
-        return cls._from_row(row)
+        return None if row is None else cls._from_row(row)
 
     @classmethod
     def view_all_user_accounts(cls) -> list["UserAccount"]:
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT account_id, email, password, name, dob, phone_num, profile_id, suspended "
-                "FROM user_account ORDER BY account_id"
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account ORDER BY account_id"
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -88,46 +77,27 @@ class UserAccount:
     def update_user_account(
         cls, account_id: str, updated_account: "UserAccount"
     ) -> bool:
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE user_account SET email = ?, password = ?, name = ?, dob = ?, "
-                "phone_num = ?, profile_id = ?, suspended = ? WHERE account_id = ?",
-                (
-                    updated_account.email,
-                    updated_account.password,
-                    updated_account.name,
-                    updated_account.dob,
-                    updated_account.phone_num,
-                    updated_account.profile_id,
-                    int(updated_account.suspended),
-                    account_id,
-                ),
-            )
-        return cursor.rowcount > 0
-
-    @classmethod
-    def suspend_user_account(cls, account_id: str) -> bool:
-        """US-9. Marks the account suspended; login() rejects suspended rows."""
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE user_account SET suspended = 1 WHERE account_id = ?",
-                (account_id,),
-            )
-        return cursor.rowcount > 0
-
-    @classmethod
-    def submit_search_criteria(cls, search_criteria: str) -> list["UserAccount"]:
-        """US-10. Case-insensitive substring match on email or name."""
-        like = f"%{search_criteria}%"
-        with get_connection() as conn:
-            rows = conn.execute(
-                "SELECT account_id, email, password, name, dob, phone_num, "
-                "profile_id, suspended FROM user_account "
-                "WHERE email LIKE ? OR name LIKE ? "
-                "ORDER BY account_id",
-                (like, like),
-            ).fetchall()
-        return [cls._from_row(row) for row in rows]
+        try:
+            with get_connection() as conn:
+                cursor = conn.execute(
+                    "UPDATE user_account SET email = ?, password = ?, name = ?, "
+                    "dob = ?, phone_num = ?, profile_id = ?, suspended = ? "
+                    "WHERE account_id = ?",
+                    (
+                        updated_account.email,
+                        updated_account.password,
+                        updated_account.name,
+                        updated_account.dob.isoformat(),
+                        updated_account.phone_num,
+                        updated_account.profile_id,
+                        1 if updated_account.suspended else 0,
+                        account_id,
+                    ),
+                )
+                affected = cursor.rowcount
+        except sqlite3.IntegrityError:
+            return False
+        return affected > 0
 
     @classmethod
     def _from_row(cls, row) -> "UserAccount":
@@ -136,8 +106,51 @@ class UserAccount:
             email=row["email"],
             password=row["password"],
             name=row["name"],
-            dob=row["dob"],
+            dob=date.fromisoformat(row["dob"]),
             phone_num=row["phone_num"],
             profile_id=row["profile_id"],
             suspended=bool(row["suspended"]),
         )
+
+    @classmethod
+    def login(cls, email: str, password: str) -> Optional["UserAccount"]:
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account "
+                "WHERE email = ? AND password = ? AND suspended = 0 "
+                "ORDER BY account_id LIMIT 1",
+                (email, password),
+            ).fetchone()
+        return None if row is None else cls._from_row(row)
+
+    @classmethod
+    def suspend_user_account(cls, account_id: str) -> bool:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_account SET suspended = 1 WHERE account_id = ?",
+                (account_id,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def unsuspend_user_account(cls, account_id: str) -> bool:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE user_account SET suspended = 0 WHERE account_id = ?",
+                (account_id,),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def search_user_account(cls, search_criteria: str) -> list["UserAccount"]:
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT account_id, email, password, name, dob, phone_num, "
+                "profile_id, suspended FROM user_account "
+                "WHERE LOWER(email) LIKE ? OR LOWER(name) LIKE ? "
+                "ORDER BY account_id",
+                (like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]

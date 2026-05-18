@@ -1,4 +1,4 @@
-"""CreateFundraisingActivityCategoryPage <<Boundary>> — Sprint 4 diagram US-34."""
+"""CreateFundraisingActivityCategoryPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -10,42 +10,44 @@ from controller.create_fundraising_activity_category_controller import (
 
 class CreateFundraisingActivityCategoryPage:
     def render(self) -> None:
-        self.display_create_category_page()
-
-    def display_create_category_page(self) -> None:
-        st.header("Create fundraising activity category")
-        with st.form("create_category_form"):
-            category_name = st.text_input("Category name")
+        st.header("Create Fundraising Activity Category")
+        with st.form("create_fra_category_form"):
+            name = st.text_input("Category name")
             description = st.text_area("Description")
-            submitted = st.form_submit_button("Create category", type="primary")
+            submitted = st.form_submit_button("Create category")
 
         if not submitted:
             return
-        if not self._validate(category_name, description):
+
+        if not self.validate_category(name, description):
+            self.display_error()
             return
 
-        success = CreateFundraisingActivityCategoryController().create_category(
-            category_name.strip(), description.strip()
+        cat = (
+            CreateFundraisingActivityCategoryController()
+            .create_category(
+                category_name=name.strip(), description=description.strip()
+            )
         )
-        if success:
-            self.display_success()
-        else:
-            self.display_error()
+        if cat is None:
+            self.display_duplicate_name_error()
+            return
+        self.display_success(cat)
 
     @staticmethod
-    def _validate(category_name: str, description: str) -> bool:
-        if not category_name.strip():
-            st.error("Category name is required.")
-            return False
-        if not description.strip():
-            st.error("Description is required.")
-            return False
-        return True
+    def validate_category(name: str, description: str) -> bool:
+        return bool(name.strip()) and bool(description.strip())
 
     @staticmethod
-    def display_success() -> None:
-        st.success("Category created.")
+    def display_success(category) -> None:
+        st.success(
+            f"Category created: {category.fra_cat_id} ({category.category_name})"
+        )
 
     @staticmethod
     def display_error() -> None:
-        st.error("Could not create category — name may already exist.")
+        st.error("Both category name and description are required.")
+
+    @staticmethod
+    def display_duplicate_name_error() -> None:
+        st.error("A category with that name already exists.")

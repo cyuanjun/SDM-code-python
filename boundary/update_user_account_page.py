@@ -1,124 +1,144 @@
-"""UpdateUserAccountPage <<Boundary>> — Sprint 2 diagram US-8."""
+"""UpdateUserAccountPage <<Boundary>>."""
 from __future__ import annotations
 
-import re
 from datetime import date
 
 import streamlit as st
 
-from controller.update_user_account_controller import UpdateUserAccountController
-from controller.view_profiles_controller import ViewProfilesController
+from controller.update_user_account_controller import (
+    UpdateUserAccountController,
+)
+from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_account_controller import ViewUserAccountController
 from entity.user_account import UserAccount
 
-EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-EDIT_KEY = "editing_account_id"
+SELECTED_KEY = "update_account_selected_id"
 
 
 class UpdateUserAccountPage:
     def render(self) -> None:
-        st.header("Update user account")
+        st.header("Update User Account")
+
+        if SELECTED_KEY not in st.session_state:
+            self._render_picker()
+            return
 
         controller = ViewUserAccountController()
-        accounts = controller.view_all_user_accounts()
-        if not accounts:
-            st.info("No accounts to update.")
-            return
-
-        if EDIT_KEY not in st.session_state:
-            st.caption("Select an account to edit:")
-            labels = {f"#{a.account_id} — {a.email}": a.account_id for a in accounts}
-            choice = st.selectbox("Account", list(labels.keys()))
-            if st.button("Edit", key="click_edit_option_account"):
-                self.click_edit_option(str(labels[choice]))
-                st.rerun()
-            return
-
-        self.display_update_page()
-
-    def display_update_page(self) -> None:
-        account_id = st.session_state[EDIT_KEY]
-        current = ViewUserAccountController().view_user_account(account_id)
+        current = controller.view_user_account(st.session_state[SELECTED_KEY])
         if current is None:
-            st.error("Account not found.")
-            st.session_state.pop(EDIT_KEY, None)
+            st.error("Selected account no longer exists.")
+            st.session_state.pop(SELECTED_KEY, None)
             return
 
         profiles = ViewProfilesController().view_all_profiles()
-        profile_labels = {f"#{p.profile_id} — {p.role}": p.profile_id for p in profiles}
-        try:
-            current_profile_label = next(
-                lbl for lbl, pid in profile_labels.items() if pid == current.profile_id
-            )
-        except StopIteration:
-            current_profile_label = next(iter(profile_labels))
-
-        try:
-            dob_value = date.fromisoformat(current.dob) if current.dob else date(2000, 1, 1)
-        except ValueError:
-            dob_value = date(2000, 1, 1)
+        profile_options = {
+            f"{p.profile_id} — {p.role}": p.profile_id for p in profiles
+        }
+        current_label = next(
+            (label for label, pid in profile_options.items()
+             if pid == current.profile_id),
+            list(profile_options.keys())[0] if profile_options else None,
+        )
 
         with st.form("update_account_form"):
+            st.write(f"**Editing:** {current.account_id}")
             email = st.text_input("Email", value=current.email)
-            password = st.text_input("Password", value=current.password)
+            password = st.text_input(
+                "Password", value=current.password, type="password"
+            )
             name = st.text_input("Name", value=current.name)
-            dob = st.date_input("Date of birth", value=dob_value, min_value=date(1900, 1, 1))
-            phone_num = st.text_input("Phone number", value=current.phone_num or "")
+            dob = st.date_input(
+                "Date of birth",
+                value=current.dob,
+                min_value=date(1900, 1, 1),
+                max_value=date.today(),
+            )
+            phone_num = st.text_input("Phone number", value=current.phone_num)
             profile_label = st.selectbox(
                 "Profile",
-                list(profile_labels.keys()),
-                index=list(profile_labels.keys()).index(current_profile_label),
+                list(profile_options.keys()),
+                index=list(profile_options.keys()).index(current_label)
+                if current_label in profile_options else 0,
             )
             suspended = st.checkbox("Suspended", value=current.suspended)
-            cols = st.columns(2)
-            submitted = cols[0].form_submit_button("Save changes", type="primary")
-            cancelled = cols[1].form_submit_button("Cancel")
 
-        if cancelled:
-            st.session_state.pop(EDIT_KEY, None)
+            col_a, col_b = st.columns(2)
+            with col_a:
+                submitted = st.form_submit_button("Save changes")
+            with col_b:
+                cancel = st.form_submit_button("Cancel")
+
+        if cancel:
+            st.session_state.pop(SELECTED_KEY, None)
             st.rerun()
             return
 
         if not submitted:
             return
 
-        if not self._validate(email, password, name, phone_num):
+        if not self.validate_account(email, password, name, phone_num):
+            self.display_error()
             return
 
-        updated = UserAccount(
-            email=email,
-            password=password,
-            name=name,
-            dob=str(dob),
-            phone_num=phone_num,
-            profile_id=int(profile_labels[profile_label]),
-            account_id=int(account_id),
-            suspended=suspended,
+        ok = UpdateUserAccountController().update_user_account(
+            st.session_state[SELECTED_KEY],
+            UserAccount(
+                email=email.strip(),
+                password=password,
+                name=name.strip(),
+                dob=dob,
+                phone_num=phone_num.strip(),
+                profile_id=profile_options[profile_label],
+                suspended=suspended,
+            ),
         )
-        success = UpdateUserAccountController().update_user_account(account_id, updated)
-        if success:
+        if ok:
             self.display_success()
-            st.session_state.pop(EDIT_KEY, None)
+            st.session_state.pop(SELECTED_KEY, None)
         else:
             self.display_error()
 
     @staticmethod
-    def click_edit_option(account_id: str) -> None:
-        st.session_state[EDIT_KEY] = account_id
+    def _render_picker() -> None:
+        accounts = ViewUserAccountController().view_all_user_accounts()
+        if not accounts:
+            st.info("No user accounts yet — create one first.")
+            return
+
+        st.caption("Pick an account to update.")
+        rows = [
+            {
+                "ID": a.account_id,
+                "Email": a.email,
+                "Name": a.name,
+                "Profile": a.profile_id,
+                "Suspended": "yes" if a.suspended else "no",
+            }
+            for a in accounts
+        ]
+        event = st.dataframe(
+            rows,
+            width="stretch",
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+        )
+        selected = event.selection.rows
+        if selected:
+            st.session_state[SELECTED_KEY] = accounts[selected[0]].account_id
+            st.rerun()
 
     @staticmethod
-    def _validate(email: str, password: str, name: str, phone_num: str) -> bool:
-        if not all([email, password, name, phone_num]):
-            st.error("All fields are required.")
+    def validate_account(
+        email: str, password: str, name: str, phone_num: str
+    ) -> bool:
+        if not email.strip() or "@" not in email:
             return False
-        if not EMAIL_PATTERN.match(email):
-            st.error("Email format is invalid.")
+        if not password:
             return False
-        if len(password) < 6:
-            st.error("Password must be at least 6 characters.")
+        if not name.strip():
             return False
-        if not phone_num.replace("+", "").replace(" ", "").isdigit():
-            st.error("Phone number must contain digits only.")
+        if not phone_num.strip():
             return False
         return True
 
@@ -128,4 +148,7 @@ class UpdateUserAccountPage:
 
     @staticmethod
     def display_error() -> None:
-        st.error("Could not update account.")
+        st.error(
+            "Update failed. Email must contain '@', and email, password, "
+            "name, and phone number are all required."
+        )

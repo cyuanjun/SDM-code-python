@@ -1,4 +1,4 @@
-"""UpdateUserAccountController <<Controller>> — pure delegator, see Sprint 2 diagram US-8."""
+"""UpdateUserAccountController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_account import UserAccount

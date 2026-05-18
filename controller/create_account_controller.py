@@ -1,7 +1,7 @@
-"""CreateAccountController <<Controller>> — pure delegator, see Sprint 1 diagram US-6."""
+"""CreateAccountController <<Controller>>."""
 from __future__ import annotations
 
-from typing import Optional
+from datetime import date
 
 from entity.user_account import UserAccount
 
@@ -12,8 +12,15 @@ class CreateAccountController:
         email: str,
         password: str,
         name: str,
-        dob: str,
+        dob: date,
         phone_num: str,
-        profile_id: int,
-    ) -> Optional[UserAccount]:
-        return UserAccount.create_account(email, password, name, dob, phone_num, profile_id)
+        profile_id: str,
+    ) -> UserAccount:
+        return UserAccount.create_account(
+            email=email,
+            password=password,
+            name=name,
+            dob=dob,
+            phone_num=phone_num,
+            profile_id=profile_id,
+        )

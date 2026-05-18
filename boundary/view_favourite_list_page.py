@@ -1,47 +1,55 @@
-"""ViewFavouriteListPage <<Boundary>> — Sprint 2 diagram US-24."""
+"""ViewFavouriteListPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
 
+from controller.search_favourite_controller import SearchFavouriteController
 from controller.view_favourite_list_controller import ViewFavouriteListController
-from controller.view_fundraising_activity_controller import (
-    ViewFundraisingActivityController,
-)
 
 
 class ViewFavouriteListPage:
     def render(self) -> None:
-        st.header("My favourites")
+        st.header("My Favourites")
 
         if "user" not in st.session_state:
-            st.warning("Log in as a donee first.")
+            st.warning("Please log in first.")
             return
+
         account_id = st.session_state["user"].account_id
 
-        favourites = ViewFavouriteListController().view_favourite_list(account_id)
-        self.display_favourite_list(favourites)
+        search_term = st.text_input(
+            "Search my favourites",
+            placeholder="Activity title, description, or category…",
+        )
+        if search_term.strip():
+            favourites = SearchFavouriteController().search_favourite(
+                account_id=account_id, search_criteria=search_term.strip(),
+            )
+            self.display_matching_favourites(favourites)
+        else:
+            favourites = ViewFavouriteListController().view_favourite_list(account_id)
+            self.display_favourite_list(favourites)
 
-    @staticmethod
-    def display_favourite_list(favourite_list) -> None:
-        if not favourite_list:
-            st.info("Your favourites list is empty.")
+    def display_favourite_list(self, favourites) -> None:
+        if not favourites:
+            st.info("You haven't favourited any activities yet.")
             return
 
-        view_ctrl = ViewFundraisingActivityController()
-        rows = []
-        for fav in favourite_list:
-            activity = view_ctrl.view_fundraising_activity_details(str(fav.activity_id))
-            if activity is None:
-                continue
-            rows.append({
-                "ID": activity.activity_id,
-                "Title": activity.title,
-                "Category": activity.category,
-                "Status": activity.status,
-                "Target": activity.target_amount,
-                "Start": activity.start_date,
-                "End": activity.end_date,
-            })
+        st.caption(f"{len(favourites)} favourite activities")
+        self._render_table(favourites)
 
-        st.caption(f"{len(rows)} favourited activities")
+    def display_matching_favourites(self, favourites) -> None:
+        if not favourites:
+            st.info("No favourites match.")
+            return
+
+        st.caption(f"{len(favourites)} match")
+        self._render_table(favourites)
+
+    @staticmethod
+    def _render_table(favourites) -> None:
+        rows = [
+            {"Activity": f.fra_id, "Account": f.account_id}
+            for f in favourites
+        ]
         st.dataframe(rows, width="stretch", hide_index=True)

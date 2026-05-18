@@ -1,4 +1,4 @@
-"""ViewUserProfileController <<Controller>> — pure delegator, see Sprint 2 diagram US-2."""
+"""ViewUserProfileController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

@@ -1,0 +1,525 @@
+"""ManageMyFundraisingActivityPage <<Boundary>>."""
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal, InvalidOperation
+
+import streamlit as st
+
+from controller.create_fundraising_activity_controller import (
+    CreateFundraisingActivityController,
+)
+from controller.search_my_completed_fundraising_activity_controller import (
+    SearchMyCompletedFundraisingActivityController,
+)
+from controller.search_my_fundraising_activity_controller import (
+    SearchMyFundraisingActivityController,
+)
+from controller.suspend_my_fundraising_activity_controller import (
+    SuspendMyFundraisingActivityController,
+)
+from controller.non_diagram.unsuspend_my_fundraising_activity_controller import (
+    UnsuspendMyFundraisingActivityController,
+)
+from controller.update_my_fundraising_activity_controller import (
+    UpdateMyFundraisingActivityController,
+)
+from controller.view_fundraising_activity_category_controller import (
+    ViewFundraisingActivityCategoryController,
+)
+from controller.view_fundraising_activity_save_count_controller import (
+    ViewFundraisingActivitySaveCountController,
+)
+from controller.view_fundraising_activity_view_count_controller import (
+    ViewFundraisingActivityViewCountController,
+)
+from controller.view_my_fundraising_activity_controller import (
+    ViewMyFundraisingActivityController,
+)
+
+def _category_lookup() -> dict[str, str]:
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.fra_cat_id: c.category_name for c in cats}
+
+
+def _active_category_options() -> dict[str, str]:
+    cats = ViewFundraisingActivityCategoryController().view_all_categories()
+    return {c.category_name: c.fra_cat_id for c in cats if not c.suspended}
+
+SELECTED_KEY = "manage_my_fra_selected_id"
+EDIT_MODE_KEY = "manage_my_fra_edit_mode"
+SELECTED_TAB_KEY = "manage_my_fra_selected_tab"
+CREATE_MODE_KEY = "manage_my_fra_create_mode"
+JUST_CREATED_KEY = "manage_my_fra_just_created"
+ACTION_MSG_KEY = "manage_my_fra_action_msg"
+
+
+class ManageMyFundraisingActivityPage:
+    def render(self) -> None:
+        if "user" not in st.session_state:
+            st.header("Manage My Fundraising Activities")
+            st.warning("Please log in first.")
+            return
+
+        owner_account_id = st.session_state["user"].account_id
+
+        if st.session_state.get(CREATE_MODE_KEY):
+            self._render_create(owner_account_id)
+            return
+
+        if SELECTED_KEY in st.session_state:
+            in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
+            title = (
+                "Update My Fundraising Activity" if in_edit
+                else "View My Fundraising Activity"
+            )
+            self._render_detail_header(title)
+            self._render_detail(owner_account_id)
+            return
+
+        col_title, col_create = st.columns([4, 1])
+        with col_title:
+            st.header("Manage My Fundraising Activities")
+        with col_create:
+            st.write("")
+            if st.button(
+                "+ Create new fundraising activity",
+                key="manage_my_fra_create_btn",
+                use_container_width=True,
+            ):
+                st.session_state[CREATE_MODE_KEY] = True
+                st.rerun()
+        self._render_list(owner_account_id)
+
+    def _render_create(self, owner_account_id: str) -> None:
+        st.header("Create Fundraising Activity")
+
+        if JUST_CREATED_KEY in st.session_state:
+            created = st.session_state[JUST_CREATED_KEY]
+            cat_lookup = _category_lookup()
+            st.success(
+                "\n\n".join([
+                    f"**Activity created: {created.fra_id}**",
+                    f"**Title:** {created.title}",
+                    f"**Description:** {created.description}",
+                    f"**Target:** ${created.target_amount}",
+                    f"**Category:** {cat_lookup.get(created.fra_cat_id, created.fra_cat_id)}",
+                    f"**Runs:** {created.start_date.isoformat()} → "
+                    f"{created.end_date.isoformat()}",
+                    f"**Owner:** {created.owner_account_id}",
+                    f"**Completed:** {'yes' if created.completed else 'no'}",
+                    f"**Suspended:** {'yes' if created.suspended else 'no'}",
+                ])
+            )
+            if st.button("← Back to my activities"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.session_state.pop(JUST_CREATED_KEY, None)
+                st.rerun()
+            return
+
+        cat_options = _active_category_options()
+        if not cat_options:
+            st.warning(
+                "No active categories exist yet. Ask the platform manager "
+                "to create one before adding fundraising activities."
+            )
+            if st.button("← Back to my activities"):
+                st.session_state.pop(CREATE_MODE_KEY, None)
+                st.rerun()
+            return
+
+        with st.form("manage_my_fra_create_form"):
+            title = st.text_input("Title")
+            description = st.text_area("Description")
+            target_amount_str = st.text_input("Target amount", value="0.00")
+            category_name = st.selectbox("Category", list(cat_options.keys()))
+            fra_cat_id = cat_options[category_name]
+            start_date = st.date_input("Start date", value=date.today())
+            end_date = st.date_input("End date", value=date.today())
+            col_submit, col_cancel, _ = st.columns([1, 1, 4])
+            with col_submit:
+                submitted = st.form_submit_button(
+                    "Create", use_container_width=True
+                )
+            with col_cancel:
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
+
+        if cancel:
+            st.session_state.pop(CREATE_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate_create(
+            title, description, target_amount_str,
+            fra_cat_id, start_date, end_date,
+        ):
+            st.error(
+                "All fields required; target must be positive; "
+                "start date must be on/before end date and not in the past."
+            )
+            return
+
+        new_activity = (
+            CreateFundraisingActivityController().create_fundraising_activity(
+                title=title.strip(),
+                description=description.strip(),
+                target_amount=Decimal(target_amount_str),
+                fra_cat_id=fra_cat_id,
+                start_date=start_date,
+                end_date=end_date,
+                owner_account_id=owner_account_id,
+            )
+        )
+        st.session_state[JUST_CREATED_KEY] = new_activity
+        st.rerun()
+
+    def _render_list(self, owner_account_id: str) -> None:
+        all_tab, completed_tab = st.tabs(["All", "Completed"])
+        with all_tab:
+            self._render_tab(owner_account_id, completed_only=False)
+        with completed_tab:
+            self._render_tab(owner_account_id, completed_only=True)
+
+    def _render_tab(
+        self, owner_account_id: str, completed_only: bool
+    ) -> None:
+        key_prefix = "completed" if completed_only else "all"
+        search_term = st.text_input(
+            "Search activities",
+            placeholder="Title, description, or category…",
+            key=f"manage_my_fra_search_{key_prefix}",
+        )
+
+        if completed_only:
+            if search_term.strip():
+                activities = (
+                    SearchMyCompletedFundraisingActivityController()
+                    .search_my_completed_fundraising_activity(
+                        owner_account_id=owner_account_id,
+                        search_criteria=search_term.strip(),
+                    )
+                )
+            else:
+                all_mine = (
+                    ViewMyFundraisingActivityController()
+                    .view_my_fundraising_activities(
+                        owner_account_id=owner_account_id
+                    )
+                )
+                activities = [a for a in all_mine if a.completed]
+        else:
+            if search_term.strip():
+                activities = (
+                    SearchMyFundraisingActivityController()
+                    .search_my_fundraising_activity(
+                        owner_account_id=owner_account_id,
+                        search_criteria=search_term.strip(),
+                    )
+                )
+            else:
+                activities = (
+                    ViewMyFundraisingActivityController()
+                    .view_my_fundraising_activities(
+                        owner_account_id=owner_account_id
+                    )
+                )
+
+        if not activities:
+            st.info("No activities to show.")
+            return
+
+        st.caption(f"{len(activities)} activity(s) — click a row to view")
+        cat_lookup = _category_lookup()
+        rows = [
+            {
+                "ID": a.fra_id,
+                "Title": a.title,
+                "Category": cat_lookup.get(a.fra_cat_id, a.fra_cat_id),
+                "Target": f"${a.target_amount}",
+                "Start": a.start_date.isoformat(),
+                "End": a.end_date.isoformat(),
+                "Completed": "yes" if a.completed else "no",
+                "Suspended": "yes" if a.suspended else "no",
+            }
+            for a in activities
+        ]
+        event = st.dataframe(
+            rows,
+            width="stretch",
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+            key=f"manage_my_fra_table_{key_prefix}",
+        )
+        selected = event.selection.rows
+        if selected:
+            st.session_state[SELECTED_KEY] = activities[selected[0]].fra_id
+            st.session_state[SELECTED_TAB_KEY] = (
+                "completed" if completed_only else "all"
+            )
+            st.rerun()
+
+    def _render_detail(self, owner_account_id: str) -> None:
+        fra_id = st.session_state[SELECTED_KEY]
+        tab = st.session_state.get(SELECTED_TAB_KEY, "all")
+
+        current = (
+            ViewMyFundraisingActivityController()
+            .view_my_fundraising_activity(
+                owner_account_id=owner_account_id, fra_id=fra_id,
+            )
+        )
+
+        if current is None:
+            st.error("Activity is not yours or no longer exists.")
+            st.session_state.pop(SELECTED_KEY, None)
+            return
+
+        if st.session_state.get(EDIT_MODE_KEY):
+            self._render_edit_form(current, owner_account_id)
+        else:
+            self._render_view(current, owner_account_id)
+
+        self._render_bottom_bar()
+
+    def _render_detail_header(self, title: str) -> None:
+        msg = st.session_state.get(ACTION_MSG_KEY)
+        if not msg:
+            st.header(title)
+            return
+        st.markdown(
+            f'<div style="display:flex; align-items:center; gap:1rem; '
+            f'flex-wrap:wrap; margin:0 0 1rem 0;">'
+            f'<h2 style="margin:0; padding:0;">{title}</h2>'
+            f'<div style="background-color:rgba(45,195,99,0.18); '
+            f'color:rgb(73,197,100); padding:0.5rem 1rem; '
+            f'border-radius:0.5rem; font-size:1rem; '
+            f'text-align:center; white-space:nowrap;">{msg}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    def _render_bottom_bar(self) -> None:
+        in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
+        st.divider()
+        cols = st.columns([1, 1, 4])
+        with cols[0]:
+            label = "← Back to activity" if in_edit else "← Back to list"
+            if st.button(
+                label,
+                key=f"manage_my_fra_back_{in_edit}",
+                use_container_width=True,
+            ):
+                st.session_state.pop(EDIT_MODE_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                if not in_edit:
+                    st.session_state.pop(SELECTED_KEY, None)
+                    st.session_state.pop(SELECTED_TAB_KEY, None)
+                st.rerun()
+
+    def _render_view(self, activity, owner_account_id: str) -> None:
+        st.subheader(activity.title)
+        cat_lookup = _category_lookup()
+        st.write(f"**FRAId:** {activity.fra_id}")
+        st.write(
+            f"**Category:** "
+            f"{cat_lookup.get(activity.fra_cat_id, activity.fra_cat_id)}"
+        )
+        st.write(f"**Target:** ${activity.target_amount}")
+        st.write(
+            f"**Runs:** {activity.start_date.isoformat()} → "
+            f"{activity.end_date.isoformat()}"
+        )
+        st.write(f"**Completed:** {'yes' if activity.completed else 'no'}")
+        st.write(f"**Suspended:** {'yes' if activity.suspended else 'no'}")
+        st.write(activity.description)
+
+        view_count = (
+            ViewFundraisingActivityViewCountController()
+            .view_fundraising_activity_view_count(activity.fra_id)
+        )
+        save_count = (
+            ViewFundraisingActivitySaveCountController()
+            .view_fundraising_activity_save_count(activity.fra_id)
+        )
+        col_metrics = st.columns(2)
+        col_metrics[0].metric("Views", view_count)
+        col_metrics[1].metric("Saves", save_count)
+
+        col_update, col_suspend, _ = st.columns([1, 1, 4])
+        with col_update:
+            if (
+                not activity.completed
+                and st.button("✏️ Update", use_container_width=True)
+            ):
+                st.session_state[EDIT_MODE_KEY] = True
+                st.session_state.pop(ACTION_MSG_KEY, None)
+                st.rerun()
+        with col_suspend:
+            if activity.completed:
+                pass
+            elif activity.suspended:
+                if st.button(
+                    "✅ Unsuspend", use_container_width=True
+                ):
+                    ok = (
+                        UnsuspendMyFundraisingActivityController()
+                        .unsuspend_my_fundraising_activity(
+                            owner_account_id=owner_account_id,
+                            fra_id=activity.fra_id,
+                        )
+                    )
+                    if ok:
+                        st.session_state[ACTION_MSG_KEY] = "Activity unsuspended"
+                        st.rerun()
+                    else:
+                        st.error("Could not unsuspend.")
+            else:
+                if st.button(
+                    "🚫 Suspend", use_container_width=True
+                ):
+                    ok = (
+                        SuspendMyFundraisingActivityController()
+                        .suspend_my_fundraising_activity(
+                            owner_account_id=owner_account_id,
+                            fra_id=activity.fra_id,
+                        )
+                    )
+                    if ok:
+                        st.session_state[ACTION_MSG_KEY] = "Activity suspended"
+                        st.rerun()
+                    else:
+                        st.error("Could not suspend.")
+
+    def _render_edit_form(self, activity, owner_account_id: str) -> None:
+        st.subheader(activity.title)
+        st.caption(f"Editing {activity.fra_id}")
+        is_completed_view = ACTION_MSG_KEY in st.session_state
+
+        cat_options = _active_category_options()
+        cat_lookup = _category_lookup()
+        current_name = cat_lookup.get(activity.fra_cat_id)
+        if current_name and current_name not in cat_options:
+            cat_options = {current_name: activity.fra_cat_id, **cat_options}
+        ordered_names = list(cat_options.keys()) or ["(no categories)"]
+        default_index = (
+            ordered_names.index(current_name) if current_name in ordered_names else 0
+        )
+
+        with st.form("manage_my_fra_edit_form"):
+            title = st.text_input(
+                "Title", value=activity.title, disabled=is_completed_view
+            )
+            description = st.text_area(
+                "Description",
+                value=activity.description,
+                disabled=is_completed_view,
+            )
+            target_amount_str = st.text_input(
+                "Target amount",
+                value=str(activity.target_amount),
+                disabled=is_completed_view,
+            )
+            category_name = st.selectbox(
+                "Category",
+                ordered_names,
+                index=default_index,
+                disabled=is_completed_view,
+            )
+            fra_cat_id = cat_options.get(category_name, activity.fra_cat_id)
+            start_date = st.date_input(
+                "Start date",
+                value=activity.start_date,
+                disabled=is_completed_view,
+            )
+            end_date = st.date_input(
+                "End date", value=activity.end_date, disabled=is_completed_view
+            )
+            col_save, col_cancel, _ = st.columns([1, 1, 4])
+            with col_save:
+                submitted = st.form_submit_button(
+                    "Save changes",
+                    use_container_width=True,
+                    disabled=is_completed_view,
+                )
+            with col_cancel:
+                cancel = st.form_submit_button(
+                    "Cancel",
+                    use_container_width=True,
+                    disabled=is_completed_view,
+                )
+
+        if is_completed_view:
+            return
+
+        if cancel:
+            st.session_state.pop(EDIT_MODE_KEY, None)
+            st.rerun()
+            return
+        if not submitted:
+            return
+        if not self._validate_update(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date,
+        ):
+            st.error(
+                "Invalid input. Title, description, category, and a positive "
+                "numeric target are required, start date must be on/before end "
+                "date, and end date must not be in the past."
+            )
+            return
+
+        ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
+            owner_account_id=owner_account_id,
+            fra_id=activity.fra_id,
+            title=title.strip(),
+            description=description.strip(),
+            target_amount=Decimal(target_amount_str),
+            fra_cat_id=fra_cat_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if ok:
+            st.session_state[ACTION_MSG_KEY] = "Activity updated"
+            st.rerun()
+        else:
+            st.error("Update failed.")
+
+    @staticmethod
+    def _validate_common(
+        title: str, description: str, target_amount_str: str,
+        fra_cat_id: str, start_date: date, end_date: date,
+    ) -> bool:
+        if not title.strip() or not description.strip() or not fra_cat_id.strip():
+            return False
+        try:
+            amount = Decimal(target_amount_str)
+        except (InvalidOperation, ValueError):
+            return False
+        return amount > 0 and start_date <= end_date
+
+    @classmethod
+    def _validate_create(
+        cls,
+        title: str, description: str, target_amount_str: str,
+        fra_cat_id: str, start_date: date, end_date: date,
+    ) -> bool:
+        if not cls._validate_common(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date,
+        ):
+            return False
+        return start_date >= date.today()
+
+    @classmethod
+    def _validate_update(
+        cls,
+        title: str, description: str, target_amount_str: str,
+        fra_cat_id: str, start_date: date, end_date: date,
+    ) -> bool:
+        if not cls._validate_common(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date,
+        ):
+            return False
+        return end_date >= date.today()

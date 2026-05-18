@@ -1,12 +1,8 @@
-"""CreateFundraisingActivityPage <<Boundary>> — Sprint 1 diagram US-13.
-
-Sprint 4 update: replaced the hardcoded DEFAULT_CATEGORIES tuple with a
-lookup against the fundraising_activity_category table (US-34..38). Falls
-back to a free-text input when no active categories exist yet.
-"""
+"""CreateFundraisingActivityPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal, InvalidOperation
 
 import streamlit as st
 
@@ -20,25 +16,30 @@ from controller.view_fundraising_activity_category_controller import (
 
 class CreateFundraisingActivityPage:
     def render(self) -> None:
-        st.header("Create fundraising activity")
-        active_categories = [
-            c
-            for c in ViewFundraisingActivityCategoryController().view_all_categories()
-            if c.status == "active"
-        ]
-        with st.form("create_fsa_form"):
+        st.header("Create Fundraising Activity")
+
+        if "user" not in st.session_state:
+            st.warning("Please log in first.")
+            return
+
+        categories = (
+            ViewFundraisingActivityCategoryController().view_all_categories()
+        )
+        active_categories = [c for c in categories if not c.suspended]
+        if not active_categories:
+            st.warning(
+                "No active categories exist yet. Ask the platform manager "
+                "to create one before adding fundraising activities."
+            )
+            return
+
+        with st.form("create_fra_form"):
             title = st.text_input("Title")
             description = st.text_area("Description")
-            target_amount = st.number_input("Target amount", min_value=0.0, step=100.0)
-            if active_categories:
-                category = st.selectbox(
-                    "Category", [c.category_name for c in active_categories]
-                )
-            else:
-                st.caption(
-                    "No active categories yet — ask a Platform Manager to create one."
-                )
-                category = st.text_input("Category")
+            target_amount_str = st.text_input("Target amount", value="0.00")
+            cat_options = {c.category_name: c.fra_cat_id for c in active_categories}
+            category_name = st.selectbox("Category", list(cat_options.keys()))
+            fra_cat_id = cat_options[category_name]
             start_date = st.date_input("Start date", value=date.today())
             end_date = st.date_input("End date", value=date.today())
             submitted = st.form_submit_button("Create activity")
@@ -46,55 +47,67 @@ class CreateFundraisingActivityPage:
         if not submitted:
             return
 
-        if not self.validate_fundraising_activity(
-            title, description, target_amount, start_date, end_date, category
+        if not self.validate_activity(
+            title, description, target_amount_str, fra_cat_id, start_date, end_date
         ):
-            self.display_fundraising_activity_validation_error()
+            self.display_error()
             return
 
-        owner_account_id = (
-            st.session_state["user"].account_id if "user" in st.session_state else None
+        target_amount = Decimal(target_amount_str)
+        owner_account_id = st.session_state["user"].account_id
+
+        activity = (
+            CreateFundraisingActivityController().create_fundraising_activity(
+                title=title.strip(),
+                description=description.strip(),
+                target_amount=target_amount,
+                fra_cat_id=fra_cat_id,
+                start_date=start_date,
+                end_date=end_date,
+                owner_account_id=owner_account_id,
+            )
         )
-        success = CreateFundraisingActivityController().create_fundraising_activity(
-            title=title,
-            description=description,
-            target_amount=float(target_amount),
-            category=category,
-            start_date=start_date,
-            end_date=end_date,
-            owner_account_id=owner_account_id,
-        )
-        if success:
-            self.display_fundraising_activity_confirmation()
-        else:
-            self.display_fundraising_activity_validation_error()
+        self.display_success(activity)
 
     @staticmethod
-    def validate_fundraising_activity(
+    def validate_activity(
         title: str,
         description: str,
-        target_amount: float,
+        target_amount_str: str,
+        fra_cat_id: str,
         start_date: date,
         end_date: date,
-        category: str = "",
+        today: date | None = None,
     ) -> bool:
-        if not title.strip() or not description.strip():
+        if not title.strip():
             return False
-        if not (category or "").strip():
+        if not description.strip():
             return False
-        if target_amount <= 0:
+        if not fra_cat_id.strip():
+            return False
+        try:
+            amount = Decimal(target_amount_str)
+        except (InvalidOperation, ValueError):
+            return False
+        if amount <= 0:
             return False
         if start_date > end_date:
+            return False
+        if start_date < (today or date.today()):
             return False
         return True
 
     @staticmethod
-    def display_fundraising_activity_confirmation() -> None:
-        st.success("Fundraising activity created.")
+    def display_success(activity) -> None:
+        st.success(
+            f"Fundraising activity created: {activity.fra_id} — "
+            f"{activity.title} (target ${activity.target_amount})"
+        )
 
     @staticmethod
-    def display_fundraising_activity_validation_error() -> None:
+    def display_error() -> None:
         st.error(
-            "Invalid fundraising activity details. "
-            "Check that all fields are filled, target amount is positive, and dates are valid."
+            "Invalid fundraising activity. Title, description, category, and a "
+            "positive numeric target are required, start date must not be after "
+            "end date, and start date must not be in the past."
         )

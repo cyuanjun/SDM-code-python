@@ -1,13 +1,17 @@
-"""GenerateMonthlyReportController <<Controller>> — pure delegator, US-43."""
+"""GenerateMonthlyReportController <<Controller>>."""
 from __future__ import annotations
 
-from typing import Optional
+from datetime import date
 
 from entity.report import Report
 
 
 class GenerateMonthlyReportController:
     def generate_monthly_report(
-        self, start_date: str, end_date: str, platform_manager_id: Optional[int]
+        self, start_date: date, end_date: date, platform_manager_id: str
     ) -> Report:
-        return Report.generate_monthly_report(start_date, end_date, platform_manager_id)
+        return Report.generate_monthly_report(
+            start_date=start_date,
+            end_date=end_date,
+            platform_manager_id=platform_manager_id,
+        )

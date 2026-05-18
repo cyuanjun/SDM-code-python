@@ -1,11 +1,13 @@
-"""SearchFundraisingActivityCategoryController <<Controller>> — pure delegator, US-37."""
+"""SearchFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity_category import FundraisingActivityCategory
 
 
 class SearchFundraisingActivityCategoryController:
-    def submit_search_criteria(
+    def search_fundraising_activity_category(
         self, search_criteria: str
     ) -> list[FundraisingActivityCategory]:
-        return FundraisingActivityCategory.submit_search_criteria(search_criteria)
+        return FundraisingActivityCategory.search_fundraising_activity_category(
+            search_criteria
+        )

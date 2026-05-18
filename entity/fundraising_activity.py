@@ -1,67 +1,238 @@
-"""FundraisingActivity <<Entity>> — Sprint 1 (US-13, US-21) + Sprint 2 (US-14, US-15, US-20)
-+ Sprint 3 (US-16 suspend, US-17 fundraiser search, US-30 search completed, US-31 view completed).
-
-Note on owner field: Sprint 2 migrated owner_email -> owner_account_id to track
-account_id as the primary key. Sprint 1 callers passing owner_email should
-update to owner_account_id.
-
-Sprint 3 update: submit_search_criteria gained owner_account_id and status
-filter parameters to disambiguate the four use cases (US-17, US-20, US-30,
-deferred US-32) sharing the diagram method name. Diagrams to be updated
-before final marking — see docs/todo.md.
-"""
+"""FundraisingActivity <<Entity>>."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from typing import Optional
 
 from persistence.db import get_connection
+from persistence.ids import next_id
+
+
+_SELECT_COLUMNS = (
+    "fra_id, title, description, target_amount, fra_cat_id, "
+    "start_date, end_date, completed, suspended, owner_account_id, "
+    "view_count, save_count"
+)
 
 
 @dataclass
 class FundraisingActivity:
     title: str
     description: str
-    target_amount: float
-    category: str
-    start_date: str
-    end_date: str
-    status: str
-    activity_id: Optional[int] = None
-    owner_account_id: Optional[int] = None
+    target_amount: Decimal
+    fra_cat_id: str
+    start_date: date
+    end_date: date
+    owner_account_id: str
+    completed: bool = False
+    suspended: bool = False
     view_count: int = 0
     save_count: int = 0
-
-    def save_fundraising_activity(self) -> bool:
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "INSERT INTO fundraising_activity "
-                "(title, description, target_amount, category, start_date, end_date, "
-                "status, owner_account_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    self.title,
-                    self.description,
-                    self.target_amount,
-                    self.category,
-                    self.start_date,
-                    self.end_date,
-                    self.status,
-                    self.owner_account_id,
-                ),
-            )
-            self.activity_id = cursor.lastrowid
-        return self.activity_id is not None
+    fra_id: Optional[str] = None
 
     @classmethod
-    def view_fundraising_activity_details(
+    def create_fundraising_activity(
+        cls,
+        title: str,
+        description: str,
+        target_amount: Decimal,
+        fra_cat_id: str,
+        start_date: date,
+        end_date: date,
+        owner_account_id: str,
+    ) -> "FundraisingActivity":
+        completed = end_date < date.today()
+        with get_connection() as conn:
+            new_id = next_id(conn, "fundraising_activity", "fra_id", "fra")
+            conn.execute(
+                "INSERT INTO fundraising_activity "
+                "(fra_id, title, description, target_amount, fra_cat_id, start_date, "
+                " end_date, completed, suspended, owner_account_id, view_count, save_count) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0)",
+                (
+                    new_id,
+                    title,
+                    description,
+                    str(target_amount),
+                    fra_cat_id,
+                    start_date.isoformat(),
+                    end_date.isoformat(),
+                    1 if completed else 0,
+                    owner_account_id,
+                ),
+            )
+        return cls(
+            fra_id=new_id,
+            title=title,
+            description=description,
+            target_amount=target_amount,
+            fra_cat_id=fra_cat_id,
+            start_date=start_date,
+            end_date=end_date,
+            owner_account_id=owner_account_id,
+            completed=completed,
+            suspended=False,
+            view_count=0,
+            save_count=0,
+        )
+
+    @classmethod
+    def view_my_fundraising_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> Optional["FundraisingActivity"]:
+        with get_connection() as conn:
+            row = conn.execute(
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (fra_id, owner_account_id),
+            ).fetchone()
+        return None if row is None else cls._from_row(row)
+
+    @classmethod
+    def view_my_fundraising_activities(
+        cls, owner_account_id: str
+    ) -> list["FundraisingActivity"]:
+        with get_connection() as conn:
+            rows = conn.execute(
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
+                "WHERE owner_account_id = ? ORDER BY fra_id",
+                (owner_account_id,),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def suspend_my_fundraising_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> bool:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity SET suspended = 1 "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (fra_id, owner_account_id),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def unsuspend_my_fundraising_activity(
+        cls, owner_account_id: str, fra_id: str
+    ) -> bool:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity SET suspended = 0 "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (fra_id, owner_account_id),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def search_my_fundraising_activity(
+        cls, owner_account_id: str, search_criteria: str
+    ) -> list["FundraisingActivity"]:
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE a.owner_account_id = ? AND ("
+                "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
+                "  OR LOWER(c.category_name) LIKE ?"
+                ") ORDER BY a.fra_id",
+                (owner_account_id, like, like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def search_my_completed_fundraising_activity(
+        cls, owner_account_id: str, search_criteria: str
+    ) -> list["FundraisingActivity"]:
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE a.owner_account_id = ? AND a.completed = 1 AND ("
+                "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
+                "  OR LOWER(c.category_name) LIKE ?"
+                ") ORDER BY a.fra_id",
+                (owner_account_id, like, like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def view_my_completed_fundraising_activities(
+        cls, owner_account_id: str
+    ) -> list["FundraisingActivity"]:
+        with get_connection() as conn:
+            rows = conn.execute(
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
+                "WHERE owner_account_id = ? AND completed = 1 "
+                "ORDER BY fra_id",
+                (owner_account_id,),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def search_fundraising_activity(
+        cls, search_criteria: str
+    ) -> list["FundraisingActivity"]:
+        like = f"%{search_criteria.lower()}%"
+        with get_connection() as conn:
+            rows = conn.execute(
+                f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
+                "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
+                "WHERE a.suspended = 0 AND ("
+                "  LOWER(a.title) LIKE ? "
+                "   OR LOWER(a.description) LIKE ? "
+                "   OR LOWER(c.category_name) LIKE ? "
+                ") ORDER BY a.fra_id",
+                (like, like, like),
+            ).fetchall()
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def update_my_fundraising_activity(
+        cls,
+        owner_account_id: str,
+        fra_id: str,
+        title: str,
+        description: str,
+        target_amount: Decimal,
+        fra_cat_id: str,
+        start_date: date,
+        end_date: date,
+    ) -> bool:
+        completed = end_date < date.today()
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET title = ?, description = ?, target_amount = ?, "
+                "fra_cat_id = ?, start_date = ?, end_date = ?, "
+                "completed = ? "
+                "WHERE fra_id = ? AND owner_account_id = ?",
+                (
+                    title,
+                    description,
+                    str(target_amount),
+                    fra_cat_id,
+                    start_date.isoformat(),
+                    end_date.isoformat(),
+                    1 if completed else 0,
+                    fra_id,
+                    owner_account_id,
+                ),
+            )
+        return cursor.rowcount > 0
+
+    @classmethod
+    def view_fundraising_activity(
         cls, activity_id: str
     ) -> Optional["FundraisingActivity"]:
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id, view_count, save_count "
-                "FROM fundraising_activity WHERE activity_id = ?",
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
+                "WHERE fra_id = ?",
                 (activity_id,),
             ).fetchone()
         if row is None:
@@ -72,175 +243,79 @@ class FundraisingActivity:
     def view_all_fundraising_activities(cls) -> list["FundraisingActivity"]:
         with get_connection() as conn:
             rows = conn.execute(
-                "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id, view_count, save_count "
-                "FROM fundraising_activity ORDER BY activity_id"
+                f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
+                "WHERE suspended = 0 "
+                "ORDER BY fra_id"
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    def view_fundraiser_activity(
-        cls, activity_id: str
-    ) -> Optional["FundraisingActivity"]:
-        """US-14 — view a fundraiser's specific activity. Same lookup as
-        view_fundraising_activity_details; ownership filtering is done at the
-        Boundary list view."""
-        return cls.view_fundraising_activity_details(activity_id)
-
-    @classmethod
-    def view_activities_by_owner(
-        cls, owner_account_id: int
-    ) -> list["FundraisingActivity"]:
-        """Helper for the fundraiser list view (US-14/US-15). Not on diagram —
-        Boundary uses this to scope the list to the current fundraiser."""
-        with get_connection() as conn:
-            rows = conn.execute(
-                "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id, view_count, save_count "
-                "FROM fundraising_activity WHERE owner_account_id = ? "
-                "ORDER BY activity_id",
-                (owner_account_id,),
-            ).fetchall()
-        return [cls._from_row(row) for row in rows]
-
-    @classmethod
-    def update_fundraiser_activity(
-        cls, activity_id: str, updated_fundraiser: "FundraisingActivity"
-    ) -> bool:
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE fundraising_activity SET title = ?, description = ?, "
-                "target_amount = ?, category = ?, start_date = ?, end_date = ?, "
-                "status = ? WHERE activity_id = ?",
-                (
-                    updated_fundraiser.title,
-                    updated_fundraiser.description,
-                    updated_fundraiser.target_amount,
-                    updated_fundraiser.category,
-                    updated_fundraiser.start_date,
-                    updated_fundraiser.end_date,
-                    updated_fundraiser.status,
-                    activity_id,
-                ),
-            )
-        return cursor.rowcount > 0
-
-    @classmethod
-    def submit_search_criteria(
-        cls,
-        search_criteria: str,
-        owner_account_id: Optional[int] = None,
-        status: Optional[str] = None,
-    ) -> list["FundraisingActivity"]:
-        """Shared search for US-17, US-20, US-30. Matches title, description,
-        or category (case-insensitive substring). Optional filters narrow to
-        a specific owner (US-17, US-30) and/or a specific status (US-30).
-        """
-        like = f"%{search_criteria}%"
-        sql = (
-            "SELECT activity_id, title, description, target_amount, category, "
-            "start_date, end_date, status, owner_account_id, view_count, save_count "
-            "FROM fundraising_activity "
-            "WHERE (title LIKE ? OR description LIKE ? OR category LIKE ?)"
-        )
-        params: list = [like, like, like]
-        if owner_account_id is not None:
-            sql += " AND owner_account_id = ?"
-            params.append(owner_account_id)
-        if status is not None:
-            sql += " AND status = ?"
-            params.append(status)
-        sql += " ORDER BY activity_id"
-        with get_connection() as conn:
-            rows = conn.execute(sql, params).fetchall()
-        return [cls._from_row(row) for row in rows]
-
-    @classmethod
-    def suspend_fundraising_activity(cls, activity_id: str) -> bool:
-        """US-16 — fundraiser suspends donations on their activity."""
-        with get_connection() as conn:
-            cursor = conn.execute(
-                "UPDATE fundraising_activity SET status = 'suspended' "
-                "WHERE activity_id = ?",
-                (activity_id,),
-            )
-        return cursor.rowcount > 0
-
-    @classmethod
-    def view_completed_activity(
-        cls, activity_id: str
-    ) -> Optional["FundraisingActivity"]:
-        """US-31 — fundraiser views one of their completed activities. Returns
-        None when the row is missing or its status is not 'completed'."""
+    def view_fundraising_activity_view_count(cls, fra_id: str) -> int:
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT activity_id, title, description, target_amount, category, "
-                "start_date, end_date, status, owner_account_id, view_count, save_count "
-                "FROM fundraising_activity "
-                "WHERE activity_id = ? AND status = 'completed'",
-                (activity_id,),
-            ).fetchone()
-        if row is None:
-            return None
-        return cls._from_row(row)
-
-    @classmethod
-    def view_fundraising_activity_view_count(cls, activity_id: int) -> int:
-        """US-28. Returns 0 when the activity is missing."""
-        with get_connection() as conn:
-            row = conn.execute(
-                "SELECT view_count FROM fundraising_activity WHERE activity_id = ?",
-                (activity_id,),
+                "SELECT view_count FROM fundraising_activity WHERE fra_id = ?",
+                (fra_id,),
             ).fetchone()
         return int(row["view_count"]) if row is not None else 0
 
     @classmethod
-    def view_fundraising_activity_save_count(cls, activity_id: int) -> int:
-        """US-29. Returns 0 when the activity is missing."""
+    def view_fundraising_activity_save_count(cls, fra_id: str) -> int:
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT save_count FROM fundraising_activity WHERE activity_id = ?",
-                (activity_id,),
+                "SELECT save_count FROM fundraising_activity WHERE fra_id = ?",
+                (fra_id,),
             ).fetchone()
         return int(row["save_count"]) if row is not None else 0
 
     @classmethod
-    def increment_view_count(cls, activity_id: int) -> bool:
-        """Bump view_count by 1. Called by the donee view flow. Not on any
-        Sprint 4 diagram — logged in docs/todo.md as a needed diagram update."""
+    def increment_view_count(cls, fra_id: str) -> bool:
         with get_connection() as conn:
             cursor = conn.execute(
-                "UPDATE fundraising_activity SET view_count = view_count + 1 "
-                "WHERE activity_id = ?",
-                (activity_id,),
+                "UPDATE fundraising_activity "
+                "SET view_count = view_count + 1 WHERE fra_id = ?",
+                (fra_id,),
             )
         return cursor.rowcount > 0
 
     @classmethod
-    def increment_save_count(cls, activity_id: int, delta: int = 1) -> bool:
-        """Bump save_count by `delta` (use +1 on favourite, -1 on unfavourite).
-        Floors at 0. Not on any Sprint 4 diagram — logged in docs/todo.md."""
+    def increment_save_count(cls, fra_id: str, delta: int = 1) -> bool:
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
-                "SET save_count = MAX(save_count + ?, 0) "
-                "WHERE activity_id = ?",
-                (delta, activity_id),
+                "SET save_count = MAX(save_count + ?, 0) WHERE fra_id = ?",
+                (delta, fra_id),
             )
         return cursor.rowcount > 0
+
+    @classmethod
+    def refresh_completed_flags(cls) -> int:
+        today = date.today().isoformat()
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET completed = CASE WHEN end_date < ? THEN 1 ELSE 0 END "
+                "WHERE completed != (CASE WHEN end_date < ? THEN 1 ELSE 0 END)",
+                (today, today),
+            )
+            return cursor.rowcount
 
     @classmethod
     def _from_row(cls, row) -> "FundraisingActivity":
         return cls(
-            activity_id=row["activity_id"],
+            fra_id=row["fra_id"],
             title=row["title"],
             description=row["description"],
-            target_amount=row["target_amount"],
-            category=row["category"],
-            start_date=row["start_date"],
-            end_date=row["end_date"],
-            status=row["status"],
+            target_amount=Decimal(row["target_amount"]),
+            fra_cat_id=row["fra_cat_id"],
+            start_date=date.fromisoformat(row["start_date"]),
+            end_date=date.fromisoformat(row["end_date"]),
+            completed=bool(row["completed"]),
+            suspended=bool(row["suspended"]),
             owner_account_id=row["owner_account_id"],
-            view_count=row["view_count"] if "view_count" in row.keys() else 0,
-            save_count=row["save_count"] if "save_count" in row.keys() else 0,
+            view_count=int(row["view_count"]),
+            save_count=int(row["save_count"]),
         )
+
+
+def _alias_columns(alias: str) -> str:
+    return ", ".join(f"{alias}.{col.strip()}" for col in _SELECT_COLUMNS.split(","))

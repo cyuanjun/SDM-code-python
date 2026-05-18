@@ -1,7 +1,4 @@
-"""LogoutPage <<Boundary>> — Sprint 1 diagrams US-12/19/27/40.
-
-Self-contained: clears the session. No Controller/Entity per the diagrams.
-"""
+"""LogoutPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -9,12 +6,18 @@ import streamlit as st
 
 class LogoutPage:
     def render(self) -> None:
-        st.header("Log out")
-        if st.button("Confirm log out"):
+        st.header("Log Out")
+
+        if "user" not in st.session_state:
+            st.info("You are not signed in.")
+            return
+
+        user = st.session_state["user"]
+        st.write(f"Signed in as **{user.name}** ({user.email}).")
+        if st.button("Log out"):
             self.logout()
 
-    def logout(self) -> None:
-        for key in ("user", "page"):
-            st.session_state.pop(key, None)
-        st.success("Logged out.")
+    @staticmethod
+    def logout() -> None:
+        st.session_state.pop("user", None)
         st.rerun()

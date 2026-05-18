@@ -1,4 +1,4 @@
-"""UpdateFundraisingActivityCategoryPage <<Boundary>> — Sprint 4 diagram US-36."""
+"""UpdateFundraisingActivityCategoryPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -9,93 +9,96 @@ from controller.update_fundraising_activity_category_controller import (
 from controller.view_fundraising_activity_category_controller import (
     ViewFundraisingActivityCategoryController,
 )
-from entity.fundraising_activity_category import FundraisingActivityCategory
 
-EDIT_KEY = "editing_category_id"
+SELECTED_KEY = "update_fra_cat_selected_id"
 
 
 class UpdateFundraisingActivityCategoryPage:
     def render(self) -> None:
-        st.header("Update fundraising activity category")
+        st.header("Update Fundraising Activity Category")
 
-        controller = ViewFundraisingActivityCategoryController()
-        categories = controller.view_all_categories()
-        if not categories:
-            st.info("No categories to update.")
+        if SELECTED_KEY not in st.session_state:
+            self._render_picker()
             return
 
-        if EDIT_KEY not in st.session_state:
-            labels = {self._label(c): c.category_id for c in categories}
-            choice = st.selectbox("Category", list(labels.keys()))
-            if st.button("Edit", key="click_edit_category"):
-                self.click_edit_button(int(labels[choice]))
-                st.rerun()
-            return
-
-        self.display_update_category_page()
-
-    def display_update_category_page(self) -> None:
-        category_id = int(st.session_state[EDIT_KEY])
-        current = ViewFundraisingActivityCategoryController().view_fundraising_activity_category(
-            category_id
+        view_controller = ViewFundraisingActivityCategoryController()
+        current = view_controller.view_fundraising_activity_category(
+            st.session_state[SELECTED_KEY]
         )
         if current is None:
-            st.error("Category not found.")
-            st.session_state.pop(EDIT_KEY, None)
+            st.error("Selected category no longer exists.")
+            st.session_state.pop(SELECTED_KEY, None)
             return
 
-        with st.form("update_category_form"):
+        with st.form("update_fra_cat_form"):
+            st.write(f"**Editing:** {current.fra_cat_id}")
             name = st.text_input("Category name", value=current.category_name)
-            description = st.text_area("Description", value=current.description or "")
-            status = st.text_input("Status", value=current.status)
-            cols = st.columns(2)
-            submitted = cols[0].form_submit_button("Save changes", type="primary")
-            cancelled = cols[1].form_submit_button("Cancel")
+            description = st.text_area("Description", value=current.description)
+            col_a, col_b = st.columns(2)
+            with col_a:
+                submitted = st.form_submit_button("Save changes")
+            with col_b:
+                cancel = st.form_submit_button("Cancel")
 
-        if cancelled:
-            st.session_state.pop(EDIT_KEY, None)
+        if cancel:
+            st.session_state.pop(SELECTED_KEY, None)
             st.rerun()
             return
+
         if not submitted:
             return
-        if not self._validate(name, description, status):
+
+        if not self.validate_category(name, description):
+            self.display_error()
             return
 
-        updated = FundraisingActivityCategory(
-            category_id=category_id,
-            category_name=name.strip(),
-            description=description.strip(),
-            status=status.strip(),
+        ok = (
+            UpdateFundraisingActivityCategoryController()
+            .update_fundraising_activity_category(
+                fra_cat_id=st.session_state[SELECTED_KEY],
+                category_name=name.strip(),
+                description=description.strip(),
+            )
         )
-        success = UpdateFundraisingActivityCategoryController().update_fundraising_activity_category(
-            category_id, updated
-        )
-        if success:
+        if ok:
             self.display_success()
-            st.session_state.pop(EDIT_KEY, None)
+            st.session_state.pop(SELECTED_KEY, None)
         else:
             self.display_error()
 
     @staticmethod
-    def click_edit_button(category_id: int) -> None:
-        st.session_state[EDIT_KEY] = category_id
+    def _render_picker() -> None:
+        cats = (
+            ViewFundraisingActivityCategoryController().view_all_categories()
+        )
+        if not cats:
+            st.info("No categories yet — create one first.")
+            return
+        st.caption("Pick a category to update.")
+        rows = [
+            {
+                "ID": c.fra_cat_id,
+                "Name": c.category_name,
+                "Description": c.description,
+                "Suspended": "yes" if c.suspended else "no",
+            }
+            for c in cats
+        ]
+        event = st.dataframe(
+            rows,
+            width="stretch",
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+        )
+        selected = event.selection.rows
+        if selected:
+            st.session_state[SELECTED_KEY] = cats[selected[0]].fra_cat_id
+            st.rerun()
 
     @staticmethod
-    def _validate(name: str, description: str, status: str) -> bool:
-        if not name.strip():
-            st.error("Category name is required.")
-            return False
-        if not description.strip():
-            st.error("Description is required.")
-            return False
-        if not status.strip():
-            st.error("Status is required.")
-            return False
-        return True
-
-    @staticmethod
-    def _label(category) -> str:
-        return f"#{category.category_id} — {category.category_name} ({category.status})"
+    def validate_category(name: str, description: str) -> bool:
+        return bool(name.strip()) and bool(description.strip())
 
     @staticmethod
     def display_success() -> None:
@@ -103,4 +106,4 @@ class UpdateFundraisingActivityCategoryPage:
 
     @staticmethod
     def display_error() -> None:
-        st.error("Could not update category.")
+        st.error("Update failed. Name and description are both required.")

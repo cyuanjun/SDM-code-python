@@ -1,4 +1,4 @@
-"""SuspendUserAccountController <<Controller>> — pure delegator, US-9."""
+"""SuspendUserAccountController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_account import UserAccount

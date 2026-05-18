@@ -1,8 +1,4 @@
-"""LoginPage <<Boundary>> — Sprint 1 diagrams US-11/18/26/39.
-
-All input/format validation happens here. The Entity result (None vs UserAccount)
-drives display_success() / display_error().
-"""
+"""LoginPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -12,7 +8,13 @@ from controller.login_controller import LoginController
 
 class LoginPage:
     def render(self) -> None:
-        st.header("Log in")
+        st.header("Log In")
+
+        if "user" in st.session_state:
+            user = st.session_state["user"]
+            st.info(f"Already signed in as {user.email} ({user.account_id}).")
+            return
+
         with st.form("login_form"):
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
@@ -21,30 +23,36 @@ class LoginPage:
         if not submitted:
             return
 
-        if not self._validate(email, password):
+        if not self.validate_credentials(email, password):
+            self.display_error()
             return
 
-        user = LoginController().login(email, password)
-        if user is not None:
-            st.session_state["user"] = user
-            self.display_success()
-            st.rerun()
-        else:
+        account = LoginController().login(email.strip(), password)
+        if account is None:
             self.display_error()
+            return
+
+        st.session_state["user"] = account
+        st.rerun()
 
     @staticmethod
-    def _validate(email: str, password: str) -> bool:
-        if not email or not password:
-            st.error("Email and password are required.")
+    def validate_credentials(email: str, password: str) -> bool:
+        if not email.strip() or "@" not in email:
             return False
-        if "@" not in email:
-            st.error("Email must contain '@'.")
+        if not password:
             return False
         return True
 
     @staticmethod
     def display_success() -> None:
-        st.success("Logged in.")
+        user = st.session_state.get("user")
+        if user is not None:
+            st.success(
+                f"Logged in as {user.name} ({user.email}). "
+                f"Account: {user.account_id}, profile: {user.profile_id}."
+            )
+        else:
+            st.success("Logged in.")
 
     @staticmethod
     def display_error() -> None:

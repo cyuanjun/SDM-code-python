@@ -1,119 +1,125 @@
-"""Report <<Entity>> — Sprint 4 (US-41 daily, US-42 weekly, US-43 monthly).
-
-Each generate-call INSERTs a row into the `report` table and returns the
-Report with the real `report_id` from the insert. This makes `reportId`
-meaningful (matches the Sprint 4 class diagram, which declares it as a
-field). No "view past reports" use case has been drawn yet — past rows
-are inspectable through the debug page.
-
-Scoping notes:
-- `totalDonationAmount` / `totalDonationCount` are always zero because no
-  donation use case exists yet (US-32/33 still deferred). Surfaced clearly
-  in the boundary pages.
-- `totalActivityCount` counts activities whose `start_date` falls in
-  [start_date, end_date]. Fundraiser/donee counts are platform-wide totals
-  because account creation time is not tracked. Diagram silent on the
-  semantics; choice logged in docs/todo.md.
-- `platform_manager_id` is the `user_account.account_id` of the logged-in
-  PM (per Sprint 1 US-39: PMs authenticate via `UserAccount.login`).
-"""
+"""Report <<Entity>>."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Optional
 
 from persistence.db import get_connection
+from persistence.ids import next_id
 
 
 @dataclass
 class Report:
     report_type: str
-    start_date: str
-    end_date: str
-    total_donation_amount: float = 0.0
+    start_date: date
+    end_date: date
+    generated_at: datetime
+    platform_manager_id: str
+    total_donation_amount: Decimal = Decimal("0")
     total_donation_count: int = 0
     total_activity_count: int = 0
     total_fundraiser_count: int = 0
     total_donee_count: int = 0
-    platform_manager_id: Optional[int] = None
-    report_id: int = 0
-    generated_at: datetime = field(default_factory=datetime.now)
+    report_id: Optional[str] = None
 
     @classmethod
     def generate_daily_report(
-        cls, start_date: str, end_date: str, platform_manager_id: Optional[int]
+        cls, start_date: date, end_date: date, platform_manager_id: str
     ) -> "Report":
-        return cls._generate("daily", start_date, end_date, platform_manager_id)
+        return cls._generate(
+            "daily", start_date, end_date, platform_manager_id
+        )
 
     @classmethod
     def generate_weekly_report(
-        cls, start_date: str, end_date: str, platform_manager_id: Optional[int]
+        cls, start_date: date, end_date: date, platform_manager_id: str
     ) -> "Report":
-        return cls._generate("weekly", start_date, end_date, platform_manager_id)
+        return cls._generate(
+            "weekly", start_date, end_date, platform_manager_id
+        )
 
     @classmethod
     def generate_monthly_report(
-        cls, start_date: str, end_date: str, platform_manager_id: Optional[int]
+        cls, start_date: date, end_date: date, platform_manager_id: str
     ) -> "Report":
-        return cls._generate("monthly", start_date, end_date, platform_manager_id)
+        return cls._generate(
+            "monthly", start_date, end_date, platform_manager_id
+        )
 
     @classmethod
     def _generate(
         cls,
         report_type: str,
-        start_date: str,
-        end_date: str,
-        platform_manager_id: Optional[int],
+        start_date: date,
+        end_date: date,
+        platform_manager_id: str,
     ) -> "Report":
+        stats = cls._aggregate_stats(start_date, end_date)
         generated_at = datetime.now()
+
         with get_connection() as conn:
-            activity_count = conn.execute(
-                "SELECT COUNT(*) AS c FROM fundraising_activity "
-                "WHERE start_date BETWEEN ? AND ?",
-                (start_date, end_date),
-            ).fetchone()["c"]
-            fundraiser_count = conn.execute(
-                "SELECT COUNT(*) AS c FROM user_account ua "
-                "JOIN user_profile up ON ua.profile_id = up.profile_id "
-                "WHERE up.role = 'fundraiser'"
-            ).fetchone()["c"]
-            donee_count = conn.execute(
-                "SELECT COUNT(*) AS c FROM user_account ua "
-                "JOIN user_profile up ON ua.profile_id = up.profile_id "
-                "WHERE up.role = 'donee'"
-            ).fetchone()["c"]
-            cursor = conn.execute(
-                "INSERT INTO report (report_type, start_date, end_date, "
-                "generated_at, platform_manager_id, total_donation_amount, "
-                "total_donation_count, total_activity_count, "
-                "total_fundraiser_count, total_donee_count) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            new_id = next_id(conn, "report", "report_id", "rep")
+            conn.execute(
+                "INSERT INTO report ("
+                "  report_id, report_type, start_date, end_date, generated_at, "
+                "  platform_manager_id, total_donation_amount, "
+                "  total_donation_count, total_activity_count, "
+                "  total_fundraiser_count, total_donee_count"
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
+                    new_id,
                     report_type,
-                    start_date,
-                    end_date,
+                    start_date.isoformat(),
+                    end_date.isoformat(),
                     generated_at.isoformat(),
                     platform_manager_id,
-                    0.0,
-                    0,
-                    int(activity_count),
-                    int(fundraiser_count),
-                    int(donee_count),
+                    str(stats["total_donation_amount"]),
+                    stats["total_donation_count"],
+                    stats["total_activity_count"],
+                    stats["total_fundraiser_count"],
+                    stats["total_donee_count"],
                 ),
             )
-            report_id = cursor.lastrowid
 
         return cls(
-            report_id=report_id,
+            report_id=new_id,
             report_type=report_type,
             start_date=start_date,
             end_date=end_date,
             generated_at=generated_at,
-            total_donation_amount=0.0,
-            total_donation_count=0,
-            total_activity_count=int(activity_count),
-            total_fundraiser_count=int(fundraiser_count),
-            total_donee_count=int(donee_count),
             platform_manager_id=platform_manager_id,
+            **stats,
         )
+
+    @staticmethod
+    def _aggregate_stats(start_date: date, end_date: date) -> dict:
+        with get_connection() as conn:
+            donation_row = conn.execute(
+                "SELECT COUNT(*) AS n, COALESCE(SUM(CAST(amount AS REAL)), 0) AS total "
+                "FROM donation WHERE donation_date BETWEEN ? AND ?",
+                (start_date.isoformat(), end_date.isoformat()),
+            ).fetchone()
+            activity_row = conn.execute(
+                "SELECT COUNT(*) AS n FROM fundraising_activity"
+            ).fetchone()
+            fundraiser_row = conn.execute(
+                "SELECT COUNT(*) AS n FROM user_account a "
+                "JOIN user_profile p ON p.profile_id = a.profile_id "
+                "WHERE p.role = 'fundraiser'"
+            ).fetchone()
+            donee_row = conn.execute(
+                "SELECT COUNT(*) AS n FROM user_account a "
+                "JOIN user_profile p ON p.profile_id = a.profile_id "
+                "WHERE p.role = 'donee'"
+            ).fetchone()
+        return {
+            "total_donation_amount": Decimal(
+                f"{donation_row['total']:.2f}"
+            ),
+            "total_donation_count": int(donation_row["n"]),
+            "total_activity_count": int(activity_row["n"]),
+            "total_fundraiser_count": int(fundraiser_row["n"]),
+            "total_donee_count": int(donee_row["n"]),
+        }

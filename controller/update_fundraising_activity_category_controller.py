@@ -1,4 +1,4 @@
-"""UpdateFundraisingActivityCategoryController <<Controller>> — pure delegator, US-36."""
+"""UpdateFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity_category import FundraisingActivityCategory
@@ -7,9 +7,12 @@ from entity.fundraising_activity_category import FundraisingActivityCategory
 class UpdateFundraisingActivityCategoryController:
     def update_fundraising_activity_category(
         self,
-        category_id: int,
-        updated_category: FundraisingActivityCategory,
+        fra_cat_id: str,
+        category_name: str,
+        description: str,
     ) -> bool:
         return FundraisingActivityCategory.update_fundraising_activity_category(
-            category_id, updated_category
+            fra_cat_id=fra_cat_id,
+            category_name=category_name,
+            description=description,
         )

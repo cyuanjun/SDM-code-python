@@ -1,4 +1,4 @@
-"""CreateProfilePage <<Boundary>> — Sprint 1 diagram US-1."""
+"""CreateProfilePage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -8,7 +8,7 @@ from controller.create_profile_controller import CreateProfileController
 
 class CreateProfilePage:
     def render(self) -> None:
-        st.header("Create user profile")
+        st.header("Create User Profile")
         with st.form("create_profile_form"):
             role = st.text_input("Role")
             description = st.text_area("Description")
@@ -17,29 +17,32 @@ class CreateProfilePage:
         if not submitted:
             return
 
-        if not self._validate(role, description):
+        if not self.validate_profile(role, description):
+            self.display_error()
             return
 
-        profile = CreateProfileController().create_profile(role, description)
-        if profile is not None:
-            self.display_success()
-        else:
-            self.display_error()
+        profile = CreateProfileController().create_profile(
+            role=role.strip(), description=description.strip()
+        )
+        if profile is None:
+            self.display_duplicate_role_error()
+            return
+        self.display_success(profile)
 
     @staticmethod
-    def _validate(role: str, description: str) -> bool:
-        if not role.strip():
-            st.error("Role is required.")
-            return False
-        if not description.strip():
-            st.error("Description is required.")
-            return False
-        return True
+    def validate_profile(role: str, description: str) -> bool:
+        return bool(role.strip()) and bool(description.strip())
 
     @staticmethod
-    def display_success() -> None:
-        st.success("Profile created.")
+    def display_success(profile) -> None:
+        st.success(
+            f"Profile created: {profile.profile_id} ({profile.role})"
+        )
 
     @staticmethod
     def display_error() -> None:
-        st.error("Could not create profile.")
+        st.error("Role and description are both required.")
+
+    @staticmethod
+    def display_duplicate_role_error() -> None:
+        st.error("A profile with that role already exists.")
