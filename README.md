@@ -3,7 +3,7 @@
 CSIT314 group project. Built from scratch against reworked UML diagrams. B-C-E architecture, OOP backend, diagram-as-contract — see [CLAUDE.md](CLAUDE.md).
 
 - [CLAUDE.md](CLAUDE.md) — architecture conventions
-- [docs/implementation_2026-05-16.md](docs/implementation_2026-05-16.md) — per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items)
+- [docs/implementation_2026-05-18.md](docs/implementation_2026-05-18.md) — per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items)
 - [docs/diagram_typos.md](docs/diagram_typos.md) — every divergence between source diagrams and code
 - [docs/todo.md](docs/todo.md) — bootstrap deviations, Exception A entries, lecturer decisions, deferred typos, open architectural items
 - [diagrams/](diagrams/) — reworked UML diagrams, organised by sprint

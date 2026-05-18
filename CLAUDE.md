@@ -49,7 +49,7 @@ When the user shares Sprint N sequence/class diagrams, **treat the class names, 
 
 The source-of-truth diagrams live under [diagrams/](diagrams/), organised by sprint (`sprint-1_diagrams/` … `sprint-4_diagrams/`), one `US-NN.jpg` per story.
 
-For detail on a specific user story (diagram surface, code paths, tests, assumptions, deferred items), read **[docs/implementation_2026-05-16.md](docs/implementation_2026-05-16.md)** — one section per US.
+For detail on a specific user story (diagram surface, code paths, tests, assumptions, deferred items), read **[docs/implementation_2026-05-18.md](docs/implementation_2026-05-18.md)** — one section per US.
 
 Every divergence between a diagram and the code is split across two more docs:
 
@@ -123,7 +123,7 @@ SDM-code/
 ├── tests/                 # pytest tests + conftest.py (autouse tmp_path DB fixture)
 │   └── non_diagram/       # smoke tests for the 8 non-diagram boundaries + delegation tests for the 5 non-diagram controllers
 ├── docs/
-│   ├── implementation_2026-05-16.md  # Per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items) — primary per-story doc
+│   ├── implementation_2026-05-18.md  # Per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items) — primary per-story doc
 │   ├── diagram_typos.md   # Per-sprint catalogue of every diagram divergence (resolved + outstanding + deferred)
 │   └── todo.md            # Bootstrap deviations, Exception A entries, Lecturer decisions, Deferred typos index, Open architectural items, Resolved
 ├── diagrams/              # Source UML diagrams, sprint-1_diagrams/ … sprint-4_diagrams/
