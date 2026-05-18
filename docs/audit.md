@@ -168,10 +168,10 @@ Conventions:
   - Code → `UpdateMyFundraisingActivityPage.display_success()` in [boundary/update_my_fundraising_activity_page.py](../boundary/update_my_fundraising_activity_page.py)
 - **Controller:** `UpdateMyFundraisingActivityController`
   - `updateMyFundraisingActivity(ownerAccountId: String, FRAId: String, title: String, description: String, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date): Boolean`
-  - Code → `UpdateMyFundraisingActivityController.update_my_fundraising_activity(owner_account_id, fra_id, updated_my_fra)` in [controller/update_my_fundraising_activity_controller.py](../controller/update_my_fundraising_activity_controller.py) ⚠️ code takes a single `FundraisingActivity` object instead of unpacked fields
+  - Code → `UpdateMyFundraisingActivityController.update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)` in [controller/update_my_fundraising_activity_controller.py](../controller/update_my_fundraising_activity_controller.py)
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `updateMyFundraisingActivity(ownerAccountId: String, FRAId: String, title: String, description: String, targetAmount: Decimal, FRACatId: String, startDate: Date, endDate: Date): Boolean`
-  - Code → `FundraisingActivity.update_my_fundraising_activity(owner_account_id, fra_id, updated_my_fra)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py) ⚠️ same field-vs-object drift
+  - Code → `FundraisingActivity.update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py)
 
 ## US-16 — Suspend my fundraising activity *(Fundraiser)*
 - **Boundary:** `ViewMyFundraisingActivityPage`
@@ -330,7 +330,7 @@ Conventions:
   - Code → `SearchMyCompletedFundraisingActivityController.search_my_completed_fundraising_activity(owner_account_id, search_criteria)` in [controller/search_my_completed_fundraising_activity_controller.py](../controller/search_my_completed_fundraising_activity_controller.py) ⚠️ class name singular in code, plural in diagram
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `searchMyCompletedFundraisingActivity(ownerAccountId: String, searchCriteria: String): List<FundraisingActivity>`
-  - Code → `FundraisingActivity.search_my_completed_fundraising_activity(owner_account_id, search_criteria)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py)
+  - Code → `FundraisingActivity.search_my_completed_fundraising_activity(owner_account_id, search_criteria)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py) — filter is `WHERE a.end_date < ?` (today), not a stored `completed` flag (post-2026-05-18 refactor)
 
 ## US-31 — View my completed fundraising activities *(Fundraiser)*
 - **Boundary:** `ViewMyFundraisingActivitiesPage`
@@ -341,7 +341,7 @@ Conventions:
   - Code → `ViewMyCompletedFundraisingActivitiesController.view_my_completed_fundraising_activities(owner_account_id)` in [controller/view_my_completed_fundraising_activities_controller.py](../controller/view_my_completed_fundraising_activities_controller.py)
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `viewMyCompletedFundraisingActivities(ownerAccountId: String): List<FundraisingActivity>`
-  - Code → `FundraisingActivity.view_my_completed_fundraising_activities(owner_account_id)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py)
+  - Code → `FundraisingActivity.view_my_completed_fundraising_activities(owner_account_id)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py) — filter is `WHERE end_date < ?` (today), not a stored `completed` flag (post-2026-05-18 refactor)
 - ⚠️ **Diagram typo:** the boundary method's parameter type reads `myCompletedFRAList: FundraisingActivity` — missing the `List<…>` wrapper. Code passes a list.
 
 ## US-32 — Search my donation history *(Donee)*
@@ -490,8 +490,8 @@ Diagram uses the plural form of the entity in the controller class name, code us
 - **US-30:** diagram `SearchMyCompletedFundraisingActivitiesController` → code `SearchMyCompletedFundraisingActivityController`
 - **US-37:** diagram `SearchFundraisingActivityCategoriesController` → code `SearchFundraisingActivityCategoryController`
 
-### Signature-shape drifts
-- **US-15:** diagram unpacks every field on `updateMyFundraisingActivity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)`; code takes a single `FundraisingActivity` object (`updated_my_fra`). Same shape both directions but the diagram should either show the `updatedMyFRA: FundraisingActivity` param or the code should switch to per-field args.
+### Resolved during this audit
+- ~~**US-15 signature-shape drift**~~ **Resolved 2026-05-18.** Code now takes the 6 unpacked fields exactly as the diagram defines: `update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)`. The previous `updated_my_fra: FundraisingActivity` parameter is gone. As a side effect, `completed` and `suspended` are no longer settable through update — `completed` is now a derived `@property` on the entity (`end_date < today`), and `suspended` is owned by US-16 / Exception A unsuspend. The `completed` column was dropped from the schema.
 
 ### Cosmetic
 - **US-23 boundary method** — diagram says `displaySuccess()`, code uses `display_remove_success()` to keep it distinct from US-22's `display_success()` on the same `ViewFundraisingActivityPage`. Either the diagram should name it `displayRemoveSuccess()` or accept that one Boundary class has two `displaySuccess()` paths.

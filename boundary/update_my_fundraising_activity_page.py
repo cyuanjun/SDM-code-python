@@ -25,8 +25,6 @@ from controller.view_fundraising_activity_category_controller import (
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
-from entity.fundraising_activity import FundraisingActivity
-
 SELECTED_KEY = "update_my_fra_selected_id"
 
 
@@ -79,8 +77,8 @@ class UpdateMyFundraisingActivityPage:
             fra_cat_id = cat_options[category_name]
             start_date = st.date_input("Start date", value=current.start_date)
             end_date = st.date_input("End date", value=current.end_date)
-            completed = st.checkbox("Completed", value=current.completed)
-            suspended = st.checkbox("Suspended", value=current.suspended)
+            # `completed` is derived from end_date; `suspended` is owned by
+            # US-16 / unsuspend and isn't editable from this form.
 
             col_a, col_b = st.columns(2)
             with col_a:
@@ -106,17 +104,12 @@ class UpdateMyFundraisingActivityPage:
         ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=st.session_state[SELECTED_KEY],
-            updated_my_fra=FundraisingActivity(
-                title=title.strip(),
-                description=description.strip(),
-                target_amount=target_amount,
-                fra_cat_id=fra_cat_id,
-                start_date=start_date,
-                end_date=end_date,
-                owner_account_id=owner_account_id,
-                completed=completed,
-                suspended=suspended,
-            ),
+            title=title.strip(),
+            description=description.strip(),
+            target_amount=target_amount,
+            fra_cat_id=fra_cat_id,
+            start_date=start_date,
+            end_date=end_date,
         )
         if ok:
             self.display_success()

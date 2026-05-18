@@ -1,10 +1,13 @@
 """UpdateMyFundraisingActivityController <<Controller>> — Sprint 2 US-15.
 
-Pure delegator. Forwards (owner_account_id, fra_id, updated_my_fra) to
+Pure delegator. Forwards the 6 editable fields (per the US-15 diagram) to
 FundraisingActivity.update_my_fundraising_activity. Ownership is enforced
-at the entity layer.
+at the entity layer via `WHERE fra_id = ? AND owner_account_id = ?`.
 """
 from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
 
 from entity.fundraising_activity import FundraisingActivity
 
@@ -14,10 +17,20 @@ class UpdateMyFundraisingActivityController:
         self,
         owner_account_id: str,
         fra_id: str,
-        updated_my_fra: FundraisingActivity,
+        title: str,
+        description: str,
+        target_amount: Decimal,
+        fra_cat_id: str,
+        start_date: date,
+        end_date: date,
     ) -> bool:
         return FundraisingActivity.update_my_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=fra_id,
-            updated_my_fra=updated_my_fra,
+            title=title,
+            description=description,
+            target_amount=target_amount,
+            fra_cat_id=fra_cat_id,
+            start_date=start_date,
+            end_date=end_date,
         )

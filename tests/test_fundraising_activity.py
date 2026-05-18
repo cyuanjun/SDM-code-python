@@ -110,10 +110,13 @@ def test_create_fundraising_activity_preserves_decimal_precision() -> None:
 
 
 def _seed_activity(owner: UserAccount, title: str = "A") -> FundraisingActivity:
+    """Seeds an *ongoing* activity (end_date in the future), so the derived
+    `completed` property stays False unless the test explicitly changes
+    end_date to a past value."""
     return FundraisingActivity.create_fundraising_activity(
         title=title, description=f"{title} desc",
         target_amount=Decimal("100.00"), fra_cat_id="cat_001",
-        start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+        start_date=date(2099, 1, 1), end_date=date(2099, 2, 1),
         owner_account_id=owner.account_id,
     )
 
@@ -257,17 +260,16 @@ def test_update_my_fundraising_activity_returns_true_for_correct_owner() -> None
     owner = _seed_fundraiser_account()
     created = _seed_activity(owner)
 
-    updated = FundraisingActivity(
-        title="New title", description="New desc",
-        target_amount=Decimal("999.99"), fra_cat_id="cat_001",
-        start_date=date(2027, 1, 1), end_date=date(2027, 12, 31),
-        owner_account_id=owner.account_id,
-        completed=True, suspended=False,
-    )
+    # End date in the past → derived `completed` flips to True post-update.
     ok = FundraisingActivity.update_my_fundraising_activity(
         owner_account_id=owner.account_id,
         fra_id=created.fra_id,
-        updated_my_fra=updated,
+        title="New title",
+        description="New desc",
+        target_amount=Decimal("999.99"),
+        fra_cat_id="cat_001",
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 12, 31),
     )
 
     assert ok is True
@@ -275,7 +277,7 @@ def test_update_my_fundraising_activity_returns_true_for_correct_owner() -> None
     assert fetched is not None
     assert fetched.title == "New title"
     assert fetched.target_amount == Decimal("999.99")
-    assert fetched.completed is True
+    assert fetched.completed is True  # derived from end_date < today
 
 
 def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
@@ -291,15 +293,15 @@ def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
         profile_id=owner.profile_id,
     )
 
-    updated = FundraisingActivity(
-        title="Hijack", description="x", target_amount=Decimal("1"),
-        fra_cat_id="cat_001", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
-        owner_account_id=other.account_id,
-    )
     ok = FundraisingActivity.update_my_fundraising_activity(
         owner_account_id=other.account_id,
         fra_id=created.fra_id,
-        updated_my_fra=updated,
+        title="Hijack",
+        description="x",
+        target_amount=Decimal("1"),
+        fra_cat_id="cat_001",
+        start_date=date(2027, 1, 1),
+        end_date=date(2027, 1, 2),
     )
 
     assert ok is False
@@ -310,16 +312,16 @@ def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
 
 def test_update_my_fundraising_activity_returns_false_for_missing_fra_id() -> None:
     owner = _seed_fundraiser_account()
-    updated = FundraisingActivity(
-        title="x", description="x", target_amount=Decimal("1"),
-        fra_cat_id="cat_001", start_date=date(2027, 1, 1), end_date=date(2027, 1, 2),
-        owner_account_id=owner.account_id,
-    )
     assert (
         FundraisingActivity.update_my_fundraising_activity(
             owner_account_id=owner.account_id,
             fra_id="fra_999",
-            updated_my_fra=updated,
+            title="x",
+            description="x",
+            target_amount=Decimal("1"),
+            fra_cat_id="cat_001",
+            start_date=date(2027, 1, 1),
+            end_date=date(2027, 1, 2),
         )
         is False
     )
@@ -496,26 +498,15 @@ def test_search_my_fundraising_activity_returns_empty_for_no_activities() -> Non
 def _seed_completed_activity(
     owner: UserAccount, title: str = "Done"
 ) -> FundraisingActivity:
-    activity = FundraisingActivity.create_fundraising_activity(
+    """Seeds a *completed* activity by setting `end_date` in the past — the
+    derived `completed` property flips to True automatically. No direct
+    update call needed any more."""
+    return FundraisingActivity.create_fundraising_activity(
         title=title, description=f"{title} desc",
         target_amount=Decimal("100"), fra_cat_id="cat_001",
         start_date=date(2025, 1, 1), end_date=date(2025, 6, 1),
         owner_account_id=owner.account_id,
     )
-    # Mark it completed via direct update — no "complete" use case exists.
-    updated = FundraisingActivity(
-        title=activity.title, description=activity.description,
-        target_amount=activity.target_amount, fra_cat_id=activity.fra_cat_id,
-        start_date=activity.start_date, end_date=activity.end_date,
-        owner_account_id=owner.account_id,
-        completed=True, suspended=False,
-    )
-    FundraisingActivity.update_my_fundraising_activity(
-        owner_account_id=owner.account_id,
-        fra_id=activity.fra_id,
-        updated_my_fra=updated,
-    )
-    return activity
 
 
 def test_search_my_completed_fundraising_activity_matches_only_completed_and_owner_scoped() -> None:

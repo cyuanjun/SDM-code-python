@@ -37,8 +37,6 @@ from controller.view_fundraising_activity_category_controller import (
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
-from entity.fundraising_activity import FundraisingActivity
-
 
 def _category_lookup() -> dict[str, str]:
     """fra_cat_id -> category_name, for rendering readable category cells."""
@@ -448,11 +446,7 @@ class ManageMyFundraisingActivityPage:
             end_date = st.date_input(
                 "End date", value=activity.end_date, disabled=is_completed_view
             )
-            completed = st.checkbox(
-                "Completed",
-                value=activity.completed,
-                disabled=is_completed_view,
-            )
+            # `completed` is derived from end_date < today; not editable here.
             col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
                 submitted = st.form_submit_button(
@@ -490,17 +484,12 @@ class ManageMyFundraisingActivityPage:
         ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
             owner_account_id=owner_account_id,
             fra_id=activity.fra_id,
-            updated_my_fra=FundraisingActivity(
-                title=title.strip(),
-                description=description.strip(),
-                target_amount=Decimal(target_amount_str),
-                fra_cat_id=fra_cat_id,
-                start_date=start_date,
-                end_date=end_date,
-                owner_account_id=owner_account_id,
-                completed=completed,
-                suspended=activity.suspended,
-            ),
+            title=title.strip(),
+            description=description.strip(),
+            target_amount=Decimal(target_amount_str),
+            fra_cat_id=fra_cat_id,
+            start_date=start_date,
+            end_date=end_date,
         )
         if ok:
             st.session_state[ACTION_MSG_KEY] = "Activity updated"

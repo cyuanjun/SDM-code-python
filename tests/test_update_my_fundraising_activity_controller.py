@@ -22,19 +22,20 @@ def test_controller_returns_true_when_entity_updates_a_row() -> None:
     )
     created = FundraisingActivity.create_fundraising_activity(
         title="A", description="d", target_amount=Decimal("100"),
-        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
-        owner_account_id=account.account_id,
-    )
-    updated = FundraisingActivity(
-        title="A2", description="d2", target_amount=Decimal("200"),
-        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+        fra_cat_id="cat_001",
+        start_date=date(2099, 1, 1), end_date=date(2099, 2, 1),
         owner_account_id=account.account_id,
     )
 
     ok = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
         owner_account_id=account.account_id,
         fra_id=created.fra_id,
-        updated_my_fra=updated,
+        title="A2",
+        description="d2",
+        target_amount=Decimal("200"),
+        fra_cat_id="cat_001",
+        start_date=date(2099, 1, 1),
+        end_date=date(2099, 2, 1),
     )
 
     assert ok is True
@@ -48,17 +49,19 @@ def test_controller_returns_false_when_entity_returns_false(
         FundraisingActivity,
         "update_my_fundraising_activity",
         classmethod(
-            lambda cls, owner_account_id, fra_id, updated_my_fra: False
+            lambda cls, owner_account_id, fra_id, title, description,
+            target_amount, fra_cat_id, start_date, end_date: False
         ),
     )
 
     result = UpdateMyFundraisingActivityController().update_my_fundraising_activity(
         owner_account_id="acc_001",
         fra_id="fra_001",
-        updated_my_fra=FundraisingActivity(
-            title="x", description="x", target_amount=Decimal("1"),
-            fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
-            owner_account_id="acc_001",
-        ),
+        title="x",
+        description="x",
+        target_amount=Decimal("1"),
+        fra_cat_id="cat_001",
+        start_date=date(2099, 1, 1),
+        end_date=date(2099, 1, 2),
     )
     assert result is False
