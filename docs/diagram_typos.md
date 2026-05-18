@@ -91,3 +91,16 @@ To support a toggle button in the consolidated `Manage*` pages, four `unsuspend_
 | `FundraisingActivityCategory` | `suspend_fundraising_activity_category(fra_cat_id)` (US-38) | `unsuspend_fundraising_activity_category(fra_cat_id)` |
 
 Each unsuspend method mirrors its suspend twin's signature, ownership scoping, and return type. Add them to the relevant class + sequence diagrams before final marking, or define a new "unsuspend" use case per actor.
+
+## Schema-level UNIQUE constraints (no diagram annotation, lecturer-approved)
+
+The class diagrams type these attributes as plain `String` with no `<<unique>>` stereotype, but the schema enforces UNIQUE at the database level. Lecturer-approved as schema-level guards that don't need diagram modelling — same shape as the email-uniqueness decision.
+
+| Column | Constraint added | Code behaviour on conflict |
+|---|---|---|
+| `user_account.email` | 2026-05-15 (lecturer-instructed) | `create_account` returns `Optional[UserAccount]` (`None` on conflict); `update_user_account` returns `False`. Boundary surfaces "An account with that email already exists." |
+| `user_profile.role` | 2026-05-17 | `create_profile` returns `Optional[UserProfile]`; `update_user_profile` returns `False`. Boundary surfaces "A profile with that role already exists." |
+| `fundraising_activity_category.category_name` | 2026-05-17 | `create_category` returns `Optional[FundraisingActivityCategory]`; `update_fundraising_activity_category` returns `False`. Boundary surfaces "A category with that name already exists." |
+| `user_account.phone_num` | 2026-05-18 (parallel to email) | Same as email — `create_account` / `update_user_account` return `None` / `False`. The consolidated `ManageUserAccountPage` re-queries the DB after the conflict and surfaces "An account with that email / phone number / email and phone number already exists" via `_which_unique_collided()`. |
+
+All four are documented under "Lecturer decisions" / "Resolved" in [todo.md](todo.md). The class diagrams retain their plain `String` typing — the lecturer accepted the convention that UNIQUE is a schema concern.
