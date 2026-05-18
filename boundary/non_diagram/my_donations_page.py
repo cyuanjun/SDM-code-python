@@ -6,6 +6,9 @@ import streamlit as st
 from controller.search_my_donation_histories_controller import (
     SearchMyDonationHistoriesController,
 )
+from controller.view_fundraising_activity_controller import (
+    ViewFundraisingActivityController,
+)
 from controller.view_my_donation_histories_controller import (
     ViewMyDonationHistoriesController,
 )
@@ -51,10 +54,16 @@ class MyDonationsPage:
             return
 
         st.caption(f"{len(donations)} donation(s) — click a row to view")
+        view_ctrl = ViewFundraisingActivityController()
+        activities = {
+            d.fra_id: view_ctrl.view_fundraising_activity(d.fra_id)
+            for d in donations
+        }
         rows = [
             {
                 "ID": d.donation_id,
-                "Activity": d.fra_id,
+                "Activity ID": d.fra_id,
+                "Title": activities[d.fra_id].title if activities[d.fra_id] else "(missing)",
                 "Amount": f"${d.amount}",
                 "Date": d.donation_date.isoformat(),
             }
@@ -87,7 +96,14 @@ class MyDonationsPage:
             return
 
         st.subheader(f"Donation {donation.donation_id}")
-        st.write(f"**Activity:** {donation.fra_id}")
+        activity = ViewFundraisingActivityController().view_fundraising_activity(
+            donation.fra_id
+        )
+        if activity is not None:
+            st.write(f"**Activity:** {activity.title} ({donation.fra_id})")
+            st.write(f"**Description:** {activity.description}")
+        else:
+            st.write(f"**Activity:** {donation.fra_id} (no longer available)")
         st.write(f"**Amount:** ${donation.amount}")
         st.write(f"**Date:** {donation.donation_date.isoformat()}")
 
