@@ -4,7 +4,7 @@ Transcription of the Boundary / Controller / Entity surface for every user story
 
 Each layer lists what the **diagram** says, then the matching `Code →` identifier + file path showing what's actually implemented (in `snake_case`). Where a `Code →` line shows a different class or method name than the diagram, that's a drift — collected at the bottom of this file.
 
-*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, US-28/US-29 boundary-placement rewire, US-28/US-29 diagram re-export (`category: String` → `FRACatId: String`), and US-31 diagram re-export (`myCompletedFRAList: List<FundraisingActivity>` wrapper restored) all landed.*
+*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, US-28/US-29 boundary-placement rewire, US-28/US-29 diagram re-export (`category: String` → `FRACatId: String`), US-31 diagram re-export (`myCompletedFRAList: List<FundraisingActivity>` wrapper restored), and the US-37 boundary method rename (`display_matching_fra_category` → `display_matching_fundraising_activity_category`) all landed.*
 
 Conventions:
 - Class names are taken verbatim from the diagrams (so `category` vs `FRACatId` reflects the diagram as drawn).
@@ -402,7 +402,7 @@ Conventions:
 ## US-37 — Search fundraising activity categories *(Platform manager)*
 - **Boundary:** `ViewFundraisingActivityCategoriesPage`
   - `displayMatchingFundraisingActivityCategory(FRACategoryList: List<FundraisingActivityCategory>): void`
-  - Code → `ViewFundraisingActivityCategoriesPage.display_matching_fra_category(categories)` in [boundary/view_fundraising_activity_categories_page.py](../boundary/view_fundraising_activity_categories_page.py) ⚠️ code abbreviates `fundraising_activity_category` → `fra_category`
+  - Code → `ViewFundraisingActivityCategoriesPage.display_matching_fundraising_activity_category(categories)` in [boundary/view_fundraising_activity_categories_page.py](../boundary/view_fundraising_activity_categories_page.py)
 - **Controller:** `SearchFundraisingActivityCategoriesController`
   - `searchFundraisingActivityCategory(searchCriteria: String): List<FundraisingActivityCategory>`
   - Code → `SearchFundraisingActivityCategoryController.search_fundraising_activity_category(search_criteria)` in [controller/search_fundraising_activity_category_controller.py](../controller/search_fundraising_activity_category_controller.py) ⚠️ class name singular in code, plural in diagram
@@ -489,6 +489,7 @@ Diagram uses the plural form of the entity in the controller class name, code us
 - **US-37:** diagram `SearchFundraisingActivityCategoriesController` → code `SearchFundraisingActivityCategoryController`
 
 ### Resolved during this audit
+- ~~**US-37 boundary method name abbreviation (`display_matching_fra_category`)**~~ **Resolved 2026-05-18.** Code renamed to `display_matching_fundraising_activity_category`, matching the diagram's `displayMatchingFundraisingActivityCategory` exactly (modulo snake_case). Single-method rename in [boundary/view_fundraising_activity_categories_page.py](../boundary/view_fundraising_activity_categories_page.py); no other call sites or tests referenced the abbreviated form. No behaviour change.
 - ~~**US-31 boundary method param type missing the `List<…>` wrapper**~~ **Resolved 2026-05-18.** Re-exported diagram now types the param as `myCompletedFRAList: List<FundraisingActivity>` on both the class and sequence diagrams, matching the controller return type. Code was already passing a list — no code change needed.
 - ~~**US-28 / US-29 entity attribute drift (`category: String` instead of `FRACatId: String`)**~~ **Resolved 2026-05-18.** Re-exported diagrams now type the entity attribute as `FRACatId: String`, matching the rest of the post-2026-05-18 FRA class diagrams (US-13/14/15/17/20/21/30/31). Code was already on `fra_cat_id` — no code change needed.
 - ~~**US-15 signature-shape drift**~~ **Resolved 2026-05-18.** Code now takes the 6 unpacked fields exactly as the diagram defines: `update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)`. The previous `updated_my_fra: FundraisingActivity` parameter is gone. As a side effect, `completed` and `suspended` are no longer settable through update — `completed` is now a derived `@property` on the entity (`end_date < today`), and `suspended` is owned by US-16 / Exception A unsuspend. The `completed` column was dropped from the schema.
@@ -496,6 +497,5 @@ Diagram uses the plural form of the entity in the controller class name, code us
 
 ### Cosmetic
 - **US-23 boundary method** — diagram says `displaySuccess()`, code uses `display_remove_success()` to keep it distinct from US-22's `display_success()` on the same `ViewFundraisingActivityPage`. Either the diagram should name it `displayRemoveSuccess()` or accept that one Boundary class has two `displaySuccess()` paths.
-- **US-37 boundary method** — diagram says `displayMatchingFundraisingActivityCategory`; code abbreviates to `display_matching_fra_category`. Rename to spell it out (`display_matching_fundraising_activity_category`) for consistency with the other Boundary display methods.
 
 Other naming choices that look like deviations but are deliberate consolidations (Exception C) — combined `Manage*` / `Browse*` / `My*` pages, the shared `GenerateReportPage` for daily/weekly/monthly — are catalogued in [diagram_typos.md](diagram_typos.md) under "UX consolidation".

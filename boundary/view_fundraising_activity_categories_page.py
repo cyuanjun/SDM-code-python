@@ -30,14 +30,14 @@ class ViewFundraisingActivityCategoriesPage:
             SearchFundraisingActivityCategoryController()
             .search_fundraising_activity_category(criteria.strip())
         )
-        self.display_matching_fra_category(results)
+        self.display_matching_fundraising_activity_category(results)
 
     @staticmethod
     def validate_criteria(criteria: str) -> bool:
         return bool(criteria.strip())
 
     @staticmethod
-    def display_matching_fra_category(categories) -> None:
+    def display_matching_fundraising_activity_category(categories) -> None:
         if not categories:
             st.info("No categories match.")
             return
