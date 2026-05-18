@@ -4,10 +4,13 @@ Transcription of the Boundary / Controller / Entity surface for every user story
 
 Each layer lists what the **diagram** says, then the matching `Code →` identifier + file path showing what's actually implemented (in `snake_case`). Where a `Code →` line shows a different class or method name than the diagram, that's a drift — collected at the bottom of this file.
 
+*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, and US-28/US-29 boundary-placement rewire all landed.*
+
 Conventions:
 - Class names are taken verbatim from the diagrams (so `category` vs `FRACatId` reflects the diagram as drawn).
 - Methods are `methodName(arg: Type, …): ReturnType`. Logout pages don't have a Controller / Entity.
 - Entity attribute lists are recorded once per entity and referenced as *(attrs as US-N)* on subsequent appearances.
+- `FundraisingActivity.completed: Boolean` appears in the diagram attribute list but is implemented as a Python `@property` (derived from `end_date < today`) rather than a stored column — the attribute still exists on instances, only the storage is implementation detail. A future re-export could mark it `/completed: Boolean` for clarity.
 - Diagram drifts and consolidations noted inline where applicable; full prose lives in [diagram_typos.md](diagram_typos.md) and [todo.md](todo.md).
 
 ---
@@ -479,8 +482,6 @@ Conventions:
 ### Pure diagram typos / gaps
 - **US-28 / US-29 entity attribute** — diagram still lists `category: String`; the 2026-05-18 FRACatId rename cascaded through US-13/14/15/17/20/21/30/31 but missed these two.
 - **US-31 boundary method** — `displayMyCompletedFundraisingActivities(myCompletedFRAList: FundraisingActivity)` is missing the `List<…>` wrapper on the parameter type.
-<!-- US-28/29 boundary class name — resolved 2026-05-18: see "Resolved during this audit" below -->
-
 
 ### Code-side singular/plural class-name drifts (controller stays a pure delegator, no behaviour change)
 Diagram uses the plural form of the entity in the controller class name, code uses the singular. Either rename the code or correct the diagrams — picking one direction would unify the convention.
