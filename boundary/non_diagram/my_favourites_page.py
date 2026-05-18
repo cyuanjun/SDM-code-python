@@ -1,16 +1,4 @@
-"""MyFavouritesPage <<Boundary>> — UX consolidation.
-
-NOT on any diagram. Combines US-24 (view) + US-25 (search) into one
-page. Search box at top filters the list.
-
-Layout mirrors `BrowseFundraisingActivityPage`: rich activity rows
-(ID / Title / Category / Target / Start / End) and a clickable detail
-panel — the detail itself is rendered by the shared
-`render_activity_detail` helper, which is where US-22 Save / US-23
-Remove live (per the 2026-05-18 US-23 diagram).
-
-Logged in docs/diagram_typos.md as a UX deviation.
-"""
+"""MyFavouritesPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -65,9 +53,6 @@ class MyFavouritesPage:
             )
             return
 
-        # Resolve each favourite's fra_id to its full activity record so
-        # the table can mirror Browse's column layout. None entries (which
-        # shouldn't happen given the FK, but defensively) get filtered.
         activities = [
             ViewFundraisingActivityController().view_fundraising_activity(f.fra_id)
             for f in favourites
@@ -97,7 +82,6 @@ class MyFavouritesPage:
         selected = event.selection.rows
         if selected:
             chosen = activities[selected[0]].fra_id
-            # US-28: bump view count (same as Browse's list → detail jump).
             FundraisingActivity.increment_view_count(chosen)
             st.session_state[SELECTED_KEY] = chosen
             st.rerun()

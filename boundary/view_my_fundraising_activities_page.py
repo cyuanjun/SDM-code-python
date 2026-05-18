@@ -1,15 +1,4 @@
-"""ViewMyFundraisingActivitiesPage <<Boundary>> — Sprint 3 US-17, US-30, US-31.
-
-Diagram contracts (2026-05-18 set):
-    US-17: + displayMatchingMyFundraisingActivity(myFRAList: List<FundraisingActivity>): void
-    US-30: + displayMatchingMyCompletedFundraisingActivity(myCompletedFRAList: List<FundraisingActivity>): void
-    US-31: + displayMyCompletedFundraisingActivities(myCompletedFRAList: List<FundraisingActivity>): void
-
-Per the sketch design (2026-05-17): one page with a search bar plus an
-[All] / [Completed] tab toggle. US-17 fires when [All] is selected with
-a search term; US-30 fires when [Completed] is selected with a search
-term; US-31 fires when [Completed] is selected with no search term.
-"""
+"""ViewMyFundraisingActivitiesPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -29,7 +18,6 @@ from controller.view_my_completed_fundraising_activities_controller import (
 
 
 def _category_lookup() -> dict[str, str]:
-    """fra_cat_id -> category_name, for rendering readable category cells."""
     cats = ViewFundraisingActivityCategoryController().view_all_categories()
     return {c.fra_cat_id: c.category_name for c in cats}
 

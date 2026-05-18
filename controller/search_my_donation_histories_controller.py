@@ -1,9 +1,4 @@
-"""SearchMyDonationHistoriesController <<Controller>> — Sprint 3 US-32.
-
-Pure delegator. Class name pluralised per the 2026-05-18 diagram set
-(`SearchMyDonationHistoriesController`); the method itself stays singular
-(`searchMyDonationHistory`) to match the diagram.
-"""
+"""SearchMyDonationHistoriesController <<Controller>>."""
 from __future__ import annotations
 
 from entity.donation import Donation

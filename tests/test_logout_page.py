@@ -30,8 +30,8 @@ from entity.user_account import UserAccount
 from boundary.logout_page import LogoutPage
 
 st.session_state["user"] = UserAccount(
-    email="ada@x.com", password="p", name="Ada",
-    dob=date(1990, 1, 1), phone_num="0400000034",
+    email="tc-admin@a.com", password="123", name="TC - Admin",
+    dob=date(2000, 1, 1), phone_num="0099999900",
     profile_id="prof_001", account_id="acc_001",
 )
 LogoutPage().render()

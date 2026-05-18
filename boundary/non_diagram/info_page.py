@@ -1,20 +1,10 @@
-"""InfoPage <<Boundary>> — debug-only utility.
-
-NOT a real use case. Bypasses the B-C-E architecture and reads the
-sqlite tables directly so the dev team can inspect database state
-during development.
-
-Shows row counts at the top, one tab per table for the raw contents,
-and the live schema at the bottom. Hide or remove before any recorded
-demo. Logged in docs/todo.md "Debug-only artifacts".
-"""
+"""InfoPage <<Boundary>> — debug-only utility, not part of the design."""
 from __future__ import annotations
 
 import streamlit as st
 
 from persistence.db import get_connection
 
-# Order matters for the tabs — most-touched tables first.
 TABLES = (
     "user_profile",
     "user_account",
@@ -47,8 +37,6 @@ class InfoPage:
         st.divider()
         with st.expander("Schema (sqlite_master)"):
             self._render_schema()
-
-    # ---- helpers ----------------------------------------------------------
 
     @staticmethod
     def _row_counts() -> dict[str, int]:

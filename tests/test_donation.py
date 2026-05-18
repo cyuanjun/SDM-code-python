@@ -13,6 +13,13 @@ from decimal import Decimal
 
 import pytest
 
+from data.seed import (
+    DEFAULT_PASSWORD,
+    TC_DONEE_EMAIL,
+    TC_DONEE_PHONE,
+    TC_FUNDRAISER_EMAIL,
+    TC_FUNDRAISER_PHONE,
+)
 from entity.donation import Donation
 from entity.fundraising_activity import FundraisingActivity
 from entity.user_account import UserAccount
@@ -22,16 +29,18 @@ from entity.user_profile import UserProfile
 def _seed_donee_and_activity() -> tuple[UserAccount, FundraisingActivity]:
     donee_profile = UserProfile.create_profile(role="donee", description="r")
     donee = UserAccount.create_account(
-        email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0400000026", profile_id=donee_profile.profile_id,
+        email=TC_DONEE_EMAIL, password=DEFAULT_PASSWORD, name="TC - Donee",
+        dob=date(2000, 1, 1), phone_num=TC_DONEE_PHONE,
+        profile_id=donee_profile.profile_id,
     )
     fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
     fr = UserAccount.create_account(
-        email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
-        phone_num="0400000031", profile_id=fr_profile.profile_id,
+        email=TC_FUNDRAISER_EMAIL, password=DEFAULT_PASSWORD, name="TC - Fundraiser",
+        dob=date(2000, 1, 1), phone_num=TC_FUNDRAISER_PHONE,
+        profile_id=fr_profile.profile_id,
     )
     activity = FundraisingActivity.create_fundraising_activity(
-        title="Hospital fund", description="medical aid",
+        title="TC - Active hospital fund", description="medical aid",
         target_amount=Decimal("1000"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 6, 1),
         owner_account_id=fr.account_id,
@@ -92,18 +101,18 @@ def test_search_my_donation_history_matches_activity_fields_for_the_donee() -> N
     # Create a second activity with a different title, owned by the same
     # fundraiser (the singleton fundraiser profile rules out a second one).
     school = FundraisingActivity.create_fundraising_activity(
-        title="School fund", description="education",
+        title="TC - Completed school fund", description="education",
         target_amount=Decimal("100"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=hospital.owner_account_id,
     )
-    _seed_donation(donee, hospital, amount="50")
-    _seed_donation(donee, school, amount="20")
+    _seed_donation(donee, hospital, amount="100.00")
+    _seed_donation(donee, school, amount="200.00")
 
     results = Donation.search_my_donation_history(
-        account_id=donee.account_id, search_criteria="school"
+        account_id=donee.account_id, search_criteria="hospital"
     )
-    assert [d.fra_id for d in results] == [school.fra_id]
+    assert [d.fra_id for d in results] == [hospital.fra_id]
 
 
 def test_search_my_donation_history_returns_empty_for_no_match() -> None:
@@ -144,8 +153,9 @@ def test_view_my_donation_histories_excludes_other_donees() -> None:
     _seed_donation(donee_a, activity)
 
     donee_b = UserAccount.create_account(
-        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="0400000148", profile_id=donee_a.profile_id,
+        email="other-d@a.com", password=DEFAULT_PASSWORD, name="Other Donee",
+        dob=date(2000, 1, 1), phone_num="0411111111",
+        profile_id=donee_a.profile_id,
     )
 
     assert (

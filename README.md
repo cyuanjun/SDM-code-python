@@ -42,7 +42,18 @@ App startup also runs [data/seed.py](data/seed.py) — anything the seed produce
 
 Three sample donations are also seeded against a demo activity owned by the default fundraiser so US-32 / US-33 have data to display. Lecturer-approved (2026-05-15) as an acceptable bootstrap convention — logged in [docs/todo.md](docs/todo.md) under "Lecturer decisions".
 
-On top of the four default credentials, `seed_bulk_all()` runs on startup and tops up to **100 of each scalable table**: accounts / categories / activities / donations / favourites / reports — so the admin/PM browse + search pages have realistic data to scroll. Account split: 1 admin / 25 fundraisers (`fr001`..`fr025`) / 70 donees (`d001`..`d070`) / 4 PMs (`pm001`..`pm004`). Favourites are 100 distinct (donee × activity) pairs; reports cycle daily / weekly / monthly across the 4 PMs. Idempotent — re-running `streamlit run app.py` or `python -m data.seed` does nothing once the targets are met.
+On top of the four default credentials, `seed_bulk_all()` runs on startup and tops up to **100 of each scalable table**: accounts / categories / activities / donations / favourites / reports — so the admin/PM browse + search pages have realistic data to scroll. Account split (after TC actors are added): 2 admins (`a001` + `tc-admin`) / 25 fundraisers (`fr001`..`fr024` + `tc-fr`) / 69 donees (`d001`..`d068` + `tc-d`) / 4 PMs (`pm001`..`pm003` + `tc-pm`). Favourites are 100 distinct (donee × activity) pairs; reports cycle daily / weekly / monthly across the PMs. Idempotent — re-running `streamlit run app.py` or `python -m data.seed` does nothing once the targets are met.
+
+**TC scenario rows** — `seed_tc_scenario()` runs after the bulk top-ups, adding a curated set of `TC - <>`-prefixed rows that back every test case in [docs/test_cases.md](docs/test_cases.md). The scenario is fully self-contained under its own actor accounts:
+
+| Account | Email | Password | Owns |
+|---|---|---|---|
+| TC - Admin | `tc-admin@a.com` | `123` | (no data — admin actor for management TCs) |
+| TC - Fundraiser | `tc-fr@a.com` | `123` | the 3 TC activities |
+| TC - Donee | `tc-d@a.com` | `123` | the 2 TC donations + 1 TC favourite |
+| TC - Platform Manager | `tc-pm@a.com` | `123` | the 1 TC monthly report |
+
+Plus 3 categories (`TC - Health`, `TC - Education`, `TC - Sports` (suspended)) and 3 activities owned by TC - Fundraiser (`TC - Active hospital fund`, `TC - Completed school fund` (past end_date → stored `completed=1`), `TC - Suspended sports fund` (suspended=1)). Single coherent scenario shared across all 106 TCs — one set tests everything. `seed_tc_scenario()` runs **after** the bulk top-ups (which reserve the trailing slots), so the TC rows occupy the highest IDs in every table — `acc_097..100`, `cat_098..100`, `fra_098..100`, `don_099..100`, `fav_100`, `rep_100`. Final totals per scalable table stay at 100. Role distribution becomes 2 admin / 25 fundraisers / 69 donees / 4 PMs (one donee slot shifted to admin to make room for TC - Admin while keeping the account total at 100).
 
 ## Run tests
 
@@ -50,7 +61,7 @@ On top of the four default credentials, `seed_bulk_all()` runs on startup and to
 pytest
 ```
 
-404 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+412 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -76,6 +87,6 @@ pytest
 | Sprint 3 | US-4, 5, 9, 10, 16, 17, 23, 25, 30, 31, 32, 33 | ✓ Complete |
 | Sprint 4 | US-28, 29, 34, 35, 36, 37, 38, 41, 42, 43 | ✓ Complete |
 
-All 43 user stories implemented. 404 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/audit.md](docs/audit.md) for the diagram-by-diagram surface and `Code →` mapping, plus [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
+All 43 user stories implemented. 410 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/audit.md](docs/audit.md) for the diagram-by-diagram surface and `Code →` mapping, plus [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
 
 The sidebar is consolidated into 10 entries via per-actor `Manage*` / `Browse*` / `My*` pages (Exception C in [CLAUDE.md](CLAUDE.md)). Role-based gating filters pages by the logged-in user's role.

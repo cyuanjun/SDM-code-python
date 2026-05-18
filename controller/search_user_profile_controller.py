@@ -1,7 +1,4 @@
-"""SearchUserProfileController <<Controller>> — Sprint 3 US-5.
-
-Pure delegator.
-"""
+"""SearchUserProfileController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_profile import UserProfile

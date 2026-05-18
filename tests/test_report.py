@@ -15,6 +15,15 @@ from decimal import Decimal
 
 import pytest
 
+from data.seed import (
+    DEFAULT_PASSWORD,
+    TC_DONEE_EMAIL,
+    TC_DONEE_PHONE,
+    TC_FUNDRAISER_EMAIL,
+    TC_FUNDRAISER_PHONE,
+    TC_PM_EMAIL,
+    TC_PM_PHONE,
+)
 from entity.donation import Donation
 from entity.fundraising_activity import FundraisingActivity
 from entity.report import Report
@@ -27,24 +36,27 @@ def _seed_pm() -> UserAccount:
         role="platform_manager", description="PM"
     )
     return UserAccount.create_account(
-        email="pm@x.com", password="p", name="PM", dob=date(1980, 1, 1),
-        phone_num="0400000031", profile_id=profile.profile_id,
+        email=TC_PM_EMAIL, password=DEFAULT_PASSWORD, name="TC - Platform Manager",
+        dob=date(2000, 1, 1), phone_num=TC_PM_PHONE,
+        profile_id=profile.profile_id,
     )
 
 
 def _seed_fundraiser() -> UserAccount:
     profile = UserProfile.create_profile(role="fundraiser", description="r")
     return UserAccount.create_account(
-        email="f@x.com", password="p", name="F", dob=date(1980, 1, 1),
-        phone_num="0400000039", profile_id=profile.profile_id,
+        email=TC_FUNDRAISER_EMAIL, password=DEFAULT_PASSWORD, name="TC - Fundraiser",
+        dob=date(2000, 1, 1), phone_num=TC_FUNDRAISER_PHONE,
+        profile_id=profile.profile_id,
     )
 
 
 def _seed_donee() -> UserAccount:
     profile = UserProfile.create_profile(role="donee", description="d")
     return UserAccount.create_account(
-        email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0400000047", profile_id=profile.profile_id,
+        email=TC_DONEE_EMAIL, password=DEFAULT_PASSWORD, name="TC - Donee",
+        dob=date(2000, 1, 1), phone_num=TC_DONEE_PHONE,
+        profile_id=profile.profile_id,
     )
 
 

@@ -1,7 +1,4 @@
-"""SuspendMyFundraisingActivityController <<Controller>> — Sprint 3 US-16.
-
-Pure delegator. Forwards (owner_account_id, fra_id) to the entity.
-"""
+"""SuspendMyFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity import FundraisingActivity

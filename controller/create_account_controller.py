@@ -1,7 +1,4 @@
-"""CreateAccountController <<Controller>> — Sprint 1 US-6.
-
-Pure delegator. Forwards Boundary input to UserAccount.create_account.
-"""
+"""CreateAccountController <<Controller>>."""
 from __future__ import annotations
 
 from datetime import date

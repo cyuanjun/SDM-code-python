@@ -1,12 +1,4 @@
-"""UpdateUserProfilePage <<Boundary>> — Sprint 2 US-3.
-
-Diagram contract (US-03.jpg):
-    + displaySuccess(): void
-
-Admin picks a profile from the list (Exception A view_all_profiles),
-edits its fields, submits. Entity returns Boolean; boundary calls
-displaySuccess on True, displayError on False.
-"""
+"""UpdateUserProfilePage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

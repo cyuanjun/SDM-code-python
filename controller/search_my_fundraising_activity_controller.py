@@ -1,7 +1,4 @@
-"""SearchMyFundraisingActivityController <<Controller>> — Sprint 3 US-17.
-
-Pure delegator.
-"""
+"""SearchMyFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity import FundraisingActivity

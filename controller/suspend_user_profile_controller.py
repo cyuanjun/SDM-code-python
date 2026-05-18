@@ -1,7 +1,4 @@
-"""SuspendUserProfileController <<Controller>> — Sprint 3 US-4.
-
-Pure delegator. Forwards profileId to UserProfile.suspend_user_profile.
-"""
+"""SuspendUserProfileController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_profile import UserProfile

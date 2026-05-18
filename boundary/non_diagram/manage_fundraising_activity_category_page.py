@@ -1,11 +1,4 @@
-"""ManageFundraisingActivityCategoryPage <<Boundary>> — UX consolidation.
-
-NOT on any diagram. Combines US-34, 35, 36, 37, 38 (FRA category CRUD)
-into one Search/List/Detail/Update/Suspend screen with an inline Create
-form at the top.
-
-Logged in docs/diagram_typos.md as a UX deviation.
-"""
+"""ManageFundraisingActivityCategoryPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -70,7 +63,6 @@ class ManageFundraisingActivityCategoryPage:
     def _render_create(self) -> None:
         st.header("Create Fundraising Activity Category")
 
-        # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
             st.success(
@@ -183,8 +175,6 @@ class ManageFundraisingActivityCategoryPage:
         self._render_bottom_bar()
 
     def _render_detail_header(self, title: str) -> None:
-        """Page title with the post-action success badge sized to its text,
-        rendered immediately to the right of the title."""
         msg = st.session_state.get(ACTION_MSG_KEY)
         if not msg:
             st.header(title)
@@ -202,8 +192,6 @@ class ManageFundraisingActivityCategoryPage:
         )
 
     def _render_bottom_bar(self) -> None:
-        """Single back button. Edit mode → back to read-only view;
-        view mode → back to list."""
         in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
         st.divider()
         cols = st.columns([1, 1, 4])

@@ -1,10 +1,4 @@
-"""ViewUserProfilesPage <<Boundary>> — Sprint 3 US-5.
-
-Diagram contract (US-05.jpg):
-    + displayMatchingUserProfile(profileList: List<UserProfile>): void
-
-Search by criteria, render matching profiles.
-"""
+"""ViewUserProfilesPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

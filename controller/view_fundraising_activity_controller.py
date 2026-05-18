@@ -1,10 +1,4 @@
-"""ViewFundraisingActivityController <<Controller>> — Sprint 1 US-21.
-
-Pure delegator. Two methods:
-- view_fundraising_activity(activity_id) — per US-21 diagram.
-- view_all_fundraising_activities() — Exception A (logged in docs/todo.md)
-  so the boundary can show a list before the donee picks one.
-"""
+"""ViewFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

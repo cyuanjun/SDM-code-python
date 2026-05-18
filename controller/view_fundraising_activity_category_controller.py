@@ -1,8 +1,4 @@
-"""ViewFundraisingActivityCategoryController — Sprint 4 US-35.
-
-Hosts the singular view (per US-35) and view_all (Exception A) so the
-boundary's category picker is fed without importing the entity directly.
-"""
+"""ViewFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

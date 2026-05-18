@@ -1,4 +1,4 @@
-"""SuspendFundraisingActivityCategoryController — Sprint 4 US-38. Pure delegator."""
+"""SuspendFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity_category import FundraisingActivityCategory

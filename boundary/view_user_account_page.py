@@ -1,15 +1,4 @@
-"""ViewUserAccountPage <<Boundary>> — Sprint 2 US-7 + Sprint 3 US-9.
-
-Diagram contracts:
-    US-07.jpg: + displayUserAccount(account: UserAccount): void
-    US-09.jpg: + displaySuccess(): void  (suspend; class diagram lists this
-                                          page; sequence diagram names
-                                          SuspendUserAccountPage — typo
-                                          logged in docs/todo.md.)
-
-List-then-detail pattern. The list uses Exception A view_all_user_accounts.
-US-9 adds a "Suspend" button on the detail view.
-"""
+"""ViewUserAccountPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -78,7 +67,6 @@ class ViewUserAccountPage:
         st.write(f"**Profile:** {account.profile_id}")
         st.write(f"**Suspended:** {'yes' if account.suspended else 'no'}")
 
-        # US-9: admin suspends this account.
         if not account.suspended:
             if st.button("🚫 Suspend this account"):
                 ok = SuspendUserAccountController().suspend_user_account(

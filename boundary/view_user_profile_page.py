@@ -1,12 +1,4 @@
-"""ViewUserProfilePage <<Boundary>> — Sprint 2 US-2 + Sprint 3 US-4.
-
-Diagram contracts:
-    US-02.jpg: + displayUserProfile(profile: UserProfile): void
-    US-04.jpg: + displaySuccess(): void  (suspend; same boundary class)
-
-US-4 places the "Suspend" button on this same page — the diagram lists
-ViewUserProfilePage as the boundary for both view and suspend.
-"""
+"""ViewUserProfilePage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -72,7 +64,6 @@ class ViewUserProfilePage:
         st.write(f"**Description:** {profile.description or '(none)'}")
         st.write(f"**Suspended:** {'yes' if profile.suspended else 'no'}")
 
-        # US-4: admin suspends this profile.
         if not profile.suspended:
             if st.button("🚫 Suspend this profile"):
                 ok = SuspendUserProfileController().suspend_user_profile(

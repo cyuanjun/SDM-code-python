@@ -1,11 +1,4 @@
-"""ManageMyFundraisingActivityPage <<Boundary>> — UX consolidation.
-
-NOT on any diagram. Combines US-13, 14, 15, 16, 17, 30, 31 into one
-screen with two tabs (All / Completed). Each tab has its own search,
-list, and detail view. Create form is inline above the tabs.
-
-Logged in docs/diagram_typos.md as a UX deviation.
-"""
+"""ManageMyFundraisingActivityPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date
@@ -45,20 +38,17 @@ from controller.view_my_fundraising_activity_controller import (
 )
 
 def _category_lookup() -> dict[str, str]:
-    """fra_cat_id -> category_name, for rendering readable category cells."""
     cats = ViewFundraisingActivityCategoryController().view_all_categories()
     return {c.fra_cat_id: c.category_name for c in cats}
 
 
 def _active_category_options() -> dict[str, str]:
-    """category_name -> fra_cat_id, only for non-suspended categories,
-    for selectbox options."""
     cats = ViewFundraisingActivityCategoryController().view_all_categories()
     return {c.category_name: c.fra_cat_id for c in cats if not c.suspended}
 
 SELECTED_KEY = "manage_my_fra_selected_id"
 EDIT_MODE_KEY = "manage_my_fra_edit_mode"
-SELECTED_TAB_KEY = "manage_my_fra_selected_tab"  # "all" or "completed"
+SELECTED_TAB_KEY = "manage_my_fra_selected_tab"
 CREATE_MODE_KEY = "manage_my_fra_create_mode"
 JUST_CREATED_KEY = "manage_my_fra_just_created"
 ACTION_MSG_KEY = "manage_my_fra_action_msg"
@@ -101,12 +91,9 @@ class ManageMyFundraisingActivityPage:
                 st.rerun()
         self._render_list(owner_account_id)
 
-    # -------- Create view ----------------------------------------------------
-
     def _render_create(self, owner_account_id: str) -> None:
         st.header("Create Fundraising Activity")
 
-        # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
             cat_lookup = _category_lookup()
@@ -188,8 +175,6 @@ class ManageMyFundraisingActivityPage:
         )
         st.session_state[JUST_CREATED_KEY] = new_activity
         st.rerun()
-
-    # -------- List view ------------------------------------------------------
 
     def _render_list(self, owner_account_id: str) -> None:
         all_tab, completed_tab = st.tabs(["All", "Completed"])
@@ -277,8 +262,6 @@ class ManageMyFundraisingActivityPage:
             )
             st.rerun()
 
-    # -------- Detail view ----------------------------------------------------
-
     def _render_detail(self, owner_account_id: str) -> None:
         fra_id = st.session_state[SELECTED_KEY]
         tab = st.session_state.get(SELECTED_TAB_KEY, "all")
@@ -303,8 +286,6 @@ class ManageMyFundraisingActivityPage:
         self._render_bottom_bar()
 
     def _render_detail_header(self, title: str) -> None:
-        """Page title with the post-action success badge sized to its text,
-        rendered immediately to the right of the title."""
         msg = st.session_state.get(ACTION_MSG_KEY)
         if not msg:
             st.header(title)
@@ -322,8 +303,6 @@ class ManageMyFundraisingActivityPage:
         )
 
     def _render_bottom_bar(self) -> None:
-        """Single back button. Edit mode → back to read-only view;
-        view mode → back to list."""
         in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
         st.divider()
         cols = st.columns([1, 1, 4])
@@ -358,10 +337,6 @@ class ManageMyFundraisingActivityPage:
         st.write(f"**Suspended:** {'yes' if activity.suspended else 'no'}")
         st.write(activity.description)
 
-        # US-28 / US-29 — pull counts via the diagram-defined controllers
-        # rather than reading the dataclass fields, so the consolidated
-        # Manage page hits the same call chain as the per-US
-        # ViewMyFundraisingActivityPage (Exception C).
         view_count = (
             ViewFundraisingActivityViewCountController()
             .view_fundraising_activity_view_count(activity.fra_id)
@@ -385,7 +360,7 @@ class ManageMyFundraisingActivityPage:
                 st.rerun()
         with col_suspend:
             if activity.completed:
-                pass  # completed activities aren't suspendable
+                pass
             elif activity.suspended:
                 if st.button(
                     "✅ Unsuspend", use_container_width=True
@@ -425,7 +400,6 @@ class ManageMyFundraisingActivityPage:
         is_completed_view = ACTION_MSG_KEY in st.session_state
 
         cat_options = _active_category_options()
-        # Allow keeping the existing category even if it's now suspended.
         cat_lookup = _category_lookup()
         current_name = cat_lookup.get(activity.fra_cat_id)
         if current_name and current_name not in cat_options:
@@ -464,7 +438,6 @@ class ManageMyFundraisingActivityPage:
             end_date = st.date_input(
                 "End date", value=activity.end_date, disabled=is_completed_view
             )
-            # `completed` is derived from end_date < today; not editable here.
             col_save, col_cancel, _ = st.columns([1, 1, 4])
             with col_save:
                 submitted = st.form_submit_button(
@@ -480,7 +453,6 @@ class ManageMyFundraisingActivityPage:
                 )
 
         if is_completed_view:
-            # Inline confirmation + Back-to-view live in the bottom bar.
             return
 
         if cancel:
@@ -515,8 +487,6 @@ class ManageMyFundraisingActivityPage:
         else:
             st.error("Update failed.")
 
-    # -------- Validators -----------------------------------------------------
-
     @staticmethod
     def _validate_common(
         title: str, description: str, target_amount_str: str,
@@ -540,7 +510,6 @@ class ManageMyFundraisingActivityPage:
             title, description, target_amount_str, fra_cat_id, start_date, end_date,
         ):
             return False
-        # Brand-new activities can't start in the past.
         return start_date >= date.today()
 
     @classmethod
@@ -553,6 +522,4 @@ class ManageMyFundraisingActivityPage:
             title, description, target_amount_str, fra_cat_id, start_date, end_date,
         ):
             return False
-        # Existing activities may have a past start_date (already running),
-        # but the end date can't be moved into the past.
         return end_date >= date.today()

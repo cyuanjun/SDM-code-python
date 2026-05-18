@@ -1,17 +1,4 @@
-"""Donation <<Entity>> — Sprint 3 US-32, US-33.
-
-Diagram contracts:
-    US-32.jpg: + searchDonationHistory(searchCriteria: String, accountId: String): List<Donation>
-               (class diagram types accountId as Integer — typo logged.)
-    US-33.jpg: + viewMyDonationHistory(accountId: String, donationId: String): Donation
-
-Attributes: donationId, accountId, FRAId, amount (Decimal), donationDate (Date).
-
-No "make donation" use case exists on any Sprint 1-3 diagram. data/seed.py
-creates a handful of demo donations so US-32/33 have data to display.
-A `create_donation` classmethod is provided here so the seed can call it
-through the entity rather than writing raw SQL.
-"""
+"""Donation <<Entity>>."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -59,9 +46,6 @@ class Donation:
     def search_my_donation_history(
         cls, account_id: str, search_criteria: str
     ) -> list["Donation"]:
-        """US-32 — donee searches donation history. Joins to
-        fundraising_activity (and from there to fundraising_activity_category)
-        and matches title / description / category_name."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -80,13 +64,6 @@ class Donation:
 
     @classmethod
     def view_my_donation_histories(cls, account_id: str) -> list["Donation"]:
-        """US-33 — donee views the list of their donation histories.
-
-        Re-shaped 2026-05-18 from a per-id 'view one' to a 'view list' per
-        the updated US-33 diagram (boundary shared with US-32). The previous
-        Exception A `view_my_donations` is retired — this is its diagram-
-        defined replacement.
-        """
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT donation_id, account_id, fra_id, amount, donation_date "

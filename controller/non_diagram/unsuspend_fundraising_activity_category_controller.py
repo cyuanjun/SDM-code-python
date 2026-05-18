@@ -1,5 +1,4 @@
-"""UnsuspendFundraisingActivityCategoryController — Exception A (UX).
-Pure delegator."""
+"""UnsuspendFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity_category import FundraisingActivityCategory

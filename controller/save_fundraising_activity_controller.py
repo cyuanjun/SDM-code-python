@@ -1,8 +1,4 @@
-"""SaveFundraisingActivityController <<Controller>> — Sprint 2 US-22.
-
-Pure delegator. Forwards (account_id, fra_id) to
-Favourite.save_fundraising_activity.
-"""
+"""SaveFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from entity.favourite import Favourite

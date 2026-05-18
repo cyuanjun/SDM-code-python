@@ -180,9 +180,11 @@ When handed new sprint diagrams:
 
 ## Coverage and what's deferred
 
-All **43 user stories** are implemented on this branch (`revamp-final-diagrams`). **404 tests pass.** **Zero open diagram drifts** — see [docs/audit.md](docs/audit.md) for the diagram-by-diagram Boundary / Controller / Entity surface + matching `Code →` Python identifier.
+All **43 user stories** are implemented on this branch (`revamp-final-diagrams`). **412 tests pass.** **Zero open diagram drifts** — see [docs/audit.md](docs/audit.md) for the diagram-by-diagram Boundary / Controller / Entity surface + matching `Code →` Python identifier.
 
-The seed bulks up to **100 of each scalable table** on startup (idempotent — `seed_bulk_all()` in [data/seed.py](data/seed.py)): accounts / categories / activities / donations / favourites / reports. Profiles stay schema-locked at 1 per role. Account split: 1 admin / 25 fundraisers / 70 donees / 4 PMs. The four default-credentials accounts (a001/fr001/d001/pm001) are still the first row in each role. Favourites are 100 distinct (donee × activity) pairs; reports cycle daily/weekly/monthly across the 4 PMs.
+The seed bulks up to **100 of each scalable table** on startup (idempotent — `seed_bulk_all()` in [data/seed.py](data/seed.py)): accounts / categories / activities / donations / favourites / reports. Profiles stay schema-locked at 1 per role. Account split: 2 admins / 25 fundraisers / 69 donees / 4 PMs. The four default-credentials accounts (a001/fr001/d001/pm001) are still the first row in each role; the four TC actor accounts (tc-admin / tc-fr / tc-d / tc-pm) sit at acc_097..100. Favourites are 100 distinct (donee × activity) pairs; reports cycle daily/weekly/monthly.
+
+**TC scenario rows.** After the bulk top-up, `seed_tc_scenario()` lays down a curated set of `TC - <>`-prefixed rows that back every test case in [docs/test_cases.md](docs/test_cases.md). Fully self-contained: 4 TC actor accounts (`tc-admin@a.com` / `tc-fr@a.com` / `tc-d@a.com` / `tc-pm@a.com`, all password `123`) plus 3 categories, 3 activities (active / completed / suspended) owned by TC - Fundraiser, 2 donations from TC - Donee, 1 favourite, 1 monthly report by TC - PM. Each `seed_bulk_*` reserves the trailing TC slots (categories fills to 97, activities to 97, donations to 98, favourites to 99, reports to 99, accounts to 1 admin + 24 fr + 68 d + 3 pm = 96) so TC rows occupy the highest IDs in every table (`acc_097..100`, `cat_098..100`, `fra_098..100`, `don_099..100`, `fav_100`, `rep_100`). Final totals stay at 100 per scalable table; one donee slot was shifted to admin to keep the total at 100 once TC - Admin was added.
 
 | Sprint | Stories | Status |
 |---|---|---|

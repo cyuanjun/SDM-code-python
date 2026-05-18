@@ -1,15 +1,4 @@
-"""Streamlit entry point.
-
-The sidebar wires the UX-consolidated boundary pages (one per actor area,
-each combining the diagram-defined per-US Boundary classes via search /
-list / detail / inline create). The per-US classes still exist as
-testable artifacts and as the diagram's 1:1 mapping — they're just not
-sidebar entries.
-
-Role-based gating: the sidebar shows only the pages allowed for the
-currently logged-in role. Defaults to logged-out view when no user is
-in session_state. The .info debug page is always visible (dev utility).
-"""
+"""Streamlit entry point."""
 from __future__ import annotations
 
 import streamlit as st
@@ -57,7 +46,6 @@ PAGES: dict = {
     ".info (debug)": InfoPage,
 }
 
-# Pages visible per role. None = not signed in.
 PAGES_BY_ROLE: dict[str | None, list[str]] = {
     None: [
         "Log In",
@@ -91,7 +79,6 @@ PAGES_BY_ROLE: dict[str | None, list[str]] = {
 
 
 def _current_role() -> str | None:
-    """Return the role of the logged-in user, or None if not signed in."""
     user = st.session_state.get("user")
     if user is None:
         return None
@@ -107,9 +94,7 @@ def main() -> None:
     seed_default_donee()
     seed_default_platform_manager()
     seed_demo_donations()
-    seed_bulk_all()  # tops up to 100 accounts / categories / activities / donations
-    # Refresh `completed` flags so activities whose end_date passed since
-    # the last write get picked up. Cheap (single UPDATE statement).
+    seed_bulk_all()
     FundraisingActivity.refresh_completed_flags()
 
     role = _current_role()

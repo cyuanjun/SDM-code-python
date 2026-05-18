@@ -11,6 +11,13 @@ from decimal import Decimal
 
 import pytest
 
+from data.seed import (
+    DEFAULT_PASSWORD,
+    TC_DONEE_EMAIL,
+    TC_DONEE_PHONE,
+    TC_FUNDRAISER_EMAIL,
+    TC_FUNDRAISER_PHONE,
+)
 from entity.favourite import Favourite
 from entity.fundraising_activity import FundraisingActivity
 from entity.user_account import UserAccount
@@ -20,8 +27,9 @@ from entity.user_profile import UserProfile
 def _seed_donee() -> UserAccount:
     profile = UserProfile.create_profile(role="donee", description="r")
     return UserAccount.create_account(
-        email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0400000024", profile_id=profile.profile_id,
+        email=TC_DONEE_EMAIL, password=DEFAULT_PASSWORD, name="TC - Donee",
+        dob=date(2000, 1, 1), phone_num=TC_DONEE_PHONE,
+        profile_id=profile.profile_id,
     )
 
 
@@ -38,17 +46,26 @@ def _seed_fundraiser() -> UserAccount:
     profile = profiles[0] if profiles else UserProfile.create_profile(
         role="fundraiser", description="r",
     )
+    if n == 1:
+        email = TC_FUNDRAISER_EMAIL
+        phone = TC_FUNDRAISER_PHONE
+        name = "TC - Fundraiser"
+    else:
+        email = f"other-fr{n}@a.com"
+        phone = f"04999{n:05d}"
+        name = f"Other Fundraiser {n}"
     return UserAccount.create_account(
-        email=f"f{n}@x.com", password="p", name="F", dob=date(1990, 1, 1),
-        phone_num=f"04999{n:05d}", profile_id=profile.profile_id,
+        email=email, password=DEFAULT_PASSWORD, name=name,
+        dob=date(2000, 1, 1), phone_num=phone, profile_id=profile.profile_id,
     )
 
 
 def _seed_activity() -> FundraisingActivity:
     fr = _seed_fundraiser()
     return FundraisingActivity.create_fundraising_activity(
-        title="A", description="d", target_amount=Decimal("100"),
-        fra_cat_id="cat_001", start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
+        title="TC - Active hospital fund", description="d",
+        target_amount=Decimal("100"), fra_cat_id="cat_001",
+        start_date=date(2026, 1, 1), end_date=date(2026, 2, 1),
         owner_account_id=fr.account_id,
     )
 
@@ -152,8 +169,8 @@ def test_view_favourite_list_scopes_to_the_account() -> None:
     profile = UserProfile.view_user_profile(first.profile_id)
     assert profile is not None
     second = UserAccount.create_account(
-        email="d2@x.com", password="p", name="D2",
-        dob=date(1990, 1, 1), phone_num="0400000156",
+        email="other-d@a.com", password=DEFAULT_PASSWORD, name="Other Donee",
+        dob=date(2000, 1, 1), phone_num="0411111111",
         profile_id=first.profile_id,
     )
     activity_a = _seed_activity()
@@ -228,13 +245,13 @@ def test_search_favourite_matches_activity_fields_for_the_donee() -> None:
     # Seed three activities and favourite two of them.
     fr = _seed_fundraiser()
     a1 = FundraisingActivity.create_fundraising_activity(
-        title="Hospital fund", description="d",
+        title="TC - Active hospital fund", description="d",
         target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=fr.account_id,
     )
     a2 = FundraisingActivity.create_fundraising_activity(
-        title="School fundraiser", description="d",
+        title="TC - Completed school fund", description="d",
         target_amount=Decimal("1"), fra_cat_id="cat_001",
         start_date=date(2026, 1, 1), end_date=date(2026, 1, 2),
         owner_account_id=fr.account_id,
@@ -286,7 +303,7 @@ def test_search_favourite_hides_favourites_pointing_at_suspended_activities() ->
     """Negative path of the donee-visible rule: favourites whose target
     activity is suspended don't surface in search results either."""
     donee = _seed_donee()
-    activity = _seed_activity()  # title="A"
+    activity = _seed_activity()  # title="TC - Active hospital fund"
     Favourite.save_fundraising_activity(
         account_id=donee.account_id, fra_id=activity.fra_id,
     )
@@ -296,7 +313,7 @@ def test_search_favourite_hides_favourites_pointing_at_suspended_activities() ->
 
     assert (
         Favourite.search_favourite(
-            account_id=donee.account_id, search_criteria="a"
+            account_id=donee.account_id, search_criteria="hospital"
         )
         == []
     )

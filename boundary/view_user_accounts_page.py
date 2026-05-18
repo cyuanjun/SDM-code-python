@@ -1,8 +1,4 @@
-"""ViewUserAccountsPage <<Boundary>> — Sprint 3 US-10.
-
-Diagram contract (US-10.jpg):
-    + displayMatchingUserAccount(accountList: List<UserAccount>): void
-"""
+"""ViewUserAccountsPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

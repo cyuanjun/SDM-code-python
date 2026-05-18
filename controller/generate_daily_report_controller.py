@@ -1,4 +1,4 @@
-"""GenerateDailyReportController — Sprint 4 US-41. Pure delegator."""
+"""GenerateDailyReportController <<Controller>>."""
 from __future__ import annotations
 
 from datetime import date

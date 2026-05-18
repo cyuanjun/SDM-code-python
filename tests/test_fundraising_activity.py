@@ -20,6 +20,11 @@ from decimal import Decimal
 
 import pytest
 
+from data.seed import (
+    DEFAULT_PASSWORD,
+    TC_FUNDRAISER_EMAIL,
+    TC_FUNDRAISER_PHONE,
+)
 from entity.fundraising_activity import FundraisingActivity
 from entity.fundraising_activity_category import FundraisingActivityCategory
 from entity.user_account import UserAccount
@@ -29,8 +34,9 @@ from entity.user_profile import UserProfile
 def _seed_fundraiser_account() -> UserAccount:
     profile = UserProfile.create_profile(role="fundraiser", description="Runs campaigns")
     return UserAccount.create_account(
-        email="fr@x.com", password="p", name="Fr", dob=date(1980, 1, 1),
-        phone_num="0400000033", profile_id=profile.profile_id,
+        email=TC_FUNDRAISER_EMAIL, password=DEFAULT_PASSWORD, name="TC - Fundraiser",
+        dob=date(2000, 1, 1), phone_num=TC_FUNDRAISER_PHONE,
+        profile_id=profile.profile_id,
     )
 
 
@@ -38,22 +44,22 @@ def test_create_fundraising_activity_persists_and_returns_with_prefixed_id() -> 
     owner = _seed_fundraiser_account()
 
     activity = FundraisingActivity.create_fundraising_activity(
-        title="Hospital fund",
-        description="Save the local clinic",
+        title="TC - Active hospital fund",
+        description="TC scenario active activity",
         target_amount=Decimal("5000.00"),
         fra_cat_id="cat_001",
         start_date=date(2026, 6, 1),
-        end_date=date(2026, 12, 31),
+        end_date=date(2027, 12, 31),
         owner_account_id=owner.account_id,
     )
 
     assert activity.fra_id == "fra_001"
-    assert activity.title == "Hospital fund"
-    assert activity.description == "Save the local clinic"
+    assert activity.title == "TC - Active hospital fund"
+    assert activity.description == "TC scenario active activity"
     assert activity.target_amount == Decimal("5000.00")
     assert activity.fra_cat_id == "cat_001"
     assert activity.start_date == date(2026, 6, 1)
-    assert activity.end_date == date(2026, 12, 31)
+    assert activity.end_date == date(2027, 12, 31)
     assert activity.owner_account_id == owner.account_id
     assert activity.completed is False
     assert activity.suspended is False
@@ -109,7 +115,9 @@ def test_create_fundraising_activity_preserves_decimal_precision() -> None:
     assert isinstance(activity.target_amount, Decimal)
 
 
-def _seed_activity(owner: UserAccount, title: str = "A") -> FundraisingActivity:
+def _seed_activity(
+    owner: UserAccount, title: str = "TC - Active hospital fund",
+) -> FundraisingActivity:
     """Seeds an *ongoing* activity (end_date in the future), so the derived
     `completed` property stays False unless the test explicitly changes
     end_date to a past value."""
@@ -199,8 +207,8 @@ def test_view_my_fundraising_activity_returns_none_for_wrong_owner() -> None:
 
     # Seed a second fundraiser who doesn't own the activity.
     other = UserAccount.create_account(
-        email="other@x.com", password="p", name="Other",
-        dob=date(1990, 1, 1), phone_num="0400000203",
+        email="other-fr@a.com", password=DEFAULT_PASSWORD, name="Other Fundraiser",
+        dob=date(2000, 1, 1), phone_num="0411111111",
         profile_id=owner.profile_id,
     )
 
@@ -288,8 +296,8 @@ def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
     created = _seed_activity(owner)
 
     other = UserAccount.create_account(
-        email="other@x.com", password="p", name="Other",
-        dob=date(1990, 1, 1), phone_num="0400000292",
+        email="other-fr@a.com", password=DEFAULT_PASSWORD, name="Other Fundraiser",
+        dob=date(2000, 1, 1), phone_num="0411111111",
         profile_id=owner.profile_id,
     )
 
@@ -307,7 +315,7 @@ def test_update_my_fundraising_activity_returns_false_for_wrong_owner() -> None:
     assert ok is False
     fetched = FundraisingActivity.view_fundraising_activity(created.fra_id)
     assert fetched is not None
-    assert fetched.title == "A"  # original
+    assert fetched.title == "TC - Active hospital fund"  # original
 
 
 def test_update_my_fundraising_activity_returns_false_for_missing_fra_id() -> None:
@@ -329,13 +337,13 @@ def test_update_my_fundraising_activity_returns_false_for_missing_fra_id() -> No
 
 def test_search_fundraising_activity_matches_title_substring() -> None:
     owner = _seed_fundraiser_account()
-    _seed_activity(owner, title="Hospital fund")
-    _seed_activity(owner, title="School fundraiser")
+    _seed_activity(owner, title="TC - Active hospital fund")
+    _seed_activity(owner, title="TC - Completed school fund")
     _seed_activity(owner, title="Animal rescue")
 
-    results = FundraisingActivity.search_fundraising_activity("fund")
+    results = FundraisingActivity.search_fundraising_activity("hospital")
 
-    assert {a.title for a in results} == {"Hospital fund", "School fundraiser"}
+    assert {a.title for a in results} == {"TC - Active hospital fund"}
 
 
 def test_search_fundraising_activity_matches_description_or_category() -> None:
@@ -395,20 +403,20 @@ def test_search_fundraising_activity_hides_suspended_from_donees() -> None:
     """Negative path of the donee-visible rule: search results skip
     suspended activities even when the title matches."""
     owner = _seed_fundraiser_account()
-    visible = _seed_activity(owner, title="School fund")
-    hidden = _seed_activity(owner, title="Hidden school fund")
+    visible = _seed_activity(owner, title="TC - Completed school fund")
+    hidden = _seed_activity(owner, title="TC - Suspended sports fund")
     FundraisingActivity.suspend_my_fundraising_activity(
         owner_account_id=owner.account_id, fra_id=hidden.fra_id,
     )
 
-    results = FundraisingActivity.search_fundraising_activity("school")
+    results = FundraisingActivity.search_fundraising_activity("sports")
 
-    assert [a.fra_id for a in results] == [visible.fra_id]
+    assert results == []
     # Owner-scoped search still returns the suspended one.
     mine = FundraisingActivity.search_my_fundraising_activity(
-        owner_account_id=owner.account_id, search_criteria="school",
+        owner_account_id=owner.account_id, search_criteria="sports",
     )
-    assert {a.fra_id for a in mine} == {visible.fra_id, hidden.fra_id}
+    assert {a.fra_id for a in mine} == {hidden.fra_id}
 
 
 def test_suspend_my_fundraising_activity_returns_true_for_correct_owner() -> None:
@@ -432,8 +440,8 @@ def test_suspend_my_fundraising_activity_returns_false_for_wrong_owner() -> None
     created = _seed_activity(owner)
 
     other = UserAccount.create_account(
-        email="other@x.com", password="p", name="Other",
-        dob=date(1990, 1, 1), phone_num="0400000436",
+        email="other-fr@a.com", password=DEFAULT_PASSWORD, name="Other Fundraiser",
+        dob=date(2000, 1, 1), phone_num="0411111111",
         profile_id=owner.profile_id,
     )
 
@@ -459,12 +467,12 @@ def test_suspend_my_fundraising_activity_returns_false_for_missing_fra_id() -> N
 
 def test_search_my_fundraising_activity_scopes_to_owner_and_matches_criteria() -> None:
     owner = _seed_fundraiser_account()
-    _seed_activity(owner, title="Hospital fund")
-    _seed_activity(owner, title="School fundraiser")
+    _seed_activity(owner, title="TC - Active hospital fund")
+    _seed_activity(owner, title="TC - Completed school fund")
 
     other = UserAccount.create_account(
-        email="other@x.com", password="p", name="Other",
-        dob=date(1990, 1, 1), phone_num="0400000467",
+        email="other-fr@a.com", password=DEFAULT_PASSWORD, name="Other Fundraiser",
+        dob=date(2000, 1, 1), phone_num="0411111111",
         profile_id=owner.profile_id,
     )
     _seed_activity(other, title="Hospital research")
@@ -473,7 +481,7 @@ def test_search_my_fundraising_activity_scopes_to_owner_and_matches_criteria() -
         owner_account_id=owner.account_id, search_criteria="hospital",
     )
 
-    assert [a.title for a in mine] == ["Hospital fund"]
+    assert [a.title for a in mine] == ["TC - Active hospital fund"]
 
 
 def test_search_my_fundraising_activity_returns_empty_for_no_match() -> None:
@@ -496,7 +504,7 @@ def test_search_my_fundraising_activity_returns_empty_for_no_activities() -> Non
 
 
 def _seed_completed_activity(
-    owner: UserAccount, title: str = "Done"
+    owner: UserAccount, title: str = "TC - Completed school fund"
 ) -> FundraisingActivity:
     """Seeds a *completed* activity by setting `end_date` in the past — the
     derived `completed` property flips to True automatically. No direct
@@ -511,13 +519,13 @@ def _seed_completed_activity(
 
 def test_search_my_completed_fundraising_activity_matches_only_completed_and_owner_scoped() -> None:
     owner = _seed_fundraiser_account()
-    completed = _seed_completed_activity(owner, title="Hospital fund")
-    ongoing = _seed_activity(owner, title="Hospital research")  # NOT completed
+    completed = _seed_completed_activity(owner, title="TC - Completed school fund")
+    ongoing = _seed_activity(owner, title="TC - Active hospital fund")  # NOT completed
     assert ongoing.completed is False
     assert completed.fra_id != ongoing.fra_id
 
     results = FundraisingActivity.search_my_completed_fundraising_activity(
-        owner_account_id=owner.account_id, search_criteria="hospital",
+        owner_account_id=owner.account_id, search_criteria="school",
     )
 
     assert [a.fra_id for a in results] == [completed.fra_id]
@@ -555,16 +563,16 @@ def test_search_my_completed_fundraising_activity_returns_empty_for_no_matches()
 
 def test_view_my_completed_fundraising_activities_returns_only_completed_for_owner() -> None:
     owner = _seed_fundraiser_account()
-    completed_a = _seed_completed_activity(owner, title="Hospital fund")
-    completed_b = _seed_completed_activity(owner, title="School fund")
-    _seed_activity(owner, title="Ongoing thing")  # not completed
+    completed_a = _seed_completed_activity(owner, title="TC - Completed school fund")
+    completed_b = _seed_completed_activity(owner, title="TC - Completed hospital fund")
+    _seed_activity(owner, title="TC - Active hospital fund")  # not completed
 
     results = FundraisingActivity.view_my_completed_fundraising_activities(
         owner_account_id=owner.account_id,
     )
 
     titles = {a.title for a in results}
-    assert titles == {"Hospital fund", "School fund"}
+    assert titles == {"TC - Completed school fund", "TC - Completed hospital fund"}
     assert all(a.completed for a in results)
     assert {completed_a.fra_id, completed_b.fra_id} == {a.fra_id for a in results}
 

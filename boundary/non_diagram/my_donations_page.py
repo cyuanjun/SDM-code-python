@@ -1,10 +1,4 @@
-"""MyDonationsPage <<Boundary>> — UX consolidation.
-
-NOT on any diagram. Combines US-33 (view) + US-32 (search) into one
-page. Search box at top filters; click a row to view details.
-
-Logged in docs/diagram_typos.md as a UX deviation.
-"""
+"""MyDonationsPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -79,9 +73,6 @@ class MyDonationsPage:
             st.rerun()
 
     def _render_detail(self, account_id: str) -> None:
-        # No diagram-defined per-id donation lookup any more — the new
-        # US-33 method is list-only. We fetch the donee's list and filter
-        # client-side to find the row they clicked.
         all_mine = (
             ViewMyDonationHistoriesController()
             .view_my_donation_histories(account_id=account_id)

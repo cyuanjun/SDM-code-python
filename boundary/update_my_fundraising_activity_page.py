@@ -1,14 +1,4 @@
-"""UpdateMyFundraisingActivityPage <<Boundary>> — Sprint 2 US-15.
-
-Diagram contract (US-15.jpg):
-    + displaySuccess(): void
-
-Fundraiser-scoped. Lists own activities, picks one, edits, submits.
-Category is a `st.selectbox` populated from the PM-curated list per the
-2026-05-18 US-13 attribute change (`category: String` → `FRACatId: String`).
-Ownership is enforced both at the boundary (list scoped by owner) and
-at the entity (UPDATE … WHERE fra_id AND owner_account_id).
-"""
+"""UpdateMyFundraisingActivityPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date
@@ -55,7 +45,6 @@ class UpdateMyFundraisingActivityPage:
         categories = (
             ViewFundraisingActivityCategoryController().view_all_categories()
         )
-        # Allow keeping the current category even if it's now suspended.
         cat_options = {c.category_name: c.fra_cat_id for c in categories}
         cat_id_to_name = {v: k for k, v in cat_options.items()}
         current_name = cat_id_to_name.get(current.fra_cat_id)
@@ -77,8 +66,6 @@ class UpdateMyFundraisingActivityPage:
             fra_cat_id = cat_options[category_name]
             start_date = st.date_input("Start date", value=current.start_date)
             end_date = st.date_input("End date", value=current.end_date)
-            # `completed` is derived from end_date; `suspended` is owned by
-            # US-16 / unsuspend and isn't editable from this form.
 
             col_a, col_b = st.columns(2)
             with col_a:
@@ -177,10 +164,6 @@ class UpdateMyFundraisingActivityPage:
             return False
         if start_date > end_date:
             return False
-        # Existing activities may legitimately have a past start_date (already
-        # running), so we don't re-validate start_date here. But the end date
-        # must still be today or later — you can't update an activity to end
-        # retroactively.
         if end_date < (today or date.today()):
             return False
         return True
@@ -199,6 +182,5 @@ class UpdateMyFundraisingActivityPage:
 
 
 def _build_category_lookup() -> dict[str, str]:
-    """fra_cat_id -> category_name. Used to render readable categories in tables."""
     cats = ViewFundraisingActivityCategoryController().view_all_categories()
     return {c.fra_cat_id: c.category_name for c in cats}

@@ -14,13 +14,13 @@ from entity.fundraising_activity_category import FundraisingActivityCategory
 
 def test_create_category_persists_and_returns_with_prefixed_id() -> None:
     cat = FundraisingActivityCategory.create_category(
-        category_name="Health",
-        description="Medical and healthcare campaigns",
+        category_name="TC - Health",
+        description="TC scenario active category",
     )
 
     assert cat.fra_cat_id == "cat_001"
-    assert cat.category_name == "Health"
-    assert cat.description == "Medical and healthcare campaigns"
+    assert cat.category_name == "TC - Health"
+    assert cat.description == "TC scenario active category"
     assert cat.suspended is False
 
 
@@ -48,10 +48,10 @@ def test_create_category_returns_none_for_duplicate_name() -> None:
     create with the same name must return None rather than persist a
     duplicate."""
     first = FundraisingActivityCategory.create_category(
-        category_name="Health", description="primary"
+        category_name="TC - Health", description="primary"
     )
     second = FundraisingActivityCategory.create_category(
-        category_name="Health", description="duplicate"
+        category_name="TC - Health", description="duplicate"
     )
 
     assert first is not None
@@ -62,35 +62,35 @@ def test_update_fra_category_returns_false_for_duplicate_name() -> None:
     """Negative path: updating one category's name to a name already
     taken by another category must return False (UNIQUE constraint)."""
     health = FundraisingActivityCategory.create_category(
-        category_name="Health", description="a"
+        category_name="TC - Health", description="a"
     )
     education = FundraisingActivityCategory.create_category(
-        category_name="Education", description="b"
+        category_name="TC - Education", description="b"
     )
     assert health is not None and education is not None
 
     ok = FundraisingActivityCategory.update_fundraising_activity_category(
         education.fra_cat_id,
-        category_name="Health",
+        category_name="TC - Health",
         description="b",
     )
     assert ok is False
     fetched = FundraisingActivityCategory.view_fundraising_activity_category(
         education.fra_cat_id
     )
-    assert fetched is not None and fetched.category_name == "Education"
+    assert fetched is not None and fetched.category_name == "TC - Education"
 
 
 def test_view_fundraising_activity_category_returns_for_existing_id() -> None:
     created = FundraisingActivityCategory.create_category(
-        category_name="Health", description="medical"
+        category_name="TC - Health", description="TC scenario active category"
     )
 
     fetched = FundraisingActivityCategory.view_fundraising_activity_category(
         created.fra_cat_id
     )
     assert fetched is not None
-    assert fetched.category_name == "Health"
+    assert fetched.category_name == "TC - Health"
 
 
 def test_view_fundraising_activity_category_returns_none_for_missing_id() -> None:
@@ -105,12 +105,12 @@ def test_view_fundraising_activity_category_returns_none_for_missing_id() -> Non
 
 def test_update_fra_category_returns_true_and_persists_changes() -> None:
     created = FundraisingActivityCategory.create_category(
-        category_name="Health", description="initial"
+        category_name="TC - Health", description="initial"
     )
 
     ok = FundraisingActivityCategory.update_fundraising_activity_category(
         fra_cat_id=created.fra_cat_id,
-        category_name="Healthcare",
+        category_name="TC - Health (renamed)",
         description="revised description",
     )
     assert ok is True
@@ -119,7 +119,7 @@ def test_update_fra_category_returns_true_and_persists_changes() -> None:
         created.fra_cat_id
     )
     assert fetched is not None
-    assert fetched.category_name == "Healthcare"
+    assert fetched.category_name == "TC - Health (renamed)"
     assert fetched.description == "revised description"
     # suspended is not updatable via this method any more (per the flattened
     # 2026-05-18 signature) — defaults from create stay in place.
@@ -138,16 +138,18 @@ def test_update_fra_category_returns_false_for_missing_id() -> None:
 
 
 def test_search_fra_category_matches_name_substring_case_insensitive() -> None:
-    FundraisingActivityCategory.create_category("Health", "medical")
-    FundraisingActivityCategory.create_category("Education", "schooling")
-    FundraisingActivityCategory.create_category("Animals", "rescue")
+    FundraisingActivityCategory.create_category("TC - Health", "TC scenario active category")
+    FundraisingActivityCategory.create_category("TC - Education", "TC scenario active category")
+    FundraisingActivityCategory.create_category("TC - Sports", "TC scenario suspended category")
 
     results = (
         FundraisingActivityCategory.search_fundraising_activity_category(
-            "HEALTH"
+            "TC - "
         )
     )
-    assert [c.category_name for c in results] == ["Health"]
+    assert [c.category_name for c in results] == [
+        "TC - Health", "TC - Education", "TC - Sports",
+    ]
 
 
 def test_search_fra_category_matches_description() -> None:
@@ -164,17 +166,17 @@ def test_search_fra_category_matches_description() -> None:
 
 def test_search_fra_category_returns_empty_for_no_match() -> None:
     """Negative path."""
-    FundraisingActivityCategory.create_category("Health", "a")
+    FundraisingActivityCategory.create_category("TC - Health", "a")
     assert (
         FundraisingActivityCategory.search_fundraising_activity_category(
-            "nothing"
+            "zzz-no-match"
         )
         == []
     )
 
 
 def test_suspend_fra_category_returns_true_and_sets_flag() -> None:
-    created = FundraisingActivityCategory.create_category("Health", "a")
+    created = FundraisingActivityCategory.create_category("TC - Health", "a")
     assert created.suspended is False
 
     assert (

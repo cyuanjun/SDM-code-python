@@ -1,20 +1,4 @@
-"""ViewMyFundraisingActivityPage <<Boundary>> — Sprint 2 US-14 + Sprint 3 US-16 + Sprint 4 US-28/29.
-
-Diagram contracts:
-    US-14.jpg: + displayMyFundraisingActivity(fundraisingActivity: FundraisingActivity): void
-    US-16.jpg: + displaySuccess(): void  (suspend; class diagram names the
-                                          donee's ViewFundraisingActivityPage
-                                          — typo logged; this fundraiser page
-                                          is the correct boundary.)
-    US-28.jpg: + displayFundraisingActivityViewCount(viewCount: Integer): void
-    US-29.jpg: + displayFundraisingActivitySaveCount(saveCount: Integer): void
-
-Fundraiser-scoped. Requires login. US-16 adds the Suspend button on detail;
-US-28/29 add the view/save count metrics — both pulled via their diagram-
-defined controllers. Owner-scoping is implicit (this page is fundraiser-
-only and only shows the caller's own activities), so no extra gate is
-needed for the counts.
-"""
+"""ViewMyFundraisingActivityPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -119,8 +103,6 @@ class ViewMyFundraisingActivityPage:
         st.write(f"**Suspended:** {'yes' if activity.suspended else 'no'}")
         st.write(activity.description)
 
-        # US-28 / US-29: view and save counts, pulled via their diagram-
-        # defined controllers (not read off the dataclass).
         view_count = (
             ViewFundraisingActivityViewCountController()
             .view_fundraising_activity_view_count(activity.fra_id)
@@ -132,7 +114,6 @@ class ViewMyFundraisingActivityPage:
         self.display_fundraising_activity_view_count(view_count)
         self.display_fundraising_activity_save_count(save_count)
 
-        # US-16: suspend my activity (only when not already suspended).
         if not activity.suspended:
             user = st.session_state.get("user")
             if user is not None and st.button("🚫 Suspend"):

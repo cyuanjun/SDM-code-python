@@ -1,14 +1,4 @@
-"""ManageUserProfilePage <<Boundary>> — UX consolidation.
-
-NOT on any diagram. Combines five US into one screen per the hand-drawn
-sketch (2026-05-15): Search → List → View → Update / Suspend, with a
-Create form expanded inline at the top.
-
-Diagram-defined Boundary classes for US-1/2/3/4/5 are kept as testable
-artifacts. This combined page calls the same controllers directly.
-
-Logged in docs/diagram_typos.md as a UX deviation.
-"""
+"""ManageUserProfilePage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -50,12 +40,11 @@ class ManageUserProfilePage:
             self._render_detail()
             return
 
-        # List view — title on left, Create button on right.
         col_title, col_create = st.columns([4, 1])
         with col_title:
             st.header("Manage User Profiles")
         with col_create:
-            st.write("")  # vertical spacer to align with the header
+            st.write("")
             if st.button(
                 "+ Create new user profile",
                 key="manage_profile_create_btn",
@@ -65,12 +54,9 @@ class ManageUserProfilePage:
                 st.rerun()
         self._render_list()
 
-    # -------- Create view ----------------------------------------------------
-
     def _render_create(self) -> None:
         st.header("Create User Profile")
 
-        # Post-create confirmation: shown after a successful create.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
             st.success(
@@ -119,8 +105,6 @@ class ManageUserProfilePage:
         st.session_state[JUST_CREATED_KEY] = new_profile
         st.rerun()
 
-    # -------- List view ------------------------------------------------------
-
     def _render_list(self) -> None:
         search_term = st.text_input(
             "Search profiles", placeholder="Role or description…"
@@ -158,8 +142,6 @@ class ManageUserProfilePage:
             st.session_state[SELECTED_KEY] = profiles[selected[0]].profile_id
             st.rerun()
 
-    # -------- Detail view ----------------------------------------------------
-
     def _render_detail(self) -> None:
         profile_id = st.session_state[SELECTED_KEY]
         current = ViewUserProfileController().view_user_profile(profile_id)
@@ -176,8 +158,6 @@ class ManageUserProfilePage:
         self._render_bottom_bar()
 
     def _render_detail_header(self, title: str) -> None:
-        """Page title with the post-action success badge sized to its text,
-        rendered immediately to the right of the title."""
         msg = st.session_state.get(ACTION_MSG_KEY)
         if not msg:
             st.header(title)
@@ -195,8 +175,6 @@ class ManageUserProfilePage:
         )
 
     def _render_bottom_bar(self) -> None:
-        """Single back button. In edit mode → back to read-only view;
-        in view mode → back to list."""
         in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
         st.divider()
         cols = st.columns([1, 1, 4])
@@ -274,8 +252,6 @@ class ManageUserProfilePage:
                 )
 
         if is_completed:
-            # The inline confirmation + Back-to-view button live in the
-            # bottom bar (_render_bottom_bar). Just keep the form greyed.
             return
 
         if cancel:
@@ -301,8 +277,6 @@ class ManageUserProfilePage:
             st.rerun()
         else:
             st.error("Update failed.")
-
-    # -------- Validators -----------------------------------------------------
 
     @staticmethod
     def _validate_create(role: str, description: str) -> bool:

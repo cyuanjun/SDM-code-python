@@ -1,8 +1,4 @@
-"""UnsuspendUserProfileController — Exception A (UX). Pure delegator.
-
-Mirror of SuspendUserProfileController. Not on any diagram; logged in
-docs/diagram_typos.md as a UX toggle deviation.
-"""
+"""UnsuspendUserProfileController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_profile import UserProfile

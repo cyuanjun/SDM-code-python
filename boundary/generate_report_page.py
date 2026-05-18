@@ -1,20 +1,4 @@
-"""GenerateReportPage <<Boundary>> — Sprint 4 US-41 / US-42 / US-43.
-
-All three diagrams name the boundary class `GenerateReportPage`.
-Implementation hosts one page with an internal radio for daily / weekly
-/ monthly; each routes to the diagram-defined controller.
-
-The PM picks one date; the boundary derives the (start, end) window
-from the chosen report type — daily = the date itself; weekly =
-Monday→Sunday of that ISO week; monthly = 1st→last day of that month.
-The diagram-defined controllers + entity methods still take
-`(startDate, endDate, platformManagerId)` so the contract is unchanged
-— this is a boundary-only UX simplification.
-
-`platform_manager_id` is sourced from the logged-in user — the diagram
-method signatures omit it but the entity declares it as an attribute,
-logged in docs/diagram_typos.md as a Sprint 4 typo.
-"""
+"""GenerateReportPage <<Boundary>>."""
 from __future__ import annotations
 
 from calendar import monthrange
@@ -86,16 +70,9 @@ class GenerateReportPage:
 
     @staticmethod
     def window_for(report_type: str, picked: date) -> tuple[date, date]:
-        """Derive (start_date, end_date) from the PM's single picked date.
-
-        - daily: same day
-        - weekly: Monday→Sunday of the ISO week containing `picked`
-        - monthly: 1st→last day of the month containing `picked`
-        """
         if report_type == "daily":
             return picked, picked
         if report_type == "weekly":
-            # `weekday()` returns 0=Mon … 6=Sun.
             monday = picked - timedelta(days=picked.weekday())
             sunday = monday + timedelta(days=6)
             return monday, sunday

@@ -1,7 +1,4 @@
-"""SuspendUserAccountController <<Controller>> — Sprint 3 US-9.
-
-Pure delegator.
-"""
+"""SuspendUserAccountController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_account import UserAccount

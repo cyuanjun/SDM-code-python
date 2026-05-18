@@ -1,9 +1,4 @@
-"""UpdateMyFundraisingActivityController <<Controller>> — Sprint 2 US-15.
-
-Pure delegator. Forwards the 6 editable fields (per the US-15 diagram) to
-FundraisingActivity.update_my_fundraising_activity. Ownership is enforced
-at the entity layer via `WHERE fra_id = ? AND owner_account_id = ?`.
-"""
+"""UpdateMyFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from datetime import date

@@ -1,4 +1,4 @@
-"""ViewFundraisingActivityCategoriesPage <<Boundary>> — Sprint 4 US-37."""
+"""ViewFundraisingActivityCategoriesPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

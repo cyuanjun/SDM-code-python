@@ -1,7 +1,4 @@
-"""ViewFundraisingActivityViewCountController <<Controller>> — Sprint 4 US-28.
-
-Pure delegator.
-"""
+"""ViewFundraisingActivityViewCountController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity import FundraisingActivity

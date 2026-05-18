@@ -1,7 +1,4 @@
-"""SearchFavouriteController <<Controller>> — Sprint 3 US-25.
-
-Pure delegator.
-"""
+"""SearchFavouriteController <<Controller>>."""
 from __future__ import annotations
 
 from entity.favourite import Favourite

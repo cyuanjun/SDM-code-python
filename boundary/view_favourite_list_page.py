@@ -1,14 +1,4 @@
-"""ViewFavouriteListPage <<Boundary>> — Sprint 2 US-24 + Sprint 3 US-25.
-
-Diagram contracts:
-    US-24.jpg: + displayFavouriteList(favouriteList: List<Favourite>): void
-    US-25.jpg: + displayMatchingFavourites(favouriteList: List<Favourite>): void
-
-Donee-only. Lists current favourites or search matches. Remove-favourite
-(US-23) lives on `ViewFundraisingActivityPage` — the donee clicks the
-activity to view its detail and finds the [Remove from favourites]
-button there (symmetric with how Save lives on the same page).
-"""
+"""ViewFavouriteListPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

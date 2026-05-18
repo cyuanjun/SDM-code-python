@@ -1,15 +1,4 @@
-"""LoginPage <<Boundary>> — Sprint 1 US-11/18/26/39 (shared across actors).
-
-Diagram contract (US-11/18/26/39.jpg):
-    + displaySuccess(): void
-
-Per the four login diagrams (admin / fundraiser / donee / platform manager),
-the boundary, controller, and entity are identical — only the actor differs.
-This single page serves all four stories.
-
-On successful login, stores the UserAccount in st.session_state["user"]
-so other pages can scope by the logged-in user.
-"""
+"""LoginPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -44,8 +33,6 @@ class LoginPage:
             return
 
         st.session_state["user"] = account
-        # Re-run so the sidebar caption (rendered at the top of app.py)
-        # picks up the new session state instead of showing "Not signed in".
         st.rerun()
 
     @staticmethod

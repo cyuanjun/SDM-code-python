@@ -1,13 +1,4 @@
-"""ViewMyDonationHistoriesPage <<Boundary>> — Sprint 3 US-32 + US-33.
-
-Diagram contracts (2026-05-18 set):
-    US-32: + displayMatchingMyDonationHistories(donationList: List<Donation>): void
-    US-33: + displayMyDonationHistories(donationList: List<Donation>): void
-
-Both USes share this boundary class. US-32 fires when the donee submits
-a search; US-33 is the default list rendering when no search criteria is
-supplied.
-"""
+"""ViewMyDonationHistoriesPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

@@ -1,23 +1,4 @@
-"""UserAccount <<Entity>> — Sprint 1 US-6 + US-11/18/26/39.
-
-Diagram contracts:
-    US-06.jpg: + createAccount(
-        email: String, password: String, name: String, DOB: Date,
-        phoneNum: String, profileId: String,
-      ): UserAccount
-    US-11/18/26/39.jpg: + login(email: String, password: String): UserAccount
-
-The diagrams do not show a failure branch for login or create. Implementation
-returns None on no-match / duplicate-email so the Boundary can call
-displayError. Logged in docs/diagram_typos.md as a missing diagram branch.
-
-Email AND phone_num are both enforced UNIQUE at the schema level (email
-per lecturer instruction 2026-05-15; phone added 2026-05-18 as a parallel
-real-world business rule). create_account returns None on conflict on
-either column; update_user_account returns False. The Boundary inspects
-the post-conflict state (e.g. searches for an account with the same email
-or phone) to decide which message to surface.
-"""
+"""UserAccount <<Entity>>."""
 from __future__ import annotations
 
 import sqlite3
@@ -75,7 +56,6 @@ class UserAccount:
 
     @classmethod
     def view_user_account(cls, account_id: str) -> Optional["UserAccount"]:
-        """US-7 — admin views one account by id. Returns None when missing."""
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT account_id, email, password, name, dob, phone_num, "
@@ -86,8 +66,6 @@ class UserAccount:
 
     @classmethod
     def view_all_user_accounts(cls) -> list["UserAccount"]:
-        """Exception A: not on the US-7/8 diagrams but needed so the admin
-        can pick which account to view/update. Logged in docs/todo.md."""
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT account_id, email, password, name, dob, phone_num, "
@@ -99,8 +77,6 @@ class UserAccount:
     def update_user_account(
         cls, account_id: str, updated_account: "UserAccount"
     ) -> bool:
-        """US-8 — admin updates an account. Returns True on success, False
-        when no row matches account_id."""
         try:
             with get_connection() as conn:
                 cursor = conn.execute(
@@ -150,8 +126,6 @@ class UserAccount:
 
     @classmethod
     def suspend_user_account(cls, account_id: str) -> bool:
-        """US-9 — admin suspends an account. Returns True on rowcount > 0,
-        False when no row matches."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_account SET suspended = 1 WHERE account_id = ?",
@@ -161,8 +135,6 @@ class UserAccount:
 
     @classmethod
     def unsuspend_user_account(cls, account_id: str) -> bool:
-        """Exception A — mirror of suspend so the UI can toggle.
-        Logged in docs/diagram_typos.md."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_account SET suspended = 0 WHERE account_id = ?",
@@ -172,8 +144,6 @@ class UserAccount:
 
     @classmethod
     def search_user_account(cls, search_criteria: str) -> list["UserAccount"]:
-        """US-10 — admin searches accounts by criteria. Case-insensitive
-        substring match against email or name."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(

@@ -1,8 +1,4 @@
-"""CreateFundraisingActivityCategoryController — Sprint 4 US-34. Pure delegator.
-
-Forwards the result (or None on duplicate-name conflict, per the UNIQUE
-constraint on category_name).
-"""
+"""CreateFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

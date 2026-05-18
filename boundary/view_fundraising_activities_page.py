@@ -1,13 +1,4 @@
-"""ViewFundraisingActivitiesPage <<Boundary>> — Sprint 2 US-20.
-
-Diagram contract (US-20.jpg):
-    + displayMatchingFundraisingActivities(FRAList: List<FundraisingActivity>): void
-
-Diagram names the boundary class `ViewFundraisingActivities` (no `Page`
-suffix); the implementation uses `ViewFundraisingActivitiesPage` to
-keep the project's class-name rule. Logged in docs/todo.md as a
-Sprint 2 typo.
-"""
+"""ViewFundraisingActivitiesPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

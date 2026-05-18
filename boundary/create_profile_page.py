@@ -1,11 +1,4 @@
-"""CreateProfilePage <<Boundary>> — Sprint 1 US-1.
-
-Diagram contract (US-01.jpg):
-    + displaySuccess(profile: UserProfile): void
-
-Validation lives here per the project rule. `displayError` is not on the
-diagram but is required by the validation rule (logged in docs/todo.md).
-"""
+"""CreateProfilePage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st

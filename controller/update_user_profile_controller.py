@@ -1,7 +1,4 @@
-"""UpdateUserProfileController <<Controller>> — Sprint 2 US-3.
-
-Pure delegator. Forwards Boundary input to UserProfile.update_user_profile.
-"""
+"""UpdateUserProfileController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_profile import UserProfile

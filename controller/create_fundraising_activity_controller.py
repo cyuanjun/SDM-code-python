@@ -1,11 +1,4 @@
-"""CreateFundraisingActivityController <<Controller>> — Sprint 1 US-13.
-
-Pure delegator. Forwards Boundary input to
-FundraisingActivity.create_fundraising_activity. Per the 2026-05-18
-US-13 diagram, `category: String` is replaced by `FRACatId: String` —
-the boundary now picks a category from the PM-curated list and the
-controller forwards the FK.
-"""
+"""CreateFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from datetime import date

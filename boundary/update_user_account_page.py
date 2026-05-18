@@ -1,8 +1,4 @@
-"""UpdateUserAccountPage <<Boundary>> — Sprint 2 US-8.
-
-Diagram contract (US-08.jpg):
-    + displaySuccess(): void
-"""
+"""UpdateUserAccountPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date

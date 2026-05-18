@@ -1,18 +1,4 @@
-"""Report <<Entity>> — Sprint 4 US-41 / US-42 / US-43.
-
-Diagram contracts:
-    US-41: + generateDailyReport(startDate: Date, endDate: Date): Report
-    US-42: + generateWeeklyReport(startDate: Date, endDate: Date): Report
-    US-43: + generateMonthlyReport(startDate: Date, endDate: Date): Report
-
-Implementation adds `platform_manager_id` as a 3rd parameter — the entity
-declares `platformManagerId: String` as an attribute, but the method
-signatures don't accept it. Logged in docs/diagram_typos.md.
-
-Each `generate_*` method inserts a `report` row capturing aggregate
-statistics over the [start_date, end_date] window and returns the
-persisted Report.
-"""
+"""Report <<Entity>>."""
 from __future__ import annotations
 
 from dataclasses import dataclass

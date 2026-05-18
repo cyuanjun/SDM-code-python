@@ -1,16 +1,4 @@
-"""FundraisingActivityCategory <<Entity>> — Sprint 4 US-34..US-38.
-
-Diagram contracts:
-    US-34: + createCategory(categoryName: String, description: String): FundraisingActivityCategory
-    US-35: + viewFundraisingActivityCategory(FRACatId: String): FundraisingActivityCategory
-    US-36: + updateFundraisingActivityCategory(FRACatId: String,
-              updatedFRACategory: FundraisingActivityCategory): Boolean
-    US-37: + searchFundraisingActivityCategory(searchCriteria: String):
-              List<FundraisingActivityCategory>
-    US-38: + suspendFundraisingActivityCategory(FRACatId: String): Boolean
-
-Attributes: FRACatId, categoryName, description, suspended (Boolean).
-"""
+"""FundraisingActivityCategory <<Entity>>."""
 from __future__ import annotations
 
 import sqlite3
@@ -69,15 +57,6 @@ class FundraisingActivityCategory:
         category_name: str,
         description: str,
     ) -> bool:
-        """US-36 — PM updates a category's name and description. Returns
-        True on success, False when no row matches fra_cat_id OR the new
-        category_name collides with the UNIQUE constraint.
-
-        Signature flattened 2026-05-18 per the new US-36 diagram: takes
-        the two updatable fields directly rather than a wrapping entity
-        object. `suspended` is no longer updatable here — US-38 handles
-        suspend/unsuspend separately.
-        """
         try:
             with get_connection() as conn:
                 cursor = conn.execute(
@@ -118,8 +97,6 @@ class FundraisingActivityCategory:
 
     @classmethod
     def unsuspend_fundraising_activity_category(cls, fra_cat_id: str) -> bool:
-        """Exception A — mirror of suspend so the UI can toggle.
-        Logged in docs/diagram_typos.md."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity_category "
@@ -130,8 +107,6 @@ class FundraisingActivityCategory:
 
     @classmethod
     def view_all_categories(cls) -> list["FundraisingActivityCategory"]:
-        """Exception A: list-all for the boundary picker on US-35 / US-36 /
-        US-38. Logged in docs/todo.md."""
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT fra_cat_id, category_name, description, suspended "

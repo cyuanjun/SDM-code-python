@@ -1,26 +1,4 @@
-"""FundraisingActivity <<Entity>> — Sprint 1 US-13, US-21.
-
-Diagram contracts (2026-05-18 set):
-    US-13.jpg: + createFundraisingActivity(
-        title: String, description: String, targetAmount: Decimal,
-        FRACatId: String, startDate: Date, endDate: Date,
-        ownerAccountId: String,
-      ): FundraisingActivity
-    US-21.jpg: + viewFundraisingActivity(activityId: String): FundraisingActivity
-
-Per the 2026-05-18 US-13 diagram the entity attribute `category: String`
-was replaced with `FRACatId: String` — an FK to `FundraisingActivityCategory`
-rather than a free-text string. Search methods (US-17, US-20, US-30) now
-JOIN to `fundraising_activity_category` and match the criteria against
-the category name (in addition to title + description).
-
-`target_amount` is Decimal per the diagram (not Float). Stored as TEXT
-to preserve precision; converted back to Decimal on read.
-
-`view_count` and `save_count` are declared on the entity from Sprint 1
-even though the read/increment methods are not introduced until later
-sprints. They default to 0 here.
-"""
+"""FundraisingActivity <<Entity>>."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -65,9 +43,6 @@ class FundraisingActivity:
         end_date: date,
         owner_account_id: str,
     ) -> "FundraisingActivity":
-        # `completed` is computed at write time from end_date < today.
-        # A `refresh_completed_flags()` pass on app startup catches rows
-        # whose end_date passed since the last write.
         completed = end_date < date.today()
         with get_connection() as conn:
             new_id = next_id(conn, "fundraising_activity", "fra_id", "fra")
@@ -107,8 +82,6 @@ class FundraisingActivity:
     def view_my_fundraising_activity(
         cls, owner_account_id: str, fra_id: str
     ) -> Optional["FundraisingActivity"]:
-        """US-14 — fundraiser views one of their own activities.
-        Ownership scoped at the entity layer per the diagram signature."""
         with get_connection() as conn:
             row = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
@@ -121,10 +94,6 @@ class FundraisingActivity:
     def view_my_fundraising_activities(
         cls, owner_account_id: str
     ) -> list["FundraisingActivity"]:
-        """Exception A: list-by-owner scoping for US-14 / US-15. Without
-        this the fundraiser would have to know their own activity ids
-        verbatim before triggering viewMyFundraisingActivity. Logged in
-        docs/todo.md."""
         with get_connection() as conn:
             rows = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
@@ -137,8 +106,6 @@ class FundraisingActivity:
     def suspend_my_fundraising_activity(
         cls, owner_account_id: str, fra_id: str
     ) -> bool:
-        """US-16 — fundraiser suspends one of their own activities.
-        Ownership scoped: UPDATE … WHERE fra_id AND owner_account_id."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity SET suspended = 1 "
@@ -151,8 +118,6 @@ class FundraisingActivity:
     def unsuspend_my_fundraising_activity(
         cls, owner_account_id: str, fra_id: str
     ) -> bool:
-        """Exception A — mirror of suspend so the UI can toggle.
-        Logged in docs/diagram_typos.md."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity SET suspended = 0 "
@@ -165,9 +130,6 @@ class FundraisingActivity:
     def search_my_fundraising_activity(
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:
-        """US-17 — fundraiser searches their own activities. Case-insensitive
-        substring match against title / description / category_name
-        (JOIN'd from FundraisingActivityCategory), scoped to owner_account_id."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -185,10 +147,6 @@ class FundraisingActivity:
     def search_my_completed_fundraising_activity(
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:
-        """US-30 — fundraiser searches their completed activities. Scoped
-        to owner; matches the stored `completed` flag, which is computed
-        from `end_date < today` at write time + refreshed at app startup.
-        Matches title / description / category_name."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -206,9 +164,6 @@ class FundraisingActivity:
     def view_my_completed_fundraising_activities(
         cls, owner_account_id: str
     ) -> list["FundraisingActivity"]:
-        """US-31 — fundraiser views the list of their completed activities.
-        Filters on the stored `completed` flag (computed from
-        `end_date < today` at write time + refreshed at app startup)."""
         with get_connection() as conn:
             rows = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
@@ -222,10 +177,6 @@ class FundraisingActivity:
     def search_fundraising_activity(
         cls, search_criteria: str
     ) -> list["FundraisingActivity"]:
-        """US-20 — donee searches activities by criteria. Case-insensitive
-        substring match against title / description / category_name.
-        Suspended activities are hidden from donees: they only show up in
-        owner-scoped searches."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -252,17 +203,6 @@ class FundraisingActivity:
         start_date: date,
         end_date: date,
     ) -> bool:
-        """US-15 — fundraiser updates one of their own activities.
-        Returns True iff a row matched both fra_id AND owner_account_id;
-        cross-owner writes are refused (rowcount stays 0).
-
-        Signature matches the 2026-05-18 US-15 diagram exactly: the 6
-        editable fields are passed unpacked rather than wrapped in a
-        FundraisingActivity DTO. `completed` is derived from `end_date`
-        so it isn't a settable field. `suspended` is owned by US-16 /
-        Exception A unsuspend, not by update — those have their own
-        methods.
-        """
         completed = end_date < date.today()
         with get_connection() as conn:
             cursor = conn.execute(
@@ -301,10 +241,6 @@ class FundraisingActivity:
 
     @classmethod
     def view_all_fundraising_activities(cls) -> list["FundraisingActivity"]:
-        """Exception A (CLAUDE.md): not on the US-21 diagram but needed so
-        ViewFundraisingActivityPage can list activities for the donee to
-        click. Logged in docs/todo.md. Suspended activities are hidden —
-        only the owner sees them via view_my_fundraising_activities."""
         with get_connection() as conn:
             rows = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
@@ -315,9 +251,6 @@ class FundraisingActivity:
 
     @classmethod
     def view_fundraising_activity_view_count(cls, fra_id: str) -> int:
-        """US-28 — fundraiser reads the view count of an activity. Returns
-        0 when the row is missing (rather than raising) so callers can
-        always display a number."""
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT view_count FROM fundraising_activity WHERE fra_id = ?",
@@ -327,8 +260,6 @@ class FundraisingActivity:
 
     @classmethod
     def view_fundraising_activity_save_count(cls, fra_id: str) -> int:
-        """US-29 — fundraiser reads the save count of an activity. Returns
-        0 when the row is missing."""
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT save_count FROM fundraising_activity WHERE fra_id = ?",
@@ -338,8 +269,6 @@ class FundraisingActivity:
 
     @classmethod
     def increment_view_count(cls, fra_id: str) -> bool:
-        """Exception A: bump view_count by 1. Fired when a donee opens the
-        activity detail in US-21. Returns True iff a row was updated."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
@@ -350,9 +279,6 @@ class FundraisingActivity:
 
     @classmethod
     def increment_save_count(cls, fra_id: str, delta: int = 1) -> bool:
-        """Exception A: bump save_count by delta (+1 on favourite,
-        -1 on remove favourite). Floors at 0 so a missing favourite-record
-        can't drive the count negative."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
@@ -363,14 +289,6 @@ class FundraisingActivity:
 
     @classmethod
     def refresh_completed_flags(cls) -> int:
-        """Sweep every row and rewrite `completed` based on today's date.
-        Returns the number of rows whose stored value flipped.
-
-        Wired into app startup + `python -m data.seed` so that an activity
-        whose `end_date` passed since the last write picks up the change
-        without needing an explicit update. `completed` is otherwise
-        written at INSERT/UPDATE time via `(end_date < today)` so this
-        is only catching the "calendar advanced" case."""
         today = date.today().isoformat()
         with get_connection() as conn:
             cursor = conn.execute(
@@ -400,5 +318,4 @@ class FundraisingActivity:
 
 
 def _alias_columns(alias: str) -> str:
-    """Prefix the SELECT columns with a table alias for JOIN queries."""
     return ", ".join(f"{alias}.{col.strip()}" for col in _SELECT_COLUMNS.split(","))

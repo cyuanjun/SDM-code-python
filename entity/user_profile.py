@@ -1,12 +1,4 @@
-"""UserProfile <<Entity>> — Sprint 1 US-1.
-
-Diagram contract (US-01.jpg):
-    + createProfile(role: String, description: String): UserProfile
-
-Attributes from the class diagram: profileId, role, description, suspended.
-`suspended` is treated as Boolean (logged typo in docs/todo.md — the diagram
-shows String).
-"""
+"""UserProfile <<Entity>>."""
 from __future__ import annotations
 
 import sqlite3
@@ -47,8 +39,6 @@ class UserProfile:
 
     @classmethod
     def view_user_profile(cls, profile_id: str) -> Optional["UserProfile"]:
-        """US-2 — admin views a single profile by id. Returns None for a
-        missing row (negative branch implicit in the diagram)."""
         with get_connection() as conn:
             row = conn.execute(
                 "SELECT profile_id, role, description, suspended "
@@ -68,9 +58,6 @@ class UserProfile:
     def update_user_profile(
         cls, profile_id: str, updated_profile: "UserProfile"
     ) -> bool:
-        """US-3 — admin updates a profile. Returns True on success, False
-        when no row matches profile_id OR the new role collides with the
-        UNIQUE constraint."""
         try:
             with get_connection() as conn:
                 cursor = conn.execute(
@@ -89,8 +76,6 @@ class UserProfile:
 
     @classmethod
     def suspend_user_profile(cls, profile_id: str) -> bool:
-        """US-4 — admin suspends a profile. Returns True on rowcount > 0,
-        False when no row matches."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_profile SET suspended = 1 WHERE profile_id = ?",
@@ -100,8 +85,6 @@ class UserProfile:
 
     @classmethod
     def unsuspend_user_profile(cls, profile_id: str) -> bool:
-        """Exception A — mirror of suspend so the UI can toggle.
-        Logged in docs/diagram_typos.md."""
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE user_profile SET suspended = 0 WHERE profile_id = ?",
@@ -111,8 +94,6 @@ class UserProfile:
 
     @classmethod
     def search_user_profile(cls, search_criteria: str) -> list["UserProfile"]:
-        """US-5 — admin searches profiles by criteria. Case-insensitive
-        substring match against role and description."""
         like = f"%{search_criteria.lower()}%"
         with get_connection() as conn:
             rows = conn.execute(
@@ -134,9 +115,6 @@ class UserProfile:
 
     @classmethod
     def view_all_profiles(cls) -> list["UserProfile"]:
-        """Exception A (CLAUDE.md): not on the US-1 diagram but needed to
-        power the profile dropdown on CreateAccountPage. Logged in
-        docs/todo.md as a diagram update owed before final marking."""
         with get_connection() as conn:
             rows = conn.execute(
                 "SELECT profile_id, role, description, suspended "

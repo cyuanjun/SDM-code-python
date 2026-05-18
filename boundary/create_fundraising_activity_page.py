@@ -1,14 +1,4 @@
-"""CreateFundraisingActivityPage <<Boundary>> — Sprint 1 US-13.
-
-Diagram contract (US-13.jpg, 2026-05-18 set):
-    + displaySuccess(fundraisingActivity: FundraisingActivity): void
-
-The fundraiser fills the form; owner_account_id comes from
-st.session_state["user"].account_id (the logged-in fundraiser).
-Category is a `st.selectbox` populated from the PM-curated category
-list (FK, not a String enum) — per the 2026-05-18 US-13 diagram which
-types the attribute as `FRACatId: String`.
-"""
+"""CreateFundraisingActivityPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date

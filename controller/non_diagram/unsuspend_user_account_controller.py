@@ -1,4 +1,4 @@
-"""UnsuspendUserAccountController — Exception A (UX). Pure delegator."""
+"""UnsuspendUserAccountController <<Controller>>."""
 from __future__ import annotations
 
 from entity.user_account import UserAccount

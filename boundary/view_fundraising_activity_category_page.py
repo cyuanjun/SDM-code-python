@@ -1,8 +1,4 @@
-"""ViewFundraisingActivityCategoryPage <<Boundary>> — Sprint 4 US-35 + US-38.
-
-Same boundary class hosts view (US-35) and suspend (US-38). List-then-detail
-pattern; Suspend button on the detail view (when not already suspended).
-"""
+"""ViewFundraisingActivityCategoryPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -69,7 +65,6 @@ class ViewFundraisingActivityCategoryPage:
         st.write(f"**Description:** {category.description or '(none)'}")
         st.write(f"**Suspended:** {'yes' if category.suspended else 'no'}")
 
-        # US-38: suspend (only when not already suspended).
         if not category.suspended:
             if st.button("🚫 Suspend this category"):
                 ok = (

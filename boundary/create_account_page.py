@@ -1,12 +1,4 @@
-"""CreateAccountPage <<Boundary>> — Sprint 1 US-6.
-
-Diagram contract (US-06.jpg):
-    + displaySuccess(account: UserAccount): void
-
-The diagram's createAccount expects a `profileId: String` parameter; the
-admin picks from a dropdown of existing profiles fetched via the
-Exception A `ViewProfilesController.view_all_profiles()`.
-"""
+"""CreateAccountPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date
@@ -20,9 +12,6 @@ from persistence.db import get_connection
 
 
 def _which_unique_collided(email: str, phone_num: str) -> str:
-    """After `create_account` returns None on IntegrityError, ask the DB
-    whether email or phone_num is the colliding column so the Boundary
-    can show a targeted error."""
     with get_connection() as conn:
         email_taken = conn.execute(
             "SELECT 1 FROM user_account WHERE email = ? LIMIT 1", (email,)
@@ -37,7 +26,7 @@ def _which_unique_collided(email: str, phone_num: str) -> str:
         return "email"
     if phone_taken:
         return "phone number"
-    return "email or phone number"  # belt-and-braces fallback
+    return "email or phone number"
 
 
 class CreateAccountPage:

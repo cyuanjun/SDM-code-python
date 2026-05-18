@@ -15,6 +15,15 @@ from datetime import date
 
 import pytest
 
+from data.seed import (
+    DEFAULT_PASSWORD,
+    TC_ADMIN_EMAIL,
+    TC_ADMIN_PHONE,
+    TC_DONEE_EMAIL,
+    TC_DONEE_PHONE,
+    TC_FUNDRAISER_EMAIL,
+    TC_FUNDRAISER_PHONE,
+)
 from entity.user_account import UserAccount
 from entity.user_profile import UserProfile
 
@@ -27,20 +36,20 @@ def test_create_account_persists_and_returns_account_with_prefixed_id() -> None:
     profile = _seed_profile()
 
     account = UserAccount.create_account(
-        email="ada@example.com",
-        password="hunter2",
-        name="Ada",
-        dob=date(1990, 1, 15),
-        phone_num="0400000000",
+        email=TC_ADMIN_EMAIL,
+        password=DEFAULT_PASSWORD,
+        name="TC - Admin",
+        dob=date(2000, 1, 1),
+        phone_num=TC_ADMIN_PHONE,
         profile_id=profile.profile_id,
     )
 
     assert account.account_id == "acc_001"
-    assert account.email == "ada@example.com"
-    assert account.password == "hunter2"
-    assert account.name == "Ada"
-    assert account.dob == date(1990, 1, 15)
-    assert account.phone_num == "0400000000"
+    assert account.email == TC_ADMIN_EMAIL
+    assert account.password == DEFAULT_PASSWORD
+    assert account.name == "TC - Admin"
+    assert account.dob == date(2000, 1, 1)
+    assert account.phone_num == TC_ADMIN_PHONE
     assert account.profile_id == profile.profile_id
     assert account.suspended is False
 
@@ -91,12 +100,14 @@ def test_create_account_returns_none_for_duplicate_email() -> None:
     profile = _seed_profile()
 
     first = UserAccount.create_account(
-        email="dup@x.com", password="p1", name="A", dob=date(2000, 1, 1),
-        phone_num="0400000095", profile_id=profile.profile_id,
+        email=TC_FUNDRAISER_EMAIL, password=DEFAULT_PASSWORD, name="TC - Fundraiser",
+        dob=date(2000, 1, 1), phone_num=TC_FUNDRAISER_PHONE,
+        profile_id=profile.profile_id,
     )
     second = UserAccount.create_account(
-        email="dup@x.com", password="p2", name="B", dob=date(2000, 1, 1),
-        phone_num="0400000099", profile_id=profile.profile_id,
+        email=TC_FUNDRAISER_EMAIL, password=DEFAULT_PASSWORD, name="Other",
+        dob=date(2000, 1, 1), phone_num="0411111111",
+        profile_id=profile.profile_id,
     )
 
     assert first is not None
@@ -147,16 +158,17 @@ def test_update_user_account_returns_false_for_duplicate_phone_num() -> None:
 
 
 def _seed_account(
-    email: str = "ada@x.com",
-    password: str = "hunter2",
+    email: str = TC_ADMIN_EMAIL,
+    password: str = DEFAULT_PASSWORD,
     profile: UserProfile | None = None,
+    phone_num: str = TC_ADMIN_PHONE,
 ) -> UserAccount:
     return UserAccount.create_account(
         email=email,
         password=password,
-        name="Ada",
-        dob=date(1990, 1, 15),
-        phone_num="0400000117",
+        name="TC - Admin",
+        dob=date(2000, 1, 1),
+        phone_num=phone_num,
         profile_id=(profile or _seed_profile()).profile_id,
     )
 
@@ -164,10 +176,10 @@ def _seed_account(
 def test_login_returns_user_account_on_matching_credentials() -> None:
     _seed_account()
 
-    account = UserAccount.login("ada@x.com", "hunter2")
+    account = UserAccount.login(TC_ADMIN_EMAIL, DEFAULT_PASSWORD)
 
     assert account is not None
-    assert account.email == "ada@x.com"
+    assert account.email == TC_ADMIN_EMAIL
     assert account.account_id == "acc_001"
     assert account.profile_id == "prof_001"
 
@@ -175,13 +187,13 @@ def test_login_returns_user_account_on_matching_credentials() -> None:
 def test_login_returns_none_when_email_does_not_match() -> None:
     _seed_account()
 
-    assert UserAccount.login("nobody@x.com", "hunter2") is None
+    assert UserAccount.login("nobody@x.com", DEFAULT_PASSWORD) is None
 
 
 def test_login_returns_none_when_password_does_not_match() -> None:
     _seed_account()
 
-    assert UserAccount.login("ada@x.com", "wrong-password") is None
+    assert UserAccount.login(TC_ADMIN_EMAIL, "wrong-password") is None
 
 
 def test_login_returns_none_when_database_is_empty() -> None:
@@ -238,11 +250,11 @@ def test_update_user_account_returns_true_on_success_and_persists_changes() -> N
     created = _seed_account(profile=profile)
 
     updated = UserAccount(
-        email="ada-new@x.com",
-        password="new-secret",
-        name="Ada (renamed)",
-        dob=date(1985, 6, 6),
-        phone_num="0411111111",
+        email=TC_ADMIN_EMAIL,
+        password=DEFAULT_PASSWORD,
+        name="TC - Admin (renamed)",
+        dob=date(2000, 1, 1),
+        phone_num=TC_ADMIN_PHONE,
         profile_id=profile.profile_id,
         suspended=True,
     )
@@ -250,10 +262,10 @@ def test_update_user_account_returns_true_on_success_and_persists_changes() -> N
 
     fetched = UserAccount.view_user_account(created.account_id)
     assert fetched is not None
-    assert fetched.email == "ada-new@x.com"
-    assert fetched.name == "Ada (renamed)"
-    assert fetched.dob == date(1985, 6, 6)
-    assert fetched.phone_num == "0411111111"
+    assert fetched.email == TC_ADMIN_EMAIL
+    assert fetched.name == "TC - Admin (renamed)"
+    assert fetched.dob == date(2000, 1, 1)
+    assert fetched.phone_num == TC_ADMIN_PHONE
     assert fetched.suspended is True
 
 
@@ -271,22 +283,25 @@ def test_update_user_account_returns_false_for_duplicate_email() -> None:
     account hits the UNIQUE constraint; update_user_account returns False
     and the row is unchanged."""
     profile = _seed_profile()
-    first = _seed_account(email="a@x.com", profile=profile)
+    first = _seed_account(
+        email=TC_FUNDRAISER_EMAIL, profile=profile, phone_num=TC_FUNDRAISER_PHONE,
+    )
     second = UserAccount.create_account(
-        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="0400000235", profile_id=profile.profile_id,
+        email=TC_DONEE_EMAIL, password=DEFAULT_PASSWORD, name="TC - Donee",
+        dob=date(2000, 1, 1), phone_num=TC_DONEE_PHONE,
+        profile_id=profile.profile_id,
     )
     assert second is not None
 
     clashing = UserAccount(
-        email="a@x.com", password="p", name="B-renamed",
-        dob=date(1990, 1, 1), phone_num="0400000241",
+        email=TC_FUNDRAISER_EMAIL, password=DEFAULT_PASSWORD, name="TC - Donee (renamed)",
+        dob=date(2000, 1, 1), phone_num="0411111111",
         profile_id=profile.profile_id,
     )
     assert UserAccount.update_user_account(second.account_id, clashing) is False
     reloaded = UserAccount.view_user_account(second.account_id)
     assert reloaded is not None
-    assert reloaded.email == "b@x.com"
+    assert reloaded.email == TC_DONEE_EMAIL
 
 
 def test_update_user_account_does_not_mutate_other_rows() -> None:
@@ -339,16 +354,18 @@ def test_suspended_account_cannot_log_in() -> None:
 def test_search_user_account_matches_email_substring_case_insensitive() -> None:
     profile = _seed_profile()
     UserAccount.create_account(
-        email="ada@x.com", password="p", name="Ada", dob=date(1990, 1, 1),
-        phone_num="0400000301", profile_id=profile.profile_id,
+        email=TC_ADMIN_EMAIL, password=DEFAULT_PASSWORD, name="TC - Admin",
+        dob=date(2000, 1, 1), phone_num=TC_ADMIN_PHONE,
+        profile_id=profile.profile_id,
     )
     UserAccount.create_account(
-        email="bob@y.com", password="p", name="Bob", dob=date(1990, 1, 1),
-        phone_num="0400000305", profile_id=profile.profile_id,
+        email="other@y.com", password=DEFAULT_PASSWORD, name="Other",
+        dob=date(2000, 1, 1), phone_num="0411111111",
+        profile_id=profile.profile_id,
     )
 
-    results = UserAccount.search_user_account("ADA")
-    assert [a.email for a in results] == ["ada@x.com"]
+    results = UserAccount.search_user_account("TC-")
+    assert [a.email for a in results] == [TC_ADMIN_EMAIL]
 
 
 def test_search_user_account_matches_name_substring() -> None:
@@ -369,10 +386,11 @@ def test_search_user_account_matches_name_substring() -> None:
 def test_search_user_account_returns_empty_for_no_match() -> None:
     profile = _seed_profile()
     UserAccount.create_account(
-        email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-        phone_num="0400000331", profile_id=profile.profile_id,
+        email=TC_ADMIN_EMAIL, password=DEFAULT_PASSWORD, name="TC - Admin",
+        dob=date(2000, 1, 1), phone_num=TC_ADMIN_PHONE,
+        profile_id=profile.profile_id,
     )
-    assert UserAccount.search_user_account("nothing") == []
+    assert UserAccount.search_user_account("zzz-no-match") == []
 
 
 def test_search_user_account_returns_empty_on_empty_db() -> None:

@@ -1,9 +1,4 @@
-"""CreateProfileController <<Controller>> — Sprint 1 US-1.
-
-Pure delegator per the project architecture rule (CLAUDE.md). Takes the
-Boundary's input, calls UserProfile.create_profile, returns the result
-(or None on duplicate-role conflict, per the UNIQUE constraint on role).
-"""
+"""CreateProfileController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

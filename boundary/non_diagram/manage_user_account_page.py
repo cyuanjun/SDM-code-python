@@ -1,11 +1,4 @@
-"""ManageUserAccountPage <<Boundary>> — UX consolidation.
-
-NOT on any diagram. Combines US-6, 7, 8, 9, 10 (account CRUD + suspend
-+ search) into one Search / List / Detail / Update / Suspend screen, with
-a Create form expanded inline at the top. Per the 2026-05-15 sketch.
-
-Logged in docs/diagram_typos.md as a UX deviation.
-"""
+"""ManageUserAccountPage <<Boundary>>."""
 from __future__ import annotations
 
 from datetime import date
@@ -32,9 +25,6 @@ from persistence.db import get_connection
 
 
 def _which_unique_collided(email: str, phone_num: str, exclude_account_id: str | None = None) -> str:
-    """Return 'email', 'phone number', 'email and phone number', or a
-    fallback when create/update returned a UNIQUE conflict. For updates,
-    pass the account_id being updated to exclude that row from the check."""
     extra = ""
     params: tuple = (email,)
     if exclude_account_id is not None:
@@ -92,12 +82,9 @@ class ManageUserAccountPage:
                 st.rerun()
         self._render_list()
 
-    # -------- Create view ----------------------------------------------------
-
     def _render_create(self) -> None:
         st.header("Create User Account")
 
-        # Post-create confirmation.
         if JUST_CREATED_KEY in st.session_state:
             created = st.session_state[JUST_CREATED_KEY]
             st.success(
@@ -180,8 +167,6 @@ class ManageUserAccountPage:
         st.session_state[JUST_CREATED_KEY] = new_account
         st.rerun()
 
-    # -------- List view ------------------------------------------------------
-
     def _render_list(self) -> None:
         search_term = st.text_input(
             "Search accounts", placeholder="Email or name…"
@@ -220,8 +205,6 @@ class ManageUserAccountPage:
             st.session_state[SELECTED_KEY] = accounts[selected[0]].account_id
             st.rerun()
 
-    # -------- Detail view ----------------------------------------------------
-
     def _render_detail(self) -> None:
         account_id = st.session_state[SELECTED_KEY]
         current = ViewUserAccountController().view_user_account(account_id)
@@ -238,8 +221,6 @@ class ManageUserAccountPage:
         self._render_bottom_bar()
 
     def _render_detail_header(self, title: str) -> None:
-        """Page title with the post-action success badge sized to its text,
-        rendered immediately to the right of the title."""
         msg = st.session_state.get(ACTION_MSG_KEY)
         if not msg:
             st.header(title)
@@ -257,8 +238,6 @@ class ManageUserAccountPage:
         )
 
     def _render_bottom_bar(self) -> None:
-        """Single back button. In edit mode → back to read-only view;
-        in view mode → back to list."""
         in_edit = bool(st.session_state.get(EDIT_MODE_KEY))
         st.divider()
         cols = st.columns([1, 1, 4])
@@ -371,7 +350,6 @@ class ManageUserAccountPage:
                 )
 
         if is_completed:
-            # The inline confirmation + Back-to-view live in the bottom bar.
             return
 
         if cancel:
@@ -405,8 +383,6 @@ class ManageUserAccountPage:
                 f"Update failed — that {field} is already in use by "
                 "another account."
             )
-
-    # -------- Validators -----------------------------------------------------
 
     @staticmethod
     def _validate_create(

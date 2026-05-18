@@ -1,9 +1,4 @@
-"""ViewMyFundraisingActivityController <<Controller>> — Sprint 2 US-14.
-
-Pure delegator. Both methods are ownership-scoped:
-- view_my_fundraising_activity: per US-14 diagram.
-- view_my_fundraising_activities: Exception A list-by-owner.
-"""
+"""ViewMyFundraisingActivityController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

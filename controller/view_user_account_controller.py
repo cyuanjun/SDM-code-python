@@ -1,9 +1,4 @@
-"""ViewUserAccountController <<Controller>> — Sprint 2 US-7.
-
-Pure delegator. Hosts both view_user_account (per diagram) and
-view_all_user_accounts (Exception A) so the boundary can show a list
-before the admin picks one.
-"""
+"""ViewUserAccountController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

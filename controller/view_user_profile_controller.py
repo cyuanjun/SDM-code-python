@@ -1,7 +1,4 @@
-"""ViewUserProfileController <<Controller>> — Sprint 2 US-2.
-
-Pure delegator. Forwards a profileId to UserProfile.view_user_profile.
-"""
+"""ViewUserProfileController <<Controller>>."""
 from __future__ import annotations
 
 from typing import Optional

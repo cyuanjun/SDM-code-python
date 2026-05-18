@@ -1,9 +1,4 @@
-"""UpdateFundraisingActivityCategoryController — Sprint 4 US-36. Pure delegator.
-
-Signature flattened 2026-05-18 per the new US-36 diagram — takes
-(fra_cat_id, category_name, description) directly rather than a wrapping
-entity object.
-"""
+"""UpdateFundraisingActivityCategoryController <<Controller>>."""
 from __future__ import annotations
 
 from entity.fundraising_activity_category import FundraisingActivityCategory

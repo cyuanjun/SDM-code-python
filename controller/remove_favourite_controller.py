@@ -1,7 +1,4 @@
-"""RemoveFavouriteController <<Controller>> — Sprint 3 US-23.
-
-Pure delegator. Forwards (FRAId, accountId) per the diagram signature.
-"""
+"""RemoveFavouriteController <<Controller>>."""
 from __future__ import annotations
 
 from entity.favourite import Favourite

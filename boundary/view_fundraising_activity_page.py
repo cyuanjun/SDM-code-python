@@ -1,24 +1,4 @@
-"""ViewFundraisingActivityPage <<Boundary>> — Sprint 1 US-21 + Sprint 2 US-22 + Sprint 3 US-23.
-
-Diagram contracts:
-    US-21.jpg: + displayFundraisingActivity(fundraisingActivity: FundraisingActivity): void
-    US-22.jpg: + displaySuccess(): void  (save-to-favourites; same boundary class)
-    US-23.jpg: + displaySuccess(): void  (remove-favourite; same boundary class — symmetric with US-22)
-
-US-22 (Save) and US-23 (Remove) both live on the donee's activity detail
-page — mirrors how US-15 (Update) and US-16 (Suspend) live on the
-fundraiser's MyFRA detail page. Whichever button is shown depends on
-whether the activity is currently in the donee's favourites.
-
-US-28 / US-29 (view + save counts) are NOT on this boundary per the
-2026-05-18 diagrams — they live on `ViewMyFundraisingActivityPage`
-(fundraiser-only). The previous code-only owner-gated metric block here
-was a drift caught in audit.md and resolved 2026-05-18 by moving the
-count display to its diagram-defined home.
-
-The Exception A view-count increment fires once when a donee opens
-the detail view.
-"""
+"""ViewFundraisingActivityPage <<Boundary>>."""
 from __future__ import annotations
 
 import streamlit as st
@@ -42,10 +22,6 @@ def _category_lookup() -> dict[str, str]:
     return {c.fra_cat_id: c.category_name for c in cats}
 
 SELECTED_KEY = "selected_fra_id"
-
-# After Save/Remove fires the action message is stashed here so the
-# post-rerun render can pick it up. `st.success(...)` followed by
-# `st.rerun()` would otherwise discard the widget.
 ACTION_MSG_KEY = "view_fra_action_msg"
 
 
@@ -99,7 +75,6 @@ class ViewFundraisingActivityPage:
         selected = event.selection.rows
         if selected:
             chosen = activities[selected[0]].fra_id
-            # US-28: every donee detail view bumps the view count.
             FundraisingActivity.increment_view_count(chosen)
             st.session_state[SELECTED_KEY] = chosen
             st.rerun()
@@ -119,8 +94,6 @@ class ViewFundraisingActivityPage:
             st.warning("This activity is currently suspended.")
         st.write(activity.description)
 
-        # US-22 / US-23: donee saves or removes this activity to/from
-        # their favourites. Mutually exclusive — show whichever applies.
         user = st.session_state.get("user")
         if user is None:
             return
@@ -180,4 +153,3 @@ class ViewFundraisingActivityPage:
     @staticmethod
     def display_remove_error() -> None:
         st.error("Could not remove favourite.")
-
