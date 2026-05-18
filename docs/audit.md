@@ -4,7 +4,7 @@ Transcription of the Boundary / Controller / Entity surface for every user story
 
 Each layer lists what the **diagram** says, then the matching `Code →` identifier + file path showing what's actually implemented (in `snake_case`). Where a `Code →` line shows a different class or method name than the diagram, that's a drift — collected at the bottom of this file.
 
-*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, US-28/US-29 boundary-placement rewire, and the US-28/US-29 diagram re-export (`category: String` → `FRACatId: String`) all landed.*
+*Last refreshed: 2026-05-18, after the US-15 unpack-fields refactor, US-22/US-23 success-message persistence fix, US-28/US-29 boundary-placement rewire, US-28/US-29 diagram re-export (`category: String` → `FRACatId: String`), and US-31 diagram re-export (`myCompletedFRAList: List<FundraisingActivity>` wrapper restored) all landed.*
 
 Conventions:
 - Class names are taken verbatim from the diagrams (so `category` vs `FRACatId` reflects the diagram as drawn).
@@ -343,7 +343,6 @@ Conventions:
 - **Entity:** `FundraisingActivity` *(attrs as US-13)*
   - `viewMyCompletedFundraisingActivities(ownerAccountId: String): List<FundraisingActivity>`
   - Code → `FundraisingActivity.view_my_completed_fundraising_activities(owner_account_id)` in [entity/fundraising_activity.py](../entity/fundraising_activity.py) — filter is `WHERE end_date < ?` (today), not a stored `completed` flag (post-2026-05-18 refactor)
-- ⚠️ **Diagram typo:** the boundary method's parameter type reads `myCompletedFRAList: FundraisingActivity` — missing the `List<…>` wrapper. Code passes a list.
 
 ## US-32 — Search my donation history *(Donee)*
 - **Boundary:** `ViewMyDonationHistoriesPage`
@@ -478,7 +477,7 @@ Conventions:
 ## Observed drifts (worth a [diagram_typos.md](diagram_typos.md) entry)
 
 ### Pure diagram typos / gaps
-- **US-31 boundary method** — `displayMyCompletedFundraisingActivities(myCompletedFRAList: FundraisingActivity)` is missing the `List<…>` wrapper on the parameter type.
+*(All known diagram typos are now resolved — see "Resolved during this audit" below.)*
 
 ### Code-side singular/plural class-name drifts (controller stays a pure delegator, no behaviour change)
 Diagram uses the plural form of the entity in the controller class name, code uses the singular. Either rename the code or correct the diagrams — picking one direction would unify the convention.
@@ -490,6 +489,7 @@ Diagram uses the plural form of the entity in the controller class name, code us
 - **US-37:** diagram `SearchFundraisingActivityCategoriesController` → code `SearchFundraisingActivityCategoryController`
 
 ### Resolved during this audit
+- ~~**US-31 boundary method param type missing the `List<…>` wrapper**~~ **Resolved 2026-05-18.** Re-exported diagram now types the param as `myCompletedFRAList: List<FundraisingActivity>` on both the class and sequence diagrams, matching the controller return type. Code was already passing a list — no code change needed.
 - ~~**US-28 / US-29 entity attribute drift (`category: String` instead of `FRACatId: String`)**~~ **Resolved 2026-05-18.** Re-exported diagrams now type the entity attribute as `FRACatId: String`, matching the rest of the post-2026-05-18 FRA class diagrams (US-13/14/15/17/20/21/30/31). Code was already on `fra_cat_id` — no code change needed.
 - ~~**US-15 signature-shape drift**~~ **Resolved 2026-05-18.** Code now takes the 6 unpacked fields exactly as the diagram defines: `update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)`. The previous `updated_my_fra: FundraisingActivity` parameter is gone. As a side effect, `completed` and `suspended` are no longer settable through update — `completed` is now a derived `@property` on the entity (`end_date < today`), and `suspended` is owned by US-16 / Exception A unsuspend. The `completed` column was dropped from the schema.
 - ~~**US-28 / US-29 boundary placement**~~ **Resolved 2026-05-18.** Diagram puts both count-display methods on `ViewMyFundraisingActivityPage` (fundraiser-only); code had them on `ViewFundraisingActivityPage` (donee detail) with a code-only owner-gate, and the consolidated `ManageMyFundraisingActivityPage` was reading `activity.view_count` / `activity.save_count` directly off the dataclass — bypassing the diagram-defined controllers entirely. After the rewire: the per-US `ViewMyFundraisingActivityPage` renders the metrics via `ViewFundraisingActivityViewCountController` + `ViewFundraisingActivitySaveCountController`; the donee-side detail (`ViewFundraisingActivityPage` + shared `render_activity_detail` helper) no longer renders the counts at all; the consolidated `ManageMyFundraisingActivityPage` now calls the same controllers (Exception C: same call chain as the per-US page).
