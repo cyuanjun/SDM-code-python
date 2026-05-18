@@ -308,8 +308,9 @@ def seed_bulk_activities() -> None:
     mix past + future so US-30/31 (completed view) and the browse list both
     have realistic data:
 
-    - every 3rd activity ends in 2025 (past) → derived `completed=True`
-    - the rest end in 2099 (future) → ongoing
+    - every 3rd activity is fully past (2025 dates) → stored `completed=1`
+    - the rest are upcoming (start 2026-07 or later, end ~12 months later)
+      → stored `completed=0`
 
     Idempotent.
     """
@@ -328,11 +329,13 @@ def seed_bulk_activities() -> None:
         category = category_ids[(i - 1) % len(category_ids)]
         # 1-in-3 cadence for past end-dates so US-30/31 has a meaningful pool.
         if i % 3 == 0:
+            # Past activity: ran Jan–Jun 2025, already wrapped.
             start_date = date(2025, 1, 1) + timedelta(days=(i % 30))
             end_date = date(2025, 6, 1) + timedelta(days=(i % 30))
         else:
-            start_date = date(2099, 1, 1) + timedelta(days=(i % 30))
-            end_date = date(2099, 12, 1) + timedelta(days=(i % 30))
+            # Upcoming activity: starts 2026-07 onwards, runs ~12 months.
+            start_date = date(2026, 7, 1) + timedelta(days=(i % 60))
+            end_date = date(2027, 6, 30) + timedelta(days=(i % 60))
         FundraisingActivity.create_fundraising_activity(
             title=title,
             description=f"Demo fundraising activity #{i}.",
