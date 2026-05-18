@@ -28,6 +28,35 @@ from controller.update_user_account_controller import (
 from controller.non_diagram.view_profiles_controller import ViewProfilesController
 from controller.view_user_account_controller import ViewUserAccountController
 from entity.user_account import UserAccount
+from persistence.db import get_connection
+
+
+def _which_unique_collided(email: str, phone_num: str, exclude_account_id: str | None = None) -> str:
+    """Return 'email', 'phone number', 'email and phone number', or a
+    fallback when create/update returned a UNIQUE conflict. For updates,
+    pass the account_id being updated to exclude that row from the check."""
+    extra = ""
+    params: tuple = (email,)
+    if exclude_account_id is not None:
+        extra = " AND account_id != ?"
+        params = (email, exclude_account_id)
+    with get_connection() as conn:
+        email_taken = conn.execute(
+            f"SELECT 1 FROM user_account WHERE email = ?{extra} LIMIT 1",
+            params,
+        ).fetchone() is not None
+        params = (phone_num,) if exclude_account_id is None else (phone_num, exclude_account_id)
+        phone_taken = conn.execute(
+            f"SELECT 1 FROM user_account WHERE phone_num = ?{extra} LIMIT 1",
+            params,
+        ).fetchone() is not None
+    if email_taken and phone_taken:
+        return "email and phone number"
+    if email_taken:
+        return "email"
+    if phone_taken:
+        return "phone number"
+    return "email or phone number"
 
 SELECTED_KEY = "manage_account_selected_id"
 EDIT_MODE_KEY = "manage_account_edit_mode"
@@ -145,7 +174,8 @@ class ManageUserAccountPage:
             profile_id=profile_options[profile_label],
         )
         if new_account is None:
-            st.error(f"An account with email '{email.strip()}' already exists.")
+            field = _which_unique_collided(email.strip(), phone_num.strip())
+            st.error(f"An account with that {field} already exists.")
             return
         st.session_state[JUST_CREATED_KEY] = new_account
         st.rerun()
@@ -367,9 +397,13 @@ class ManageUserAccountPage:
             st.session_state[ACTION_MSG_KEY] = "Account updated"
             st.rerun()
         else:
+            field = _which_unique_collided(
+                email.strip(), phone_num.strip(),
+                exclude_account_id=account.account_id,
+            )
             st.error(
-                f"Update failed — email '{email.strip()}' may already "
-                "be in use by another account."
+                f"Update failed — that {field} is already in use by "
+                "another account."
             )
 
     # -------- Validators -----------------------------------------------------

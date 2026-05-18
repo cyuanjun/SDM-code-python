@@ -129,7 +129,7 @@ def test_seed_does_not_overwrite_existing_account_with_same_role() -> None:
     )
     UserAccount.create_account(
         email="real-fundraiser@x.com", password="real-pwd", name="Real",
-        dob=date(1990, 1, 1), phone_num="1",
+        dob=date(1990, 1, 1), phone_num="0400000132",
         profile_id=profile.profile_id,
     )
 
@@ -211,6 +211,17 @@ def test_seed_bulk_accounts_preserves_default_credentials() -> None:
     assert UserAccount.login(DEFAULT_FUNDRAISER_EMAIL, DEFAULT_FUNDRAISER_PASSWORD) is not None
     assert UserAccount.login(DEFAULT_DONEE_EMAIL, DEFAULT_DONEE_PASSWORD) is not None
     assert UserAccount.login(DEFAULT_PM_EMAIL, DEFAULT_PM_PASSWORD) is not None
+
+
+def test_seed_bulk_accounts_produces_globally_unique_phones() -> None:
+    """Negative path of the 2026-05-18 phone-UNIQUE constraint: bulk seed
+    must produce 100 distinct phone numbers (not just unique-per-role)."""
+    seed_bulk_accounts()
+    with get_connection() as conn:
+        rows = conn.execute("SELECT phone_num FROM user_account").fetchall()
+    phones = [r["phone_num"] for r in rows]
+    assert len(phones) == 100
+    assert len(set(phones)) == 100
 
 
 def test_seed_bulk_categories_fills_to_100() -> None:

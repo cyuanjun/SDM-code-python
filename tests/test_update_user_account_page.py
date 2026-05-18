@@ -60,7 +60,7 @@ from boundary.update_user_account_page import UpdateUserAccountPage
 profile = UserProfile.create_profile(role="admin", description="a")
 UserAccount.create_account(
     email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000063", profile_id=profile.profile_id,
 )
 UpdateUserAccountPage().render()
 """

@@ -14,7 +14,7 @@ def _seed_account() -> UserAccount:
     profile = UserProfile.create_profile(role="admin", description="a")
     return UserAccount.create_account(
         email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000017", profile_id=profile.profile_id,
     )
 
 

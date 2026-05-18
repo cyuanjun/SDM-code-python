@@ -21,7 +21,7 @@ def _seed_donee() -> UserAccount:
     profile = UserProfile.create_profile(role="donee", description="r")
     return UserAccount.create_account(
         email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000024", profile_id=profile.profile_id,
     )
 
 
@@ -40,7 +40,7 @@ def _seed_fundraiser() -> UserAccount:
     )
     return UserAccount.create_account(
         email=f"f{n}@x.com", password="p", name="F", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num=f"04999{n:05d}", profile_id=profile.profile_id,
     )
 
 
@@ -153,7 +153,7 @@ def test_view_favourite_list_scopes_to_the_account() -> None:
     assert profile is not None
     second = UserAccount.create_account(
         email="d2@x.com", password="p", name="D2",
-        dob=date(1990, 1, 1), phone_num="0",
+        dob=date(1990, 1, 1), phone_num="0400000156",
         profile_id=first.profile_id,
     )
     activity_a = _seed_activity()
@@ -207,7 +207,7 @@ def test_remove_favourite_is_scoped_to_the_account() -> None:
     donee_a = _seed_donee()
     donee_b = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=donee_a.profile_id,
+        phone_num="0400000210", profile_id=donee_a.profile_id,
     )
     activity = _seed_activity()
     Favourite.save_fundraising_activity(

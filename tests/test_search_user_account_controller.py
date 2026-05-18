@@ -16,7 +16,7 @@ def test_controller_returns_entity_list_unchanged() -> None:
     profile = UserProfile.create_profile(role="admin", description="a")
     UserAccount.create_account(
         email="ada@x.com", password="p", name="Ada", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000019", profile_id=profile.profile_id,
     )
 
     results = SearchUserAccountController().search_user_account("ada")

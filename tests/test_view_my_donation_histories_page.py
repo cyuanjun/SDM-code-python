@@ -41,7 +41,7 @@ from boundary.view_my_donation_histories_page import ViewMyDonationHistoriesPage
 profile = UserProfile.create_profile(role="donee", description="r")
 account = UserAccount.create_account(
     email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000044", profile_id=profile.profile_id,
 )
 st.session_state["user"] = account
 ViewMyDonationHistoriesPage().render()

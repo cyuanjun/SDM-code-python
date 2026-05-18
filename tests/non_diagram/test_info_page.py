@@ -38,15 +38,15 @@ fr_profile = UserProfile.create_profile(role='fundraiser', description='r')
 pm_profile = UserProfile.create_profile(role='platform_manager', description='PM')
 donee = UserAccount.create_account(
     email='d@x.com', password='p', name='D', dob=date(1990, 1, 1),
-    phone_num='0', profile_id=donee_profile.profile_id,
+    phone_num='1', profile_id=donee_profile.profile_id,
 )
 fr = UserAccount.create_account(
     email='f@x.com', password='p', name='F', dob=date(1990, 1, 1),
-    phone_num='0', profile_id=fr_profile.profile_id,
+    phone_num='2', profile_id=fr_profile.profile_id,
 )
 pm = UserAccount.create_account(
     email='pm@x.com', password='p', name='PM', dob=date(1980, 1, 1),
-    phone_num='0', profile_id=pm_profile.profile_id,
+    phone_num='3', profile_id=pm_profile.profile_id,
 )
 activity = FundraisingActivity.create_fundraising_activity(
     title='A', description='d', target_amount=Decimal('100'),

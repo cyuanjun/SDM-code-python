@@ -116,7 +116,7 @@ from boundary.create_fundraising_activity_page import CreateFundraisingActivityP
 
 st.session_state["user"] = UserAccount(
     email="fr@x.com", password="p", name="Fr",
-    dob=date(1980, 1, 1), phone_num="0",
+    dob=date(1980, 1, 1), phone_num="0400000119",
     profile_id="prof_001", account_id="acc_001",
 )
 CreateFundraisingActivityPage().render()

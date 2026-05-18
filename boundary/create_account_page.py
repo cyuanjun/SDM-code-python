@@ -15,6 +15,29 @@ import streamlit as st
 
 from controller.create_account_controller import CreateAccountController
 from controller.non_diagram.view_profiles_controller import ViewProfilesController
+from entity.user_account import UserAccount
+from persistence.db import get_connection
+
+
+def _which_unique_collided(email: str, phone_num: str) -> str:
+    """After `create_account` returns None on IntegrityError, ask the DB
+    whether email or phone_num is the colliding column so the Boundary
+    can show a targeted error."""
+    with get_connection() as conn:
+        email_taken = conn.execute(
+            "SELECT 1 FROM user_account WHERE email = ? LIMIT 1", (email,)
+        ).fetchone() is not None
+        phone_taken = conn.execute(
+            "SELECT 1 FROM user_account WHERE phone_num = ? LIMIT 1",
+            (phone_num,),
+        ).fetchone() is not None
+    if email_taken and phone_taken:
+        return "email and phone number"
+    if email_taken:
+        return "email"
+    if phone_taken:
+        return "phone number"
+    return "email or phone number"  # belt-and-braces fallback
 
 
 class CreateAccountPage:
@@ -62,7 +85,8 @@ class CreateAccountPage:
             profile_id=profile_label_to_id[profile_label],
         )
         if account is None:
-            st.error(f"An account with email '{email.strip()}' already exists.")
+            field = _which_unique_collided(email.strip(), phone_num.strip())
+            st.error(f"An account with that {field} already exists.")
             return
         self.display_success(account)
 

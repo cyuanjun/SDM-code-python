@@ -34,7 +34,7 @@ from boundary.view_fundraising_activity_page import ViewFundraisingActivityPage
 profile = UserProfile.create_profile(role="fundraiser", description="r")
 account = UserAccount.create_account(
     email="o@x.com", password="p", name="O", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000037", profile_id=profile.profile_id,
 )
 FundraisingActivity.create_fundraising_activity(
     title="A", description="d", target_amount=Decimal("100.00"),

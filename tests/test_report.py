@@ -28,7 +28,7 @@ def _seed_pm() -> UserAccount:
     )
     return UserAccount.create_account(
         email="pm@x.com", password="p", name="PM", dob=date(1980, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000031", profile_id=profile.profile_id,
     )
 
 
@@ -36,7 +36,7 @@ def _seed_fundraiser() -> UserAccount:
     profile = UserProfile.create_profile(role="fundraiser", description="r")
     return UserAccount.create_account(
         email="f@x.com", password="p", name="F", dob=date(1980, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000039", profile_id=profile.profile_id,
     )
 
 
@@ -44,7 +44,7 @@ def _seed_donee() -> UserAccount:
     profile = UserProfile.create_profile(role="donee", description="d")
     return UserAccount.create_account(
         email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000047", profile_id=profile.profile_id,
     )
 
 

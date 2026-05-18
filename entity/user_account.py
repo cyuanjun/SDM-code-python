@@ -11,9 +11,12 @@ The diagrams do not show a failure branch for login or create. Implementation
 returns None on no-match / duplicate-email so the Boundary can call
 displayError. Logged in docs/diagram_typos.md as a missing diagram branch.
 
-Email is enforced UNIQUE at the schema level (per lecturer instruction
-2026-05-15). create_account returns None on conflict; update_user_account
-returns False.
+Email AND phone_num are both enforced UNIQUE at the schema level (email
+per lecturer instruction 2026-05-15; phone added 2026-05-18 as a parallel
+real-world business rule). create_account returns None on conflict on
+either column; update_user_account returns False. The Boundary inspects
+the post-conflict state (e.g. searches for an account with the same email
+or phone) to decide which message to surface.
 """
 from __future__ import annotations
 

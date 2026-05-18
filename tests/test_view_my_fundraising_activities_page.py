@@ -41,7 +41,7 @@ from boundary.view_my_fundraising_activities_page import ViewMyFundraisingActivi
 profile = UserProfile.create_profile(role="fundraiser", description="r")
 account = UserAccount.create_account(
     email="o@x.com", password="p", name="O", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000044", profile_id=profile.profile_id,
 )
 st.session_state["user"] = account
 ViewMyFundraisingActivitiesPage().render()
@@ -65,7 +65,7 @@ from boundary.view_my_fundraising_activities_page import ViewMyFundraisingActivi
 profile = UserProfile.create_profile(role="fundraiser", description="r")
 account = UserAccount.create_account(
     email="o@x.com", password="p", name="O", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000068", profile_id=profile.profile_id,
 )
 activity = FundraisingActivity.create_fundraising_activity(
     title="A", description="d", target_amount=Decimal("100"),

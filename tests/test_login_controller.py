@@ -14,7 +14,7 @@ def test_controller_returns_user_account_on_match() -> None:
     profile = UserProfile.create_profile(role="admin", description="a")
     UserAccount.create_account(
         email="ada@x.com", password="p", name="Ada", dob=date(1990, 1, 15),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000017", profile_id=profile.profile_id,
     )
 
     result = LoginController().login("ada@x.com", "p")

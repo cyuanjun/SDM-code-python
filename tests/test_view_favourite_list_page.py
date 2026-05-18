@@ -31,7 +31,7 @@ from boundary.view_favourite_list_page import ViewFavouriteListPage
 profile = UserProfile.create_profile(role="donee", description="r")
 account = UserAccount.create_account(
     email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000034", profile_id=profile.profile_id,
 )
 st.session_state["user"] = account
 ViewFavouriteListPage().render()
@@ -55,12 +55,12 @@ from boundary.view_favourite_list_page import ViewFavouriteListPage
 donee_profile = UserProfile.create_profile(role="donee", description="r")
 donee = UserAccount.create_account(
     email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=donee_profile.profile_id,
+    phone_num="0400000058", profile_id=donee_profile.profile_id,
 )
 fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
 fr = UserAccount.create_account(
     email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
-    phone_num="0", profile_id=fr_profile.profile_id,
+    phone_num="0400000063", profile_id=fr_profile.profile_id,
 )
 activity = FundraisingActivity.create_fundraising_activity(
     title="A", description="d", target_amount=Decimal("100"),

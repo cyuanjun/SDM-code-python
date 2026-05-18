@@ -18,7 +18,7 @@ def _owner_account_id() -> str:
     profile = UserProfile.create_profile(role="fundraiser", description="r")
     account = UserAccount.create_account(
         email="o@x.com", password="p", name="O", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000021", profile_id=profile.profile_id,
     )
     return account.account_id
 

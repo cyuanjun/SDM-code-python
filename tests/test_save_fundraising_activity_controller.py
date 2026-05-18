@@ -19,12 +19,12 @@ def test_controller_returns_true_when_entity_saves() -> None:
     donee_profile = UserProfile.create_profile(role="donee", description="r")
     donee = UserAccount.create_account(
         email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=donee_profile.profile_id,
+        phone_num="0400000022", profile_id=donee_profile.profile_id,
     )
     fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
     fr = UserAccount.create_account(
         email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=fr_profile.profile_id,
+        phone_num="0400000027", profile_id=fr_profile.profile_id,
     )
     activity = FundraisingActivity.create_fundraising_activity(
         title="A", description="d", target_amount=Decimal("100"),

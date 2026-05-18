@@ -81,7 +81,7 @@ from boundary.generate_report_page import GenerateReportPage
 profile = UserProfile.create_profile(role="platform_manager", description="PM")
 account = UserAccount.create_account(
     email="pm@x.com", password="p", name="PM", dob=date(1980, 1, 1),
-    phone_num="0", profile_id=profile.profile_id,
+    phone_num="0400000084", profile_id=profile.profile_id,
 )
 st.session_state["user"] = account
 GenerateReportPage().render()

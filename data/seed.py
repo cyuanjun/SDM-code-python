@@ -432,7 +432,10 @@ def _fill_role_accounts(
 ) -> None:
     """Create the missing accounts for one role to reach `target` total
     accounts of that role. Emails follow `{prefix}{NNN}@a.com`, names
-    follow `{role_label} NNN`. Idempotent — skips rows that already exist."""
+    follow `{role_label} NNN`. Phone numbers are sourced from the
+    next-globally-unique pool (`phone_num` is UNIQUE on the schema, so
+    every account across all roles must have a distinct number).
+    Idempotent — skips rows that already exist."""
     existing = _account_ids_for_role(_role_from_prefix(prefix))
     n = len(existing)
     for i in range(n + 1, target + 1):
@@ -444,9 +447,30 @@ def _fill_role_accounts(
             password=DEFAULT_PASSWORD,
             name=f"{role_label} {i:03d}",
             dob=_DEFAULT_DOB,
-            phone_num=f"{i:010d}",
+            phone_num=_next_unique_phone(),
             profile_id=profile_id,
         )
+
+
+def _next_unique_phone() -> str:
+    """Return the next 10-digit phone number not yet used on any account.
+    Walks from 0000000000 upward — cheap because the total account count
+    is bounded (100). The four default-seeded accounts already occupy
+    0000000000..0000000003, so this typically returns 0000000004 on the
+    first bulk fill and increases from there."""
+    with get_connection() as conn:
+        used = {
+            row["phone_num"]
+            for row in conn.execute(
+                "SELECT phone_num FROM user_account"
+            ).fetchall()
+        }
+    i = 0
+    while True:
+        candidate = f"{i:010d}"
+        if candidate not in used:
+            return candidate
+        i += 1
 
 
 def _role_from_prefix(prefix: str) -> str:

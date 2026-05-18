@@ -16,7 +16,7 @@ def test_controller_returns_true_when_entity_suspends() -> None:
     profile = UserProfile.create_profile(role="admin", description="a")
     created = UserAccount.create_account(
         email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000019", profile_id=profile.profile_id,
     )
     assert (
         SuspendUserAccountController().suspend_user_account(created.account_id)

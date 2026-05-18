@@ -31,7 +31,7 @@ from boundary.logout_page import LogoutPage
 
 st.session_state["user"] = UserAccount(
     email="ada@x.com", password="p", name="Ada",
-    dob=date(1990, 1, 1), phone_num="0",
+    dob=date(1990, 1, 1), phone_num="0400000034",
     profile_id="prof_001", account_id="acc_001",
 )
 LogoutPage().render()

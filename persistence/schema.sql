@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS user_account (
     password   TEXT NOT NULL,
     name       TEXT NOT NULL,
     dob        TEXT NOT NULL,
-    phone_num  TEXT NOT NULL,
+    phone_num  TEXT NOT NULL UNIQUE,
     profile_id TEXT NOT NULL REFERENCES user_profile(profile_id),
     suspended  INTEGER NOT NULL DEFAULT 0
 );

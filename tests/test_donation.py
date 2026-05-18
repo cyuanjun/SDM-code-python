@@ -23,12 +23,12 @@ def _seed_donee_and_activity() -> tuple[UserAccount, FundraisingActivity]:
     donee_profile = UserProfile.create_profile(role="donee", description="r")
     donee = UserAccount.create_account(
         email="d@x.com", password="p", name="D", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=donee_profile.profile_id,
+        phone_num="0400000026", profile_id=donee_profile.profile_id,
     )
     fr_profile = UserProfile.create_profile(role="fundraiser", description="r")
     fr = UserAccount.create_account(
         email="f@x.com", password="p", name="F", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=fr_profile.profile_id,
+        phone_num="0400000031", profile_id=fr_profile.profile_id,
     )
     activity = FundraisingActivity.create_fundraising_activity(
         title="Hospital fund", description="medical aid",
@@ -145,7 +145,7 @@ def test_view_my_donation_histories_excludes_other_donees() -> None:
 
     donee_b = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=donee_a.profile_id,
+        phone_num="0400000148", profile_id=donee_a.profile_id,
     )
 
     assert (

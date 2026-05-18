@@ -67,7 +67,7 @@ def _seed_account() -> UserAccount:
     profile = UserProfile.create_profile(role="admin", description="a")
     return UserAccount.create_account(
         email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000070", profile_id=profile.profile_id,
     )
 
 
@@ -118,7 +118,7 @@ def _seed_owner_and_activity() -> tuple[UserAccount, FundraisingActivity]:
     profile = UserProfile.create_profile(role="fundraiser", description="r")
     owner = UserAccount.create_account(
         email="o@x.com", password="p", name="O", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000121", profile_id=profile.profile_id,
     )
     activity = FundraisingActivity.create_fundraising_activity(
         title="A", description="d", target_amount=Decimal("100"),
@@ -154,7 +154,7 @@ def test_unsuspend_my_fra_returns_false_for_wrong_owner() -> None:
 
     other = UserAccount.create_account(
         email="other@x.com", password="p", name="Other",
-        dob=date(1990, 1, 1), phone_num="0",
+        dob=date(1990, 1, 1), phone_num="0400000157",
         profile_id=owner.profile_id,
     )
 

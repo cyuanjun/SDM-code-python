@@ -50,11 +50,11 @@ def test_create_account_assigns_sequential_ids() -> None:
 
     first = UserAccount.create_account(
         email="a@x.com", password="p", name="A", dob=date(2000, 1, 1),
-        phone_num="1", profile_id=profile.profile_id,
+        phone_num="0400000053", profile_id=profile.profile_id,
     )
     second = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(2000, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000057", profile_id=profile.profile_id,
     )
 
     assert first.account_id == "acc_001"
@@ -66,7 +66,7 @@ def test_create_account_links_to_profile_via_foreign_key() -> None:
 
     account = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1995, 6, 6),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000069", profile_id=profile.profile_id,
     )
 
     assert account.profile_id == profile.profile_id
@@ -79,7 +79,7 @@ def test_create_account_returns_none_for_nonexistent_profile_id() -> None:
     returns None (same contract as the duplicate-email path)."""
     result = UserAccount.create_account(
         email="ghost@x.com", password="p", name="Ghost",
-        dob=date(2000, 1, 1), phone_num="0", profile_id="prof_999",
+        dob=date(2000, 1, 1), phone_num="0400000082", profile_id="prof_999",
     )
 
     assert result is None
@@ -92,16 +92,58 @@ def test_create_account_returns_none_for_duplicate_email() -> None:
 
     first = UserAccount.create_account(
         email="dup@x.com", password="p1", name="A", dob=date(2000, 1, 1),
-        phone_num="1", profile_id=profile.profile_id,
+        phone_num="0400000095", profile_id=profile.profile_id,
     )
     second = UserAccount.create_account(
         email="dup@x.com", password="p2", name="B", dob=date(2000, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000099", profile_id=profile.profile_id,
     )
 
     assert first is not None
     assert second is None
     assert UserAccount.view_user_account(first.account_id) is not None
+
+
+def test_create_account_returns_none_for_duplicate_phone_num() -> None:
+    """Negative path: phone_num is UNIQUE (added 2026-05-18).
+    create_account returns None on conflict and the second row is rejected."""
+    profile = _seed_profile()
+
+    first = UserAccount.create_account(
+        email="a@x.com", password="p1", name="A", dob=date(2000, 1, 1),
+        phone_num="0411222333", profile_id=profile.profile_id,
+    )
+    second = UserAccount.create_account(
+        email="b@x.com", password="p2", name="B", dob=date(2000, 1, 1),
+        phone_num="0411222333", profile_id=profile.profile_id,
+    )
+
+    assert first is not None
+    assert second is None
+    assert UserAccount.view_user_account(first.account_id) is not None
+
+
+def test_update_user_account_returns_false_for_duplicate_phone_num() -> None:
+    """Negative path: changing phone to one already used by a different
+    account hits the UNIQUE constraint; update_user_account returns False
+    and the row is unchanged."""
+    profile = _seed_profile()
+    first = _seed_account(email="a@x.com", profile=profile)
+    second = UserAccount.create_account(
+        email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
+        phone_num="0411222333", profile_id=profile.profile_id,
+    )
+    assert second is not None
+
+    clashing = UserAccount(
+        email="b@x.com", password="p", name="B-renamed",
+        dob=date(1990, 1, 1), phone_num=first.phone_num,
+        profile_id=profile.profile_id,
+    )
+    assert UserAccount.update_user_account(second.account_id, clashing) is False
+    reloaded = UserAccount.view_user_account(second.account_id)
+    assert reloaded is not None
+    assert reloaded.phone_num == "0411222333"
 
 
 def _seed_account(
@@ -114,7 +156,7 @@ def _seed_account(
         password=password,
         name="Ada",
         dob=date(1990, 1, 15),
-        phone_num="0400000000",
+        phone_num="0400000117",
         profile_id=(profile or _seed_profile()).profile_id,
     )
 
@@ -174,15 +216,15 @@ def test_view_all_user_accounts_returns_all_in_insertion_order() -> None:
     profile = _seed_profile()
     UserAccount.create_account(
         email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-        phone_num="1", profile_id=profile.profile_id,
+        phone_num="0400000177", profile_id=profile.profile_id,
     )
     UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000181", profile_id=profile.profile_id,
     )
     UserAccount.create_account(
         email="c@x.com", password="p", name="C", dob=date(1990, 1, 1),
-        phone_num="3", profile_id=profile.profile_id,
+        phone_num="0400000185", profile_id=profile.profile_id,
     )
 
     accounts = UserAccount.view_all_user_accounts()
@@ -219,7 +261,7 @@ def test_update_user_account_returns_false_for_missing_id() -> None:
     """Negative path: no row matches account_id."""
     updated = UserAccount(
         email="x@x.com", password="p", name="X", dob=date(2000, 1, 1),
-        phone_num="0", profile_id="prof_001",
+        phone_num="0400000222", profile_id="prof_001",
     )
     assert UserAccount.update_user_account("acc_999", updated) is False
 
@@ -232,13 +274,13 @@ def test_update_user_account_returns_false_for_duplicate_email() -> None:
     first = _seed_account(email="a@x.com", profile=profile)
     second = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000235", profile_id=profile.profile_id,
     )
     assert second is not None
 
     clashing = UserAccount(
         email="a@x.com", password="p", name="B-renamed",
-        dob=date(1990, 1, 1), phone_num="2",
+        dob=date(1990, 1, 1), phone_num="0400000241",
         profile_id=profile.profile_id,
     )
     assert UserAccount.update_user_account(second.account_id, clashing) is False
@@ -252,12 +294,12 @@ def test_update_user_account_does_not_mutate_other_rows() -> None:
     first = _seed_account(email="a@x.com", profile=profile)
     second = UserAccount.create_account(
         email="b@x.com", password="p", name="B", dob=date(1990, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000255", profile_id=profile.profile_id,
     )
 
     updated = UserAccount(
         email="renamed@x.com", password="p", name="renamed",
-        dob=date(1990, 1, 1), phone_num="9",
+        dob=date(1990, 1, 1), phone_num="0400000260",
         profile_id=profile.profile_id,
     )
     UserAccount.update_user_account(first.account_id, updated)
@@ -298,11 +340,11 @@ def test_search_user_account_matches_email_substring_case_insensitive() -> None:
     profile = _seed_profile()
     UserAccount.create_account(
         email="ada@x.com", password="p", name="Ada", dob=date(1990, 1, 1),
-        phone_num="1", profile_id=profile.profile_id,
+        phone_num="0400000301", profile_id=profile.profile_id,
     )
     UserAccount.create_account(
         email="bob@y.com", password="p", name="Bob", dob=date(1990, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000305", profile_id=profile.profile_id,
     )
 
     results = UserAccount.search_user_account("ADA")
@@ -313,11 +355,11 @@ def test_search_user_account_matches_name_substring() -> None:
     profile = _seed_profile()
     UserAccount.create_account(
         email="a@x.com", password="p", name="Alice Smith", dob=date(1990, 1, 1),
-        phone_num="1", profile_id=profile.profile_id,
+        phone_num="0400000316", profile_id=profile.profile_id,
     )
     UserAccount.create_account(
         email="b@x.com", password="p", name="Bob Jones", dob=date(1990, 1, 1),
-        phone_num="2", profile_id=profile.profile_id,
+        phone_num="0400000320", profile_id=profile.profile_id,
     )
 
     results = UserAccount.search_user_account("smith")
@@ -328,7 +370,7 @@ def test_search_user_account_returns_empty_for_no_match() -> None:
     profile = _seed_profile()
     UserAccount.create_account(
         email="a@x.com", password="p", name="A", dob=date(1990, 1, 1),
-        phone_num="0", profile_id=profile.profile_id,
+        phone_num="0400000331", profile_id=profile.profile_id,
     )
     assert UserAccount.search_user_account("nothing") == []
 
