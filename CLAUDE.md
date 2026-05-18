@@ -51,6 +51,8 @@ The source-of-truth diagrams live under [diagrams/](diagrams/), organised by spr
 
 For detail on a specific user story (diagram surface, code paths, tests, assumptions, deferred items), read **[docs/implementation_2026-05-18.md](docs/implementation_2026-05-18.md)** — one section per US.
 
+For the diagram-by-diagram surface (Boundary / Controller / Entity + methods + args) paired with the matching `Code →` Python identifier, ordered US-1 → US-43, read **[docs/audit.md](docs/audit.md)** — this is the "does the code match the diagrams" cross-check; zero open drifts as of 2026-05-18.
+
 Every divergence between a diagram and the code is split across two more docs:
 
 - [docs/diagram_typos.md](docs/diagram_typos.md) — pure typos / signature issues in the source diagrams where the code follows the *corrected* version. Grouped by sprint.
@@ -83,7 +85,7 @@ If a Boundary page legitimately needs to display a list of records, look up by a
 - An entry is added to the "Exception A — off-diagram entity methods to power UX" section of [docs/todo.md](docs/todo.md), naming the new method and which boundary needs it.
 - The class diagram is updated to reflect the new method **before** final submission (or a new use case is defined).
 
-Current Exception A methods (live in [docs/todo.md](docs/todo.md)): `UserProfile.view_all_profiles` + `unsuspend_user_profile`, `UserAccount.view_all_user_accounts` + `unsuspend_user_account`, `FundraisingActivity.view_all_fundraising_activities` + `view_my_fundraising_activities` + `increment_view_count` + `increment_save_count` + `unsuspend_my_fundraising_activity`, `FundraisingActivityCategory.view_all_categories` + `unsuspend_fundraising_activity_category`, `Donation.view_my_donations`.
+Current Exception A methods (live in [docs/todo.md](docs/todo.md)): `UserProfile.view_all_profiles` + `unsuspend_user_profile`, `UserAccount.view_all_user_accounts` + `unsuspend_user_account`, `FundraisingActivity.view_all_fundraising_activities` + `view_my_fundraising_activities` + `increment_view_count` + `increment_save_count` + `unsuspend_my_fundraising_activity`, `FundraisingActivityCategory.view_all_categories` + `unsuspend_fundraising_activity_category`. (`Donation.view_my_donations` was retired 2026-05-18 when US-33 reframed to list semantics.)
 
 ### Exception B — Debug-only utilities
 
@@ -124,6 +126,8 @@ SDM-code/
 │   └── non_diagram/       # smoke tests for the 8 non-diagram boundaries + delegation tests for the 5 non-diagram controllers
 ├── docs/
 │   ├── implementation_2026-05-18.md  # Per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items) — primary per-story doc
+│   ├── audit.md           # Diagram-by-diagram Boundary / Controller / Entity surface + matching `Code →` identifier, US-1 → US-43; zero open drifts
+│   ├── test_cases.md      # Diagram-derived test cases (per-US table, 103 IDs, happy + negative path per US)
 │   ├── diagram_typos.md   # Per-sprint catalogue of every diagram divergence (resolved + outstanding + deferred)
 │   └── todo.md            # Bootstrap deviations, Exception A entries, Lecturer decisions, Deferred typos index, Open architectural items, Resolved
 ├── diagrams/              # Source UML diagrams, sprint-1_diagrams/ … sprint-4_diagrams/
@@ -176,7 +180,7 @@ When handed new sprint diagrams:
 
 ## Coverage and what's deferred
 
-All **43 user stories** are implemented on this branch (`revamp`). **377 tests pass.**
+All **43 user stories** are implemented on this branch (`revamp-final-diagrams`). **377 tests pass.** **Zero open diagram drifts** — see [docs/audit.md](docs/audit.md) for the diagram-by-diagram Boundary / Controller / Entity surface + matching `Code →` Python identifier.
 
 | Sprint | Stories | Status |
 |---|---|---|

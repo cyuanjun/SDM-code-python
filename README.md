@@ -1,9 +1,11 @@
-# SDM Online Fundraising System — revamp branch
+# SDM Online Fundraising System — revamp-final-diagrams branch
 
 CSIT314 group project. Built from scratch against reworked UML diagrams. B-C-E architecture, OOP backend, diagram-as-contract — see [CLAUDE.md](CLAUDE.md).
 
 - [CLAUDE.md](CLAUDE.md) — architecture conventions
 - [docs/implementation_2026-05-18.md](docs/implementation_2026-05-18.md) — per-US implementation reference (diagram surface, code paths, tests, assumptions, deferred items)
+- [docs/audit.md](docs/audit.md) — diagram-by-diagram Boundary / Controller / Entity surface paired with the matching `Code →` Python identifier, ordered US-1 → US-43 (zero open drifts)
+- [docs/test_cases.md](docs/test_cases.md) — diagram-derived test cases (per-US table, 103 IDs, every happy + negative path)
 - [docs/diagram_typos.md](docs/diagram_typos.md) — every divergence between source diagrams and code
 - [docs/todo.md](docs/todo.md) — bootstrap deviations, Exception A entries, lecturer decisions, deferred typos, open architectural items
 - [diagrams/](diagrams/) — reworked UML diagrams, organised by sprint
@@ -46,7 +48,7 @@ Three sample donations are also seeded against a demo activity owned by the defa
 pytest
 ```
 
-373 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+377 passing. Tests are written test-first; per [CLAUDE.md](CLAUDE.md) "TDD expectations" every entity method ships with both a happy-path and a negative test (missing rows, FK violations, invalid input, empty results, cross-tenant access). Controller delegation tests are paired the same way. CI runs via [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Project layout
 
@@ -72,6 +74,6 @@ pytest
 | Sprint 3 | US-4, 5, 9, 10, 16, 17, 23, 25, 30, 31, 32, 33 | ✓ Complete |
 | Sprint 4 | US-28, 29, 34, 35, 36, 37, 38, 41, 42, 43 | ✓ Complete |
 
-All 43 user stories implemented. 373 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
+All 43 user stories implemented. 377 tests passing. Zero outstanding diagram typos — every divergence is either resolved (live diagrams updated), lecturer-deferred, or logged as an accepted code-vs-diagram divergence. See [docs/audit.md](docs/audit.md) for the diagram-by-diagram surface and `Code →` mapping, plus [docs/diagram_typos.md](docs/diagram_typos.md) and the "Lecturer decisions" / "Deferred typos" sections of [docs/todo.md](docs/todo.md).
 
 The sidebar is consolidated into 10 entries via per-actor `Manage*` / `Browse*` / `My*` pages (Exception C in [CLAUDE.md](CLAUDE.md)). Role-based gating filters pages by the logged-in user's role.
