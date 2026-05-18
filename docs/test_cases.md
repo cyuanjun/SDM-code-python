@@ -2,7 +2,7 @@
 
 One table per sprint. Test cases cover the 43 diagram-defined user stories (US-1 … US-43). Off-diagram code (Exception A methods, the 8 consolidated boundaries, the debug page) is not in scope here — that's verified separately by the smoke tests under `tests/non_diagram/`.
 
-The bold sentence at the start of each "Test Data" cell describes what the case verifies; what follows is the concrete input. All "Actual Result" entries are the observed outcome from the pytest suite (**392 tests** pass on `revamp-final-diagrams` as of 2026-05-18). Each ID maps to one or more tests under `tests/` (paths listed in [implementation_2026-05-18.md](implementation_2026-05-18.md)).
+The bold sentence at the start of each "Test Data" cell describes what the case verifies; what follows is the concrete input. All "Actual Result" entries are the observed outcome from the pytest suite (**398 tests** pass on `revamp-final-diagrams` as of 2026-05-18). Each ID maps to one or more tests under `tests/` (paths listed in [implementation_2026-05-18.md](implementation_2026-05-18.md)).
 
 ## Sprint 1 — User accounts, profiles, login/logout, fundraising activity create/view
 
@@ -141,4 +141,4 @@ The bold sentence at the start of each "Test Data" cell describes what the case 
 
 **Every user story has at least one positive and one negative test case.** Negative-path cases cover the failure branches the diagrams imply: missing row → `None`/`False`/`[]`, cross-owner access refused, blank inputs rejected by Boundary, the three UNIQUE constraints (`user_account.email`, `user_profile.role`, `fundraising_activity_category.category_name`) rejecting duplicates, the suspended-hidden filter on the four donee-facing read paths (US-20, US-21, US-24, US-25), past-date guards on create/update (US-13/US-15), and graceful no-op behaviour for logout-when-not-signed-in.
 
-For each diagram-defined Entity method, the corresponding pytest happy + negative tests live in `tests/test_<entity>.py`. Controller delegation tests live in `tests/test_<controller>_controller.py`. Per-US Boundary smoke tests live in `tests/test_<page>_page.py`. The pytest suite passes (**392 tests** as of 2026-05-18) — that's the underlying evidence behind every "Pass" entry above.
+For each diagram-defined Entity method, the corresponding pytest happy + negative tests live in `tests/test_<entity>.py`. Controller delegation tests live in `tests/test_<controller>_controller.py`. Per-US Boundary smoke tests live in `tests/test_<page>_page.py`. The pytest suite passes (**398 tests** as of 2026-05-18) — that's the underlying evidence behind every "Pass" entry above.

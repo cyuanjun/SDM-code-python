@@ -34,12 +34,14 @@ CREATE TABLE IF NOT EXISTS user_account (
     suspended  INTEGER NOT NULL DEFAULT 0
 );
 
--- `completed` is *not* stored. The entity exposes a derived `completed`
--- property computed from `end_date < today`. US-30/31 read methods filter
--- by `end_date < ?` rather than a stored flag. The diagram still types
--- `completed: Boolean` on the entity — that's honoured because the
--- attribute still exists on instances; only the storage is implementation
--- detail.
+-- `completed` is "derive + store" (decided 2026-05-18): computed as
+-- `end_date < today` at INSERT/UPDATE time and stored. SQLite forbids
+-- non-deterministic expressions like `date('now')` in GENERATED columns,
+-- so the compute happens in Python (entity layer). A
+-- `FundraisingActivity.refresh_completed_flags()` pass runs on app
+-- startup to catch rows whose `end_date` passed since the last write —
+-- keeps US-30/31 (`WHERE completed = 1`) correct without relying on
+-- writes happening at the right time.
 CREATE TABLE IF NOT EXISTS fundraising_activity (
     fra_id           TEXT PRIMARY KEY,
     title            TEXT NOT NULL,
@@ -48,6 +50,7 @@ CREATE TABLE IF NOT EXISTS fundraising_activity (
     fra_cat_id       TEXT NOT NULL REFERENCES fundraising_activity_category(fra_cat_id),
     start_date       TEXT NOT NULL,
     end_date         TEXT NOT NULL,
+    completed        INTEGER NOT NULL DEFAULT 0,
     suspended        INTEGER NOT NULL DEFAULT 0,
     owner_account_id TEXT NOT NULL REFERENCES user_account(account_id),
     view_count       INTEGER NOT NULL DEFAULT 0,

@@ -34,7 +34,7 @@ from persistence.ids import next_id
 
 _SELECT_COLUMNS = (
     "fra_id, title, description, target_amount, fra_cat_id, "
-    "start_date, end_date, suspended, owner_account_id, "
+    "start_date, end_date, completed, suspended, owner_account_id, "
     "view_count, save_count"
 )
 
@@ -48,19 +48,11 @@ class FundraisingActivity:
     start_date: date
     end_date: date
     owner_account_id: str
+    completed: bool = False
     suspended: bool = False
     view_count: int = 0
     save_count: int = 0
     fra_id: Optional[str] = None
-
-    @property
-    def completed(self) -> bool:
-        """Derived from `end_date`. The diagram lists `completed: Boolean`
-        as an entity attribute but defines no use case that writes it, so
-        we treat it as "the activity is past its end date." US-30/31
-        consume this same rule via `WHERE end_date < ?` at the entity
-        layer rather than reading a stored column."""
-        return self.end_date < date.today()
 
     @classmethod
     def create_fundraising_activity(
@@ -73,13 +65,17 @@ class FundraisingActivity:
         end_date: date,
         owner_account_id: str,
     ) -> "FundraisingActivity":
+        # `completed` is computed at write time from end_date < today.
+        # A `refresh_completed_flags()` pass on app startup catches rows
+        # whose end_date passed since the last write.
+        completed = end_date < date.today()
         with get_connection() as conn:
             new_id = next_id(conn, "fundraising_activity", "fra_id", "fra")
             conn.execute(
                 "INSERT INTO fundraising_activity "
                 "(fra_id, title, description, target_amount, fra_cat_id, start_date, "
-                " end_date, suspended, owner_account_id, view_count, save_count) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0)",
+                " end_date, completed, suspended, owner_account_id, view_count, save_count) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0)",
                 (
                     new_id,
                     title,
@@ -88,6 +84,7 @@ class FundraisingActivity:
                     fra_cat_id,
                     start_date.isoformat(),
                     end_date.isoformat(),
+                    1 if completed else 0,
                     owner_account_id,
                 ),
             )
@@ -100,6 +97,7 @@ class FundraisingActivity:
             start_date=start_date,
             end_date=end_date,
             owner_account_id=owner_account_id,
+            completed=completed,
             suspended=False,
             view_count=0,
             save_count=0,
@@ -188,19 +186,19 @@ class FundraisingActivity:
         cls, owner_account_id: str, search_criteria: str
     ) -> list["FundraisingActivity"]:
         """US-30 — fundraiser searches their completed activities. Scoped
-        to owner; "completed" is derived from `end_date < today`. Matches
-        title / description / category_name."""
+        to owner; matches the stored `completed` flag, which is computed
+        from `end_date < today` at write time + refreshed at app startup.
+        Matches title / description / category_name."""
         like = f"%{search_criteria.lower()}%"
-        today = date.today().isoformat()
         with get_connection() as conn:
             rows = conn.execute(
                 f"SELECT {_alias_columns('a')} FROM fundraising_activity a "
                 "JOIN fundraising_activity_category c ON c.fra_cat_id = a.fra_cat_id "
-                "WHERE a.owner_account_id = ? AND a.end_date < ? AND ("
+                "WHERE a.owner_account_id = ? AND a.completed = 1 AND ("
                 "  LOWER(a.title) LIKE ? OR LOWER(a.description) LIKE ? "
                 "  OR LOWER(c.category_name) LIKE ?"
                 ") ORDER BY a.fra_id",
-                (owner_account_id, today, like, like, like),
+                (owner_account_id, like, like, like),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -209,14 +207,14 @@ class FundraisingActivity:
         cls, owner_account_id: str
     ) -> list["FundraisingActivity"]:
         """US-31 — fundraiser views the list of their completed activities.
-        "Completed" is derived from `end_date < today`."""
-        today = date.today().isoformat()
+        Filters on the stored `completed` flag (computed from
+        `end_date < today` at write time + refreshed at app startup)."""
         with get_connection() as conn:
             rows = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM fundraising_activity "
-                "WHERE owner_account_id = ? AND end_date < ? "
+                "WHERE owner_account_id = ? AND completed = 1 "
                 "ORDER BY fra_id",
-                (owner_account_id, today),
+                (owner_account_id,),
             ).fetchall()
         return [cls._from_row(row) for row in rows]
 
@@ -265,11 +263,13 @@ class FundraisingActivity:
         Exception A unsuspend, not by update — those have their own
         methods.
         """
+        completed = end_date < date.today()
         with get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE fundraising_activity "
                 "SET title = ?, description = ?, target_amount = ?, "
-                "fra_cat_id = ?, start_date = ?, end_date = ? "
+                "fra_cat_id = ?, start_date = ?, end_date = ?, "
+                "completed = ? "
                 "WHERE fra_id = ? AND owner_account_id = ?",
                 (
                     title,
@@ -278,6 +278,7 @@ class FundraisingActivity:
                     fra_cat_id,
                     start_date.isoformat(),
                     end_date.isoformat(),
+                    1 if completed else 0,
                     fra_id,
                     owner_account_id,
                 ),
@@ -361,6 +362,26 @@ class FundraisingActivity:
         return cursor.rowcount > 0
 
     @classmethod
+    def refresh_completed_flags(cls) -> int:
+        """Sweep every row and rewrite `completed` based on today's date.
+        Returns the number of rows whose stored value flipped.
+
+        Wired into app startup + `python -m data.seed` so that an activity
+        whose `end_date` passed since the last write picks up the change
+        without needing an explicit update. `completed` is otherwise
+        written at INSERT/UPDATE time via `(end_date < today)` so this
+        is only catching the "calendar advanced" case."""
+        today = date.today().isoformat()
+        with get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE fundraising_activity "
+                "SET completed = CASE WHEN end_date < ? THEN 1 ELSE 0 END "
+                "WHERE completed != (CASE WHEN end_date < ? THEN 1 ELSE 0 END)",
+                (today, today),
+            )
+            return cursor.rowcount
+
+    @classmethod
     def _from_row(cls, row) -> "FundraisingActivity":
         return cls(
             fra_id=row["fra_id"],
@@ -370,6 +391,7 @@ class FundraisingActivity:
             fra_cat_id=row["fra_cat_id"],
             start_date=date.fromisoformat(row["start_date"]),
             end_date=date.fromisoformat(row["end_date"]),
+            completed=bool(row["completed"]),
             suspended=bool(row["suspended"]),
             owner_account_id=row["owner_account_id"],
             view_count=int(row["view_count"]),

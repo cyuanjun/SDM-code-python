@@ -682,3 +682,54 @@ def test_increment_save_count_floors_at_zero() -> None:
 def test_increment_save_count_returns_false_for_missing_id() -> None:
     """Negative path: no row matches."""
     assert FundraisingActivity.increment_save_count("fra_999", +1) is False
+
+
+# ----- refresh_completed_flags ----------------------------------------------
+
+
+def test_refresh_completed_flags_flips_stale_rows() -> None:
+    """The `completed` column is computed on write — `refresh_completed_flags`
+    catches rows whose end_date passed since the last write. Simulate
+    staleness by directly back-dating an activity's end_date in the DB
+    and verify the refresh flips its stored `completed` to 1."""
+    import sqlite3
+    from persistence.db import get_connection
+
+    owner = _seed_fundraiser_account()
+    activity = _seed_activity(owner)  # ongoing: end_date 2099, completed=0
+
+    assert activity.completed is False
+
+    # Mutate the row directly — same shape as time passing without a write.
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE fundraising_activity SET end_date = '2025-01-01' "
+            "WHERE fra_id = ?",
+            (activity.fra_id,),
+        )
+
+    # Stored `completed` is still 0 (stale).
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT completed FROM fundraising_activity WHERE fra_id = ?",
+            (activity.fra_id,),
+        ).fetchone()
+    assert row["completed"] == 0
+
+    flipped = FundraisingActivity.refresh_completed_flags()
+    assert flipped == 1
+
+    fetched = FundraisingActivity.view_fundraising_activity(activity.fra_id)
+    assert fetched is not None
+    assert fetched.completed is True
+
+
+def test_refresh_completed_flags_is_a_no_op_when_nothing_stale() -> None:
+    """Negative path: when every row's stored `completed` already matches
+    today's date, refresh returns 0 — no UPDATE rows touched."""
+    owner = _seed_fundraiser_account()
+    _seed_activity(owner)
+    _seed_completed_activity(owner)
+
+    flipped = FundraisingActivity.refresh_completed_flags()
+    assert flipped == 0

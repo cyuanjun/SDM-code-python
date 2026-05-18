@@ -490,6 +490,7 @@ if __name__ == "__main__":
     seed_default_platform_manager()
     seed_demo_donations()
     seed_bulk_all()
+    FundraisingActivity.refresh_completed_flags()
     print("Seed complete.")
     print(f"  admin   : {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}")
     print(f"  funder  : {DEFAULT_FUNDRAISER_EMAIL} / {DEFAULT_FUNDRAISER_PASSWORD}")

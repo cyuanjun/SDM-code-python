@@ -40,6 +40,7 @@ from data.seed import (
     seed_default_platform_manager,
     seed_demo_donations,
 )
+from entity.fundraising_activity import FundraisingActivity
 from persistence.db import init_db
 
 PAGES: dict = {
@@ -107,6 +108,9 @@ def main() -> None:
     seed_default_platform_manager()
     seed_demo_donations()
     seed_bulk_all()  # tops up to 100 accounts / categories / activities / donations
+    # Refresh `completed` flags so activities whose end_date passed since
+    # the last write get picked up. Cheap (single UPDATE statement).
+    FundraisingActivity.refresh_completed_flags()
 
     role = _current_role()
     allowed_labels = PAGES_BY_ROLE.get(role, PAGES_BY_ROLE[None])
