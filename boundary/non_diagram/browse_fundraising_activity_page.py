@@ -44,6 +44,13 @@ def _category_lookup() -> dict[str, str]:
     return {c.fra_cat_id: c.category_name for c in cats}
 
 
+# After Save/Remove fires, the action message is stashed here so the post-
+# rerun render can pick it up and show it. `st.success(...)` followed by
+# `st.rerun()` would otherwise discard the widget — same pattern that the
+# Suspend/Unsuspend buttons use in ManageMyFundraisingActivityPage.
+ACTION_MSG_KEY = "browse_fra_action_msg"
+
+
 def render_activity_detail(selected_key: str) -> None:
     """Shared activity detail panel. Renders title + metadata + owner-gated
     metrics + US-22/US-23 Save/Remove buttons + Back button. Used by both
@@ -62,6 +69,11 @@ def render_activity_detail(selected_key: str) -> None:
         st.error("Activity no longer exists.")
         st.session_state.pop(selected_key, None)
         return
+
+    # Persisted success message from a prior Save/Remove click (the rerun
+    # would discard a plain `st.success` widget).
+    if ACTION_MSG_KEY in st.session_state:
+        st.success(st.session_state.pop(ACTION_MSG_KEY))
 
     st.subheader(activity.title)
     cat_name = _category_lookup().get(activity.fra_cat_id, activity.fra_cat_id)
@@ -110,7 +122,9 @@ def render_activity_detail(selected_key: str) -> None:
                     )
                 )
                 if ok:
-                    st.success("Removed from your favourites.")
+                    st.session_state[ACTION_MSG_KEY] = (
+                        "Removed from your favourites."
+                    )
                     st.rerun()
                 else:
                     st.error("Could not remove from favourites.")
@@ -124,13 +138,16 @@ def render_activity_detail(selected_key: str) -> None:
                     )
                 )
                 if ok:
-                    st.success("Saved to your favourites.")
+                    st.session_state[ACTION_MSG_KEY] = (
+                        "Saved to your favourites."
+                    )
                     st.rerun()
                 else:
                     st.info("Already in your favourites.")
 
     if st.button("← Back to list"):
         st.session_state.pop(selected_key, None)
+        st.session_state.pop(ACTION_MSG_KEY, None)
         st.rerun()
 
 

@@ -48,6 +48,11 @@ def _category_lookup() -> dict[str, str]:
 
 SELECTED_KEY = "selected_fra_id"
 
+# After Save/Remove fires the action message is stashed here so the
+# post-rerun render can pick it up. `st.success(...)` followed by
+# `st.rerun()` would otherwise discard the widget.
+ACTION_MSG_KEY = "view_fra_action_msg"
+
 
 class ViewFundraisingActivityPage:
     def render(self) -> None:
@@ -62,10 +67,13 @@ class ViewFundraisingActivityPage:
                 st.error("Selected activity no longer exists.")
                 st.session_state.pop(SELECTED_KEY, None)
             else:
+                if ACTION_MSG_KEY in st.session_state:
+                    st.success(st.session_state.pop(ACTION_MSG_KEY))
                 self.display_fundraising_activity(activity)
                 self._maybe_display_counts(activity)
             if st.button("← Back to list"):
                 st.session_state.pop(SELECTED_KEY, None)
+                st.session_state.pop(ACTION_MSG_KEY, None)
                 st.rerun()
             return
 
@@ -134,7 +142,9 @@ class ViewFundraisingActivityPage:
                     )
                 )
                 if ok:
-                    self.display_remove_success()
+                    st.session_state[ACTION_MSG_KEY] = (
+                        "Removed from your favourites."
+                    )
                     st.rerun()
                 else:
                     self.display_remove_error()
@@ -147,7 +157,9 @@ class ViewFundraisingActivityPage:
                     )
                 )
                 if ok:
-                    self.display_success()
+                    st.session_state[ACTION_MSG_KEY] = (
+                        "Saved to your favourites."
+                    )
                     st.rerun()
                 else:
                     self.display_save_error()
