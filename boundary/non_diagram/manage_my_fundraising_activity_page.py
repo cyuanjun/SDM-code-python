@@ -34,6 +34,12 @@ from controller.update_my_fundraising_activity_controller import (
 from controller.view_fundraising_activity_category_controller import (
     ViewFundraisingActivityCategoryController,
 )
+from controller.view_fundraising_activity_save_count_controller import (
+    ViewFundraisingActivitySaveCountController,
+)
+from controller.view_fundraising_activity_view_count_controller import (
+    ViewFundraisingActivityViewCountController,
+)
 from controller.view_my_fundraising_activity_controller import (
     ViewMyFundraisingActivityController,
 )
@@ -352,9 +358,21 @@ class ManageMyFundraisingActivityPage:
         st.write(f"**Suspended:** {'yes' if activity.suspended else 'no'}")
         st.write(activity.description)
 
+        # US-28 / US-29 — pull counts via the diagram-defined controllers
+        # rather than reading the dataclass fields, so the consolidated
+        # Manage page hits the same call chain as the per-US
+        # ViewMyFundraisingActivityPage (Exception C).
+        view_count = (
+            ViewFundraisingActivityViewCountController()
+            .view_fundraising_activity_view_count(activity.fra_id)
+        )
+        save_count = (
+            ViewFundraisingActivitySaveCountController()
+            .view_fundraising_activity_save_count(activity.fra_id)
+        )
         col_metrics = st.columns(2)
-        col_metrics[0].metric("Views", activity.view_count)
-        col_metrics[1].metric("Saves", activity.save_count)
+        col_metrics[0].metric("Views", view_count)
+        col_metrics[1].metric("Saves", save_count)
 
         col_update, col_suspend, _ = st.columns([1, 1, 4])
         with col_update:

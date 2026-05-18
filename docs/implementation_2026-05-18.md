@@ -982,19 +982,19 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 | Entity | `FundraisingActivity (FRAId, title, description, targetAmount, FRACatId: String, startDate, endDate, completed, suspended, ownerAccountId, viewCount: Integer, saveCount: Integer)` | `viewFundraisingActivityViewCount(FRAId: String): Integer` |
 
 **Code**
-- [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py) — count rendered via `activity.view_count` on the dataclass
+- [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py) — calls `ViewFundraisingActivityViewCountController` and renders via `display_fundraising_activity_view_count(view_count)`
 - [controller/view_fundraising_activity_view_count_controller.py](../controller/view_fundraising_activity_view_count_controller.py)
 - [entity/fundraising_activity.py:312](../entity/fundraising_activity.py#L312) `view_fundraising_activity_view_count`
 - [entity/fundraising_activity.py:337](../entity/fundraising_activity.py#L337) `increment_view_count` (Exception A)
 
-**Sidebar wiring:** Surfaced via `ManageMyFundraisingActivityPage` (read-only detail view) under **[Fundraiser] Manage My Fundraising Activities**; fundraiser only.
+**Sidebar wiring:** Surfaced via `ManageMyFundraisingActivityPage` (read-only detail view) under **[Fundraiser] Manage My Fundraising Activities**; fundraiser only. The consolidated page calls the same controller as the per-US boundary (Exception C).
 
 **Tests**
 - [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — entity happy + missing-row returns 0 + increment-on-missing returns False
 - [tests/test_view_fundraising_activity_view_count_controller.py](../tests/test_view_fundraising_activity_view_count_controller.py) — delegation + integer mirror
 - [tests/test_view_my_fundraising_activity_page.py](../tests/test_view_my_fundraising_activity_page.py) — page smoke
 
-**Notes / assumptions / deferred:** Diagram redraw **2026-05-16** moved the boundary from the donee's `ViewFundraisingActivityPage` to the fundraiser's `ViewMyFundraisingActivityPage` — resolved in [docs/diagram_typos.md](diagram_typos.md). The entity returns `0` (rather than raising) for a missing FRAId so the UI can always render a number. `increment_view_count` is an Exception A write fired from US-21 when a donee opens an activity.
+**Notes / assumptions / deferred:** Diagram redraw **2026-05-16** moved the boundary from the donee's `ViewFundraisingActivityPage` to the fundraiser's `ViewMyFundraisingActivityPage` — resolved in [docs/diagram_typos.md](diagram_typos.md). **Boundary-placement rewire (2026-05-18):** previously the count display was on the donee's `ViewFundraisingActivityPage` with a code-only owner-gate and the consolidated `ManageMyFundraisingActivityPage` was reading the count fields directly off the dataclass. Both sites now defer to the per-US `ViewMyFundraisingActivityPage` + the diagram-defined controller — the donee-side detail no longer renders the count. Owner-gating is implicit (fundraiser-only page). The entity returns `0` (rather than raising) for a missing FRAId so the UI can always render a number. `increment_view_count` is an Exception A write fired from US-21 when a donee opens an activity.
 
 ### US-29 — View fundraising activity save count ([diagram](../diagrams/sprint-4_diagrams/US-29.jpg))
 
@@ -1009,19 +1009,19 @@ Diagrams: [diagrams/sprint-4_diagrams/](../diagrams/sprint-4_diagrams/). Stories
 | Entity | `FundraisingActivity (attrs as US-28)` | `viewFundraisingActivitySaveCount(FRAId: String): Integer` |
 
 **Code**
-- [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py) — shares the US-28 page; same dataclass field `activity.save_count`
+- [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py) — calls `ViewFundraisingActivitySaveCountController` and renders via `display_fundraising_activity_save_count(save_count)` (shares the page with US-14/16/28)
 - [controller/view_fundraising_activity_save_count_controller.py](../controller/view_fundraising_activity_save_count_controller.py)
 - [entity/fundraising_activity.py:325](../entity/fundraising_activity.py#L325) `view_fundraising_activity_save_count`
 - [entity/fundraising_activity.py:350](../entity/fundraising_activity.py#L350) `increment_save_count(fra_id, delta)` (Exception A; floors at 0)
 
-**Sidebar wiring:** Same as US-28 — the "Saves" metric on the read-only detail view inside `ManageMyFundraisingActivityPage`; fundraiser only.
+**Sidebar wiring:** Same as US-28 — the "Saves" metric on the read-only detail view inside `ManageMyFundraisingActivityPage`; fundraiser only. Both per-US + consolidated pages call the same controller.
 
 **Tests**
 - [tests/test_fundraising_activity.py](../tests/test_fundraising_activity.py) — entity happy + missing-row + increment by +1 / −1 + floor-at-zero guard
 - [tests/test_view_fundraising_activity_save_count_controller.py](../tests/test_view_fundraising_activity_save_count_controller.py)
 - [tests/test_view_my_fundraising_activity_page.py](../tests/test_view_my_fundraising_activity_page.py)
 
-**Notes / assumptions / deferred:** Same boundary correction as US-28 (was the donee's view page on the original diagram). `increment_save_count` is Exception A: US-22 fires `delta=+1` when a donee favourites; US-23 fires `delta=−1` on remove. The `MAX(save_count + ?, 0)` guard prevents a missing favourite row from driving the count negative.
+**Notes / assumptions / deferred:** Same 2026-05-18 boundary-placement rewire as US-28 — see those notes. `increment_save_count` is Exception A: US-22 fires `delta=+1` when a donee favourites; US-23 fires `delta=−1` on remove. The `MAX(save_count + ?, 0)` guard prevents a missing favourite row from driving the count negative.
 
 ### US-34 — Create fundraising activity category ([diagram](../diagrams/sprint-4_diagrams/US-34.jpg))
 

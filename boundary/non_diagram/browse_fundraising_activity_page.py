@@ -30,12 +30,6 @@ from controller.view_fundraising_activity_category_controller import (
 from controller.view_fundraising_activity_controller import (
     ViewFundraisingActivityController,
 )
-from controller.view_fundraising_activity_save_count_controller import (
-    ViewFundraisingActivitySaveCountController,
-)
-from controller.view_fundraising_activity_view_count_controller import (
-    ViewFundraisingActivityViewCountController,
-)
 from entity.fundraising_activity import FundraisingActivity
 
 
@@ -89,24 +83,15 @@ def render_activity_detail(selected_key: str) -> None:
         st.warning("This activity is currently suspended.")
     st.write(activity.description)
 
-    # Owner-gated metrics (US-28 / US-29).
-    user = st.session_state.get("user")
-    if user is not None and user.account_id == activity.owner_account_id:
-        view_count = (
-            ViewFundraisingActivityViewCountController()
-            .view_fundraising_activity_view_count(activity.fra_id)
-        )
-        save_count = (
-            ViewFundraisingActivitySaveCountController()
-            .view_fundraising_activity_save_count(activity.fra_id)
-        )
-        cols = st.columns(2)
-        cols[0].metric("Views", view_count)
-        cols[1].metric("Saves to favourites", save_count)
+    # US-28 / US-29 (view + save counts) are NOT on this donee-facing
+    # detail per the 2026-05-18 diagrams — they belong on
+    # `ViewMyFundraisingActivityPage` (fundraiser-only). A fundraiser
+    # checking their own counts uses the [Fundraiser] sidebar entries.
 
     # US-22 / US-23: donee saves or removes this activity to/from
     # their favourites. Mutually exclusive — show whichever applies.
     # Mirrors the per-US ViewFundraisingActivityPage logic (Exception C).
+    user = st.session_state.get("user")
     if user is not None:
         favourites = (
             ViewFavouriteListController().view_favourite_list(user.account_id)

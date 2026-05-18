@@ -300,7 +300,7 @@ Conventions:
 ## US-28 — View fundraising activity view count *(Fundraiser)*
 - **Boundary:** `ViewMyFundraisingActivityPage`
   - `displayFundraisingActivityViewCount(viewCount: Integer): void`
-  - Code → `ViewFundraisingActivityPage.display_fundraising_activity_view_count(view_count)` in [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py) ⚠️ code lives on `ViewFundraisingActivityPage`, not `ViewMyFundraisingActivityPage` as the diagram says
+  - Code → `ViewMyFundraisingActivityPage.display_fundraising_activity_view_count(view_count)` in [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py)
 - **Controller:** `ViewFundraisingActivityViewCountController`
   - `viewFundraisingActivityViewCount(FRAId: String): Integer`
   - Code → `ViewFundraisingActivityViewCountController.view_fundraising_activity_view_count(fra_id)` in [controller/view_fundraising_activity_view_count_controller.py](../controller/view_fundraising_activity_view_count_controller.py)
@@ -312,7 +312,7 @@ Conventions:
 ## US-29 — View fundraising activity save count *(Fundraiser)*
 - **Boundary:** `ViewMyFundraisingActivityPage`
   - `displayFundraisingActivitySaveCount(saveCount: Integer): void`
-  - Code → `ViewFundraisingActivityPage.display_fundraising_activity_save_count(save_count)` in [boundary/view_fundraising_activity_page.py](../boundary/view_fundraising_activity_page.py) ⚠️ same `ViewFundraisingActivityPage` vs diagram's `ViewMyFundraisingActivityPage` drift as US-28
+  - Code → `ViewMyFundraisingActivityPage.display_fundraising_activity_save_count(save_count)` in [boundary/view_my_fundraising_activity_page.py](../boundary/view_my_fundraising_activity_page.py)
 - **Controller:** `ViewFundraisingActivitySaveCountController`
   - `viewFundraisingActivitySaveCount(FRAId: String): Integer`
   - Code → `ViewFundraisingActivitySaveCountController.view_fundraising_activity_save_count(fra_id)` in [controller/view_fundraising_activity_save_count_controller.py](../controller/view_fundraising_activity_save_count_controller.py)
@@ -479,7 +479,8 @@ Conventions:
 ### Pure diagram typos / gaps
 - **US-28 / US-29 entity attribute** — diagram still lists `category: String`; the 2026-05-18 FRACatId rename cascaded through US-13/14/15/17/20/21/30/31 but missed these two.
 - **US-31 boundary method** — `displayMyCompletedFundraisingActivities(myCompletedFRAList: FundraisingActivity)` is missing the `List<…>` wrapper on the parameter type.
-- **US-28 / US-29 boundary class name** — diagram names the boundary `ViewMyFundraisingActivityPage`; code wires the count display on `ViewFundraisingActivityPage` (the donee detail page, owner-gated). Either the diagram should drop "My" or the code should move the metric block to the fundraiser-only `ViewMyFundraisingActivityPage`.
+<!-- US-28/29 boundary class name — resolved 2026-05-18: see "Resolved during this audit" below -->
+
 
 ### Code-side singular/plural class-name drifts (controller stays a pure delegator, no behaviour change)
 Diagram uses the plural form of the entity in the controller class name, code uses the singular. Either rename the code or correct the diagrams — picking one direction would unify the convention.
@@ -492,6 +493,7 @@ Diagram uses the plural form of the entity in the controller class name, code us
 
 ### Resolved during this audit
 - ~~**US-15 signature-shape drift**~~ **Resolved 2026-05-18.** Code now takes the 6 unpacked fields exactly as the diagram defines: `update_my_fundraising_activity(owner_account_id, fra_id, title, description, target_amount, fra_cat_id, start_date, end_date)`. The previous `updated_my_fra: FundraisingActivity` parameter is gone. As a side effect, `completed` and `suspended` are no longer settable through update — `completed` is now a derived `@property` on the entity (`end_date < today`), and `suspended` is owned by US-16 / Exception A unsuspend. The `completed` column was dropped from the schema.
+- ~~**US-28 / US-29 boundary placement**~~ **Resolved 2026-05-18.** Diagram puts both count-display methods on `ViewMyFundraisingActivityPage` (fundraiser-only); code had them on `ViewFundraisingActivityPage` (donee detail) with a code-only owner-gate, and the consolidated `ManageMyFundraisingActivityPage` was reading `activity.view_count` / `activity.save_count` directly off the dataclass — bypassing the diagram-defined controllers entirely. After the rewire: the per-US `ViewMyFundraisingActivityPage` renders the metrics via `ViewFundraisingActivityViewCountController` + `ViewFundraisingActivitySaveCountController`; the donee-side detail (`ViewFundraisingActivityPage` + shared `render_activity_detail` helper) no longer renders the counts at all; the consolidated `ManageMyFundraisingActivityPage` now calls the same controllers (Exception C: same call chain as the per-US page).
 
 ### Cosmetic
 - **US-23 boundary method** — diagram says `displaySuccess()`, code uses `display_remove_success()` to keep it distinct from US-22's `display_success()` on the same `ViewFundraisingActivityPage`. Either the diagram should name it `displayRemoveSuccess()` or accept that one Boundary class has two `displaySuccess()` paths.

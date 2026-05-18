@@ -1,19 +1,20 @@
-"""ViewFundraisingActivityPage <<Boundary>> — Sprint 1 US-21 + Sprint 2 US-22 + Sprint 3 US-23 + Sprint 4 US-28/29.
+"""ViewFundraisingActivityPage <<Boundary>> — Sprint 1 US-21 + Sprint 2 US-22 + Sprint 3 US-23.
 
 Diagram contracts:
     US-21.jpg: + displayFundraisingActivity(fundraisingActivity: FundraisingActivity): void
     US-22.jpg: + displaySuccess(): void  (save-to-favourites; same boundary class)
     US-23.jpg: + displaySuccess(): void  (remove-favourite; same boundary class — symmetric with US-22)
-    US-28.jpg: + displayFundraisingActivityViewCount(viewCount: Integer): void
-    US-29.jpg: + displayFundraisingActivitySaveCount(saveCount: Integer): void
 
 US-22 (Save) and US-23 (Remove) both live on the donee's activity detail
 page — mirrors how US-15 (Update) and US-16 (Suspend) live on the
 fundraiser's MyFRA detail page. Whichever button is shown depends on
 whether the activity is currently in the donee's favourites.
 
-US-28 / US-29 diagrams place the view/save count display on this same
-boundary; implementation gates the count display to the activity owner.
+US-28 / US-29 (view + save counts) are NOT on this boundary per the
+2026-05-18 diagrams — they live on `ViewMyFundraisingActivityPage`
+(fundraiser-only). The previous code-only owner-gated metric block here
+was a drift caught in audit.md and resolved 2026-05-18 by moving the
+count display to its diagram-defined home.
 
 The Exception A view-count increment fires once when a donee opens
 the detail view.
@@ -32,12 +33,6 @@ from controller.view_fundraising_activity_category_controller import (
 )
 from controller.view_fundraising_activity_controller import (
     ViewFundraisingActivityController,
-)
-from controller.view_fundraising_activity_save_count_controller import (
-    ViewFundraisingActivitySaveCountController,
-)
-from controller.view_fundraising_activity_view_count_controller import (
-    ViewFundraisingActivityViewCountController,
 )
 from entity.fundraising_activity import FundraisingActivity
 
@@ -70,7 +65,6 @@ class ViewFundraisingActivityPage:
                 if ACTION_MSG_KEY in st.session_state:
                     st.success(st.session_state.pop(ACTION_MSG_KEY))
                 self.display_fundraising_activity(activity)
-                self._maybe_display_counts(activity)
             if st.button("← Back to list"):
                 st.session_state.pop(SELECTED_KEY, None)
                 st.session_state.pop(ACTION_MSG_KEY, None)
@@ -187,29 +181,3 @@ class ViewFundraisingActivityPage:
     def display_remove_error() -> None:
         st.error("Could not remove favourite.")
 
-    def _maybe_display_counts(self, activity) -> None:
-        """US-28 / US-29: render the view/save counts only when the
-        logged-in user owns the activity. Diagram puts these on this
-        page despite it being the donee view — owner-gating keeps the
-        info private."""
-        user = st.session_state.get("user")
-        if user is None or user.account_id != activity.owner_account_id:
-            return
-        view_count = (
-            ViewFundraisingActivityViewCountController()
-            .view_fundraising_activity_view_count(activity.fra_id)
-        )
-        save_count = (
-            ViewFundraisingActivitySaveCountController()
-            .view_fundraising_activity_save_count(activity.fra_id)
-        )
-        self.display_fundraising_activity_view_count(view_count)
-        self.display_fundraising_activity_save_count(save_count)
-
-    @staticmethod
-    def display_fundraising_activity_view_count(view_count: int) -> None:
-        st.metric("Views", view_count)
-
-    @staticmethod
-    def display_fundraising_activity_save_count(save_count: int) -> None:
-        st.metric("Saves to favourites", save_count)
